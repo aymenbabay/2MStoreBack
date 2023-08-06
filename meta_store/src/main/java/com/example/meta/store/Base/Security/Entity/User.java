@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
 
@@ -34,6 +35,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Transactional
 public class User extends BaseEntity<Long> implements UserDetails, Serializable {
 
 

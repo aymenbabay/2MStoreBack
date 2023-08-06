@@ -4,6 +4,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
@@ -43,13 +45,13 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 
     DecimalFormat df = new DecimalFormat("#.###");
 
-	public void insertLine(List<CommandLineDto> commandLinesDto, Company company, Long id) {
+	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, Long id, String type) {
 		List<CommandLine> commandLines = new ArrayList<>();
 		List<Article> articles = new ArrayList<>();
 		Invoice invoice = invoiceService.addInvoice(company,id);
 		
 		for(CommandLineDto i : commandLinesDto) {
-			Article article = articleService.findByCompanyArticleId(i.getCompanyarticle());
+			Article article = articleService.findByCompanyArticleId(i.getCompanyArticle());
 			articles.add(article);
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
@@ -86,7 +88,14 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		System.out.println("befor impact invoice in command line service");
 		articleService.impactInvoice(commandLinesDto,id,articles);
 		System.out.println("after impact invoice in command line service");
+	
+		if (type.equals("pdf-save-client") ) {	
 		
+			return invoiceService.export(company,commandLines,articles);
+			
+		}
+		
+		return null;
 	}
 
 

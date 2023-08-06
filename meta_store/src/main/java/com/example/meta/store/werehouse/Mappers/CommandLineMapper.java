@@ -10,10 +10,10 @@ import com.example.meta.store.werehouse.Entities.CommandLine;
 public interface CommandLineMapper {
 
 
-    @Mapping(source = "companyarticle", target = "companyarticle.id")
+    @Mapping(source = "companyArticle", target = "companyArticle.id")
 	CommandLine mapToEntity(CommandLineDto dto);
 	
 
-    @Mapping(source = "companyarticle.id", target = "companyarticle")
+   @Mapping(source = "companyArticle.id", target = "companyArticle")
 	CommandLineDto mapToDto(CommandLine entity);
 }

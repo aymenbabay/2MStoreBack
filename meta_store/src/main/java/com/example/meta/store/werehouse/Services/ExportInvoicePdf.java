@@ -13,8 +13,10 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 import com.example.meta.store.werehouse.Dtos.InvoiceDto;
+import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Entities.CompanyArticle;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
@@ -40,7 +42,7 @@ public class ExportInvoicePdf {
 
     static DecimalFormat df = new DecimalFormat("#.###");
     
-	public static ByteArrayInputStream invoicePdf(List<CommandLine> commandLines, Invoice invoice, Company company)  {
+	public static ByteArrayInputStream invoicePdf(List<CommandLine> commandLines, Invoice invoice, Company company, List<Article> articles)  {
 		Document document = new Document();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
@@ -127,8 +129,12 @@ public class ExportInvoicePdf {
 		});
 		
 		for(CommandLine i : commandLines) {
-			
-		PdfPCell libelleCell = new PdfPCell(new Phrase(i.getCompanyarticle().getArticle().getLibelle()));
+			for(Article j : articles) {
+			//	if(i.getCompanyArticle() == j.getcom()) {
+					
+				
+				
+		PdfPCell libelleCell = new PdfPCell(new Phrase(j.getLibelle()));
 		libelleCell.setPaddingLeft(1);
 		libelleCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		libelleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -141,18 +147,18 @@ public class ExportInvoicePdf {
 		qteCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(qteCell);
 		
-		PdfPCell unitCell = new PdfPCell(new Phrase(i.getCompanyarticle().getArticle().getUnit()));
+		PdfPCell unitCell = new PdfPCell(new Phrase(j.getUnit()));
 		unitCell.setPaddingLeft(1);
 		unitCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		unitCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(unitCell);
 		
-		PdfPCell tvaCell = new PdfPCell(new Phrase(i.getCompanyarticle().getArticle().getTva().toString()));
+		PdfPCell tvaCell = new PdfPCell(new Phrase(j.getTva().toString()));
 		tvaCell.setPaddingLeft(1);
 		tvaCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		tvaCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(tvaCell);
-		String x = df.format( i.getCompanyarticle().getArticle().getCost()*i.getCompanyarticle().getArticle().getMargin());
+		String x = df.format( j.getCost()*j.getMargin());
 		PdfPCell puCell = new PdfPCell(new Phrase(x));
 		puCell.setPaddingLeft(1);
 		puCell.setVerticalAlignment(Element.ALIGN_CENTER);
@@ -172,6 +178,7 @@ public class ExportInvoicePdf {
 		table.addCell(prixtotCell);
 		}
 		
+		}
 		
 		PdfPTable totalTable = new PdfPTable(3);
 		
@@ -226,4 +233,7 @@ public class ExportInvoicePdf {
 		}
 		return  new ByteArrayInputStream(out.toByteArray());
 	}
+	
+	
+	
 }

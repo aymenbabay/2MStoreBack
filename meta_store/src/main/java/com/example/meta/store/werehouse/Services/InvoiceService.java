@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.InvoiceDto;
+import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
@@ -189,11 +190,11 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	}
 
 
-	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines) {
+	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines, List<Article> articles) {
 		
 
 		Optional<Invoice> invoice = invoiceRepository.lastInvoice(company.getId());
-		ByteArrayInputStream bais = ExportInvoicePdf.invoicePdf(commandLines,invoice.get(),company);
+		ByteArrayInputStream bais = ExportInvoicePdf.invoicePdf(commandLines,invoice.get(),company,articles);
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Content-Disposition", "inline; filename=invoice.pdf");
 		 ResponseEntity<InputStreamResource> response = ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(bais));

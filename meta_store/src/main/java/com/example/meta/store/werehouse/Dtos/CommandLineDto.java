@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.Article;
+import com.example.meta.store.werehouse.Entities.CompanyArticle;
 import com.example.meta.store.werehouse.Entities.Invoice;
 
 import jakarta.persistence.JoinColumn;
@@ -25,5 +26,6 @@ public class CommandLineDto extends BaseDto<Long> implements Serializable{
 
 	private Invoice invoice;
 	
-	private Long companyarticle;
+	private Long companyArticle;
+	//private CompanyArticle companyArticle;
 }

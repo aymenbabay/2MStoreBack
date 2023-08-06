@@ -59,6 +59,7 @@ public class ClientService extends BaseService<Client, Long>{
 		meClient.setNature("personne Moral");
 		meClient.setCompany(company);
 		meClient.setVirtual(false);
+		meClient.setEmail(company.getEmail());
 		Provider provider = providerService.getMeAsProvider(company.getId());
 		Set<Provider> providers = new HashSet<>();
 		providers.add(provider);
@@ -194,7 +195,7 @@ public class ClientService extends BaseService<Client, Long>{
 
 
 
-	public ClientDto upDateMyClientById(Long id, ClientDto clientDto, Company company,String username) {
+	public ClientDto upDateMyClientById(Long id, ClientDto clientDto, Company company) {
 		ResponseEntity<Client> client = super.getById(id);
 		if(client == null) {
 			throw new RecordNotFoundException("Client Not Found");
@@ -206,8 +207,8 @@ public class ClientService extends BaseService<Client, Long>{
 			}
 		
 		}
-		if(!client.getBody().getCreatedBy().equals(username)) {
-			System.out.println(username);
+		if(!client.getBody().getCreatedBy().equals(company.getUser().getUsername())) {
+			System.out.println(company.getUser().getUsername());
 			throw new NotPermissonException("You Have No Permission");
 		}
 			Optional<Client> client1 = clientRepository.findByCode(clientDto.getCode());
@@ -216,6 +217,7 @@ public class ClientService extends BaseService<Client, Long>{
 			}
 			Client client3 = clientMapper.mapToEntity(clientDto);
 			client3.setCompany(company);
+			client3.setProviders(client.getBody().getProviders());
 			super.insert(client3);
 			return clientDto;
 		

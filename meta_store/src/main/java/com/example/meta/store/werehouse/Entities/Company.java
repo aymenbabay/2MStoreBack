@@ -70,13 +70,6 @@ public class Company extends BaseEntity<Long> implements Serializable{
 	@JoinColumn(name = "userId")
 	private User user;
 	
-	@OneToOne
-	@JoinColumn(name = "providerId")
-	private Provider provider;
-	
-	@OneToOne
-	@JoinColumn(name = "clientId")
-	private Client client;
 	
 
 	

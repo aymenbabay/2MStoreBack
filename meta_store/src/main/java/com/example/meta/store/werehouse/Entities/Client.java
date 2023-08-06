@@ -53,6 +53,8 @@ public class Client extends BaseEntity<Long> implements Serializable {
 	private String address;
 
 	private String indestrySector;
+	
+	private String email;
     
     @ManyToMany()
     @JoinTable(name= "client_provider",

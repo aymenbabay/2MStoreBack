@@ -78,18 +78,22 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 	public ProviderDto upDateMyVirtualProviderById(Long id, ProviderDto providerDto, Company company) {
 		Optional<Provider> provider = providerRepository.findById(id);
+		System.out.println("1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		if(provider.isEmpty()) {
 			throw new RecordNotFoundException("there is no provider with id: "+id);
 		}
 		Optional<Provider> provider2 = providerRepository.findByCodeAndCompanyId(providerDto.getCode(), company.getId());
+		System.out.println("2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		if(provider2.isPresent() && provider.get().getId() != id) {
 			throw new RecordIsAlreadyExist("this code is already in use "+provider2.get().getCompany().getName());
 		}
 		Optional<Provider> pro = providerRepository.findByBankaccountnumber(providerDto.getBankaccountnumber());
+		System.out.println("3aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		if(pro.isPresent() && provider.get().getId() != id) {
 			throw new RecordIsAlreadyExist("this account number is related with another provider "+pro.get().getCompany().getName());
 		}
 		Optional<Provider> vpro = providerRepository.findByMatfisc(providerDto.getMatfisc());
+		System.out.println("4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		if(vpro.isPresent() && provider.get().getId() != id) {
 			throw new RecordIsAlreadyExist("this matricule fiscl is related by another provider "+vpro.get().getCompany().getName());
 		}
@@ -136,6 +140,10 @@ public class ProviderService extends BaseService<Provider, Long> {
 		provider1.setBankaccountnumber(company.getBankaccountnumber());
 		provider1.setMatfisc(company.getMatfisc());
 		provider1.setName(company.getName());
+		provider1.setPhone(company.getPhone());
+		provider1.setIndestrySector(company.getIndestrySector());
+		provider1.setAddress(company.getAddress());
+		provider1.setEmail(company.getEmail());
 		super.insert(provider1);
 		return null;
 	}
@@ -208,6 +216,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 		}
 		List<ProviderDto> providersDto = new ArrayList<>();
 		for(Provider i : providers) {
+			System.out.println(i.isVirtual()+"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww");
 			ProviderDto providerDto = providerMapper.mapToDto(i);
 			providersDto.add(providerDto);
 		}
@@ -254,6 +263,18 @@ public class ProviderService extends BaseService<Provider, Long> {
 	public Provider getMeProvider(Long id) {
 		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(id,false);
 		return provider.get();
+	}
+
+
+	public List<ProviderDto> getAllRealProviders() {
+		List<Provider> providers = providerRepository.findAllReal();
+		List<ProviderDto> dtos = new ArrayList<>();
+		for(Provider i : providers) {
+			System.out.println(i.getCode()+" qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+			ProviderDto dto = providerMapper.mapToDto(i);
+			dtos.add(dto);
+		}
+		return dtos;
 	}
 
 

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import com.example.meta.store.Base.Entity.BaseEntity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -27,6 +28,8 @@ public class CompanyArticle extends BaseEntity<Long> implements Serializable{
 	
 	private double margin;
 	
+	private double cost;
+	
 	@ManyToOne(optional = true)
 	@JoinColumn(name = "categoryId")
 	private Category category;
@@ -35,11 +38,11 @@ public class CompanyArticle extends BaseEntity<Long> implements Serializable{
 	@JoinColumn(name = "subCategoryId")
 	private SubCategory subCategory;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "companyId")
 	private Company company;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "articleId")
 	private Article article;
 }

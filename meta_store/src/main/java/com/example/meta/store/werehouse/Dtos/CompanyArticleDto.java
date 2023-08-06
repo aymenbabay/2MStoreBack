@@ -24,6 +24,8 @@ public class CompanyArticleDto extends BaseDto<Long> implements Serializable {
 	
 	private double margin;
 	
+	private double cost;
+	
 	private Company company;
 	
 	private Article article;

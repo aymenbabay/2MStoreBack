@@ -22,7 +22,7 @@ public interface CompanyRepository extends BaseRepository<Company, Long> {
 
 	boolean existsByMatfisc(String matfisc);
 
-	Company findByClientId(Long clientId);
+	//Company findByClientId(Long clientId);
 
 
 }

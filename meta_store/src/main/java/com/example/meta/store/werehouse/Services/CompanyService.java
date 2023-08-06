@@ -55,6 +55,8 @@ public class CompanyService extends BaseService<Company, Long> {
 	private final CategoryService categoryService;
 	
 	private final SubCategoryService subCategoryService;
+	
+	private final ObjectMapper objectMapper;
 
 	public ResponseEntity<CompanyDto> insertCompany(String company, MultipartFile file, User user)
 			throws JsonMappingException, JsonProcessingException {
@@ -62,7 +64,7 @@ public class CompanyService extends BaseService<Company, Long> {
 		if (exist) {
 			throw new RecordIsAlreadyExist("You Already have A Company");
 		}
-		CompanyDto companyDto = new ObjectMapper().readValue(company, CompanyDto.class);
+		CompanyDto companyDto = objectMapper.readValue(company, CompanyDto.class);
 		boolean existName = companyRepository.existsByName(companyDto.getName());
 		if (existName) {
 			throw new RecordIsAlreadyExist("This Name Is Already Exist Please Choose Another One");
@@ -93,7 +95,7 @@ public class CompanyService extends BaseService<Company, Long> {
 	//contient un erreur
 	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Optional<Company> compan) throws JsonMappingException, JsonProcessingException {
 		Company company = compan.get();
-		CompanyDto companyDto1 = new ObjectMapper().readValue(companyDto, CompanyDto.class);
+		CompanyDto companyDto1 = objectMapper.readValue(companyDto, CompanyDto.class);
 		boolean existName = companyRepository.existsByName(companyDto1.getName());
 		if(!company.getName().equals(companyDto1.getName())  && existName
 				   && !company.getId().equals(companyDto1.getId())) {

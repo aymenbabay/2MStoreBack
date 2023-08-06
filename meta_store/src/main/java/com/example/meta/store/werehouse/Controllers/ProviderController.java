@@ -57,6 +57,12 @@ public class ProviderController {
 		return providerService.getAllProviders();
 	}
 	
+	@GetMapping("/get_all_real")
+	public List<ProviderDto> getAllReal(){
+		System.out.println("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+		return providerService.getAllRealProviders();
+	}
+	
 	@GetMapping("/get_all_my_virtual")
 	public List<ProviderDto> getAllMyVirtual() {
 		Company company = getCompany();

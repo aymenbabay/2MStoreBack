@@ -37,4 +37,6 @@ public class ProviderDto extends BaseDto<Long> implements Serializable{
 		
 		private String email;
 		
+		private boolean isVirtual;
+		
 }

@@ -36,10 +36,11 @@ public class CategoryService extends BaseService<Category, Long>{
 	
 	private final ImageService imageService;
 	
+	private final ObjectMapper objectMapper;
 
 	
 	public ResponseEntity<CategoryDto> upDateCategory( String catDto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
-		CategoryDto categoryDto = new ObjectMapper().readValue(catDto, CategoryDto.class);
+		CategoryDto categoryDto = objectMapper.readValue(catDto, CategoryDto.class);
 		Optional<Category> category = categoryRepository.findByIdAndCompanyId(categoryDto.getId(),company.getId());
 		if(category.isEmpty()) {
 			throw new RecordNotFoundException("Category Not Found");
@@ -100,7 +101,7 @@ public class CategoryService extends BaseService<Category, Long>{
 			throws JsonMappingException, JsonProcessingException {
 
 		System.out.println("insert service"+catDto);
-		CategoryDto categoryDto = new ObjectMapper().readValue(catDto, CategoryDto.class);
+		CategoryDto categoryDto = objectMapper.readValue(catDto, CategoryDto.class);
 		Optional<Category> category1 = categoryRepository.findByLibelleAndCompanyId(categoryDto.getLibelle(),company.getId());
 		if(category1.isPresent())  {
 			throw new RecordIsAlreadyExist("Category "+categoryDto.getLibelle()+"is already exist");

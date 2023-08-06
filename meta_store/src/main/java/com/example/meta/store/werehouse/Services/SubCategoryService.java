@@ -39,9 +39,10 @@ public class SubCategoryService extends BaseService<SubCategory, Long>{
 	
 	private final ImageService imageService;
 	
+	private final ObjectMapper objectMapper;
 	
 	public ResponseEntity<SubCategoryDto> upDateSubCategory( String dto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
-		SubCategoryDto subCategoryDto = new ObjectMapper().readValue(dto, SubCategoryDto.class);
+		SubCategoryDto subCategoryDto = objectMapper.readValue(dto, SubCategoryDto.class);
 		Optional<SubCategory> subCategory = subCategoryRepository.findByIdAndCompanyId(subCategoryDto.getId(),company.getId());
 		if(subCategory.isPresent()) {
 			SubCategory categ = subCategoryMapper.mapToEntity(subCategoryDto);
@@ -138,7 +139,7 @@ public class SubCategoryService extends BaseService<SubCategory, Long>{
 	}
 
 	public ResponseEntity<SubCategoryDto> insertSubCategory(String subCatDto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException{
-		SubCategoryDto subCategoryDto = new ObjectMapper().readValue(subCatDto, SubCategoryDto.class);
+		SubCategoryDto subCategoryDto = objectMapper.readValue(subCatDto, SubCategoryDto.class);
 		ResponseEntity<SubCategory> subCategory1 = getByLibelleAndCompanyId(subCategoryDto.getLibelle(),company.getId());
 	if(subCategory1 != null)  {
 		throw new RecordIsAlreadyExist("is already exist");

@@ -64,10 +64,11 @@ public class ArticleService extends BaseService<Article, Long>{
 	
 	private final CompanyService companyService;
 	
+	private final ObjectMapper objectMapper;
 	
 	public ResponseEntity<ArticleDto> insertArticle( MultipartFile file, String article, Provider provider)
 			throws JsonMappingException, JsonProcessingException {
-		ArticleDto articleDto = new ObjectMapper().readValue(article, ArticleDto.class);
+		ArticleDto articleDto = objectMapper.readValue(article, ArticleDto.class);
 		Article article1 = articleMapper.mapToEntity(articleDto);
 		if(file != null) {
 			String newFileName = imageService.insertImag(file,provider.getCompany().getUser().getUsername(), "article");
@@ -89,6 +90,7 @@ public class ArticleService extends BaseService<Article, Long>{
 		}
 		super.insert(article1);
 		companyArticle.setArticle(article1);
+		companyArticle.setCost(article1.getCost());
 		companyArticle.setCompany(provider.getCompany());
 		companyArticle.setQuantity(article1.getQuantity());
 		companyArticle.setMargin(article1.getMargin());
@@ -109,7 +111,7 @@ public class ArticleService extends BaseService<Article, Long>{
 
 	public ResponseEntity<ArticleDto> upDateArticle( MultipartFile file, String article, Provider provider) 
 			throws JsonMappingException, JsonProcessingException {
-		ArticleUpdateDto articleDto = new ObjectMapper().readValue(article, ArticleUpdateDto.class);
+		ArticleUpdateDto articleDto = objectMapper.readValue(article, ArticleUpdateDto.class);
 		System.out.println(articleDto.getId()+"azzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"+provider.getCompany().getId());
 		Article updatedArticle = articleMapper.mapToArticle(articleDto);
 		Optional<Article> article1;

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.meta.store.Base.Entity.BaseEntity;
 
 import jakarta.persistence.Entity;
@@ -20,6 +22,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Transactional
 public class Role extends BaseEntity<Long> implements Serializable{
 
 
