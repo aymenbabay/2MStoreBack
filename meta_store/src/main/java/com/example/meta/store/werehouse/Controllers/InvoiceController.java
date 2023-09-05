@@ -1,5 +1,7 @@
 package com.example.meta.store.werehouse.Controllers;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
+import com.example.meta.store.werehouse.Dtos.InvoiceDto;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Services.CompanyService;
 import com.example.meta.store.werehouse.Services.InvoiceService;
@@ -36,6 +39,19 @@ public class InvoiceController {
 	public Long getLastInvoiceCode() {
 		Company company = getCompany();
 		return invoiceService.getLastInvoice(company.getId());
+	}
+	
+	@GetMapping("getMyInvoiceAsProvider")
+	public List<InvoiceDto> getMyInvoiceAsProvider(){
+		Company company = getCompany();
+		return invoiceService.getMyInvoiceAsProvider(company.getId());
+		
+	}
+	
+	@GetMapping("getMyInvoiceAsClient")
+	public List<InvoiceDto> getInvoicesAsClient(){
+		Company company = getCompany();
+		return invoiceService.getInvoicesAsClient(company);
 	}
 	
 	private Company getCompany() {

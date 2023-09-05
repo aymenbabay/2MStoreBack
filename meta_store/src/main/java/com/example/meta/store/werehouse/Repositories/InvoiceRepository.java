@@ -34,4 +34,9 @@ public interface InvoiceRepository extends BaseRepository<Invoice, Long> {
 
 	List<Invoice> findAllByClientId(Long clientId);
 
+	static boolean existsByClientId(Long id) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }

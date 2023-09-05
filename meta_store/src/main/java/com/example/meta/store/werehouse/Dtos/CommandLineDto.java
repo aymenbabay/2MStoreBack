@@ -23,9 +23,18 @@ public class CommandLineDto extends BaseDto<Long> implements Serializable{
 	private Double totTva;
 
 	private Double prixArticleTot;
-
-	private Invoice invoice;
 	
 	private Long companyArticle;
-	//private CompanyArticle companyArticle;
+	
+	private String articleLibelle;
+	
+	private Double articleCost;
+	
+	private Double articleTva;
+	
+	private String articleCode;
+	
+	private String articleUnit;
+	
+	private Double articleMargin;
 }

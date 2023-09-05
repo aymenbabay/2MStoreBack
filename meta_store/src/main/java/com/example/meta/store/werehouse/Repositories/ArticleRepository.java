@@ -13,24 +13,14 @@ public interface ArticleRepository extends BaseRepository<Article, Long>{
 	@Query("SELECT a FROM Article a WHERE a.provider.id = :providerId AND a.libelle = :libelle")
 	List<Article> findAllByLibelleAndProviderIdContaining(String libelle, Long providerId);
 
-	Optional<Article> findByCode(String art);
-
-	Optional<Article> findByLibelleAndProviderId(String libelle,Long providerId);
-//
-
-	List<Article> findByProviderId( Long providerId);
-
-	Optional<Article> findByIdAndProviderId(Long id, Long providerId);
-
-	Optional<Article> findByCodeAndProviderId(String code, Long companyId);
-
-
-	@Query(value = "SELECT a FROM Article a ORDER BY random() LIMIT 10")
-    List<Article> findRandomArticles();
-
-	 boolean existsByCodeAndProviderId(String code, Long providerId);
 	
+	@Query(value = "SELECT a FROM Article a WHERE ABS(a.provider.company.user.logitude - :longitude) >5 "
+			+ "AND ABS(a.provider.company.user.latitude - :latitude) >5 ORDER BY random() LIMIT 10 ")
+    List<Article> findRandomArticles(double longitude, double latitude );
+
 	List<Article> findAllByProviderId(Long providerId);
+
+
 
 
 }

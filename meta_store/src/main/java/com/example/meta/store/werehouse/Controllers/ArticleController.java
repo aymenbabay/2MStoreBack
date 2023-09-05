@@ -31,10 +31,11 @@ import lombok.RequiredArgsConstructor;
 
 @Validated
 @RestController
-@RequestMapping("/werehouse/article")
+@RequestMapping("/werehouse/article/")
 @RequiredArgsConstructor
 public class ArticleController {
 
+	// ------------------- it's ok ----------------------------------
 
 	private final ArticleService articleService;
 
@@ -48,7 +49,7 @@ public class ArticleController {
 	
 	private final ProviderService providerService;
 	
-	@PostMapping("/add")
+	@PostMapping("add")
 	public ResponseEntity<ArticleDto> insertArticle(
 			 @RequestParam(value ="file", required = false) MultipartFile file,
 			 @RequestParam("article") String article)
@@ -57,14 +58,20 @@ public class ArticleController {
 		return articleService.insertArticle(file,article,provider);
 	}
 	
+	@GetMapping("{id}/{quantity}")
+	public void addQuantity(@PathVariable Long quantity, @PathVariable Long id) {
+		Provider provider = getProvider();
+		articleService.addQuantity(id,quantity,provider);
+	}
 	
-	@GetMapping("/getAllMyArticle")
+	
+	@GetMapping("getAllMyArticle")
 	public List<CompanyArticleDto> getAllMyArticle() {
 		Provider provider = getProvider();
 		return articleService.getAllProvidersArticleByProviderId(provider);
 	}
 	
-	@PutMapping("/update")
+	@PutMapping("update")
 	public ResponseEntity<ArticleDto> upDateArticle(
 			 @RequestParam(value ="file", required = false) MultipartFile file,
 			 @RequestParam("article") String article) throws Exception{
@@ -72,27 +79,13 @@ public class ArticleController {
 		return articleService.upDateArticle(file,article, provider);
 	}
 	
-	@PutMapping("/updatecompanyarticle")
-	public void upDateCompanyArticle(@RequestBody CompanyArticleDto companyArticleDto) {
-		System.out.println(companyArticleDto.getId()+" aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1");
-		
+	@PutMapping("updatecompanyarticle")
+	public void upDateCompanyArticle(@RequestBody CompanyArticleDto companyArticleDto) {		
 		articleService.upDateCompanyArticle(companyArticleDto);
 	}
-//	-------------------------------------------------properly work------------------------------------------------
 	
-	@GetMapping("/{articlenamecontaining}")
-	public List<ArticleDto> getByNameContaining(@PathVariable String articlenamecontaining ){
-		Provider provider = getProvider(); 
-		return articleService.getByNameContaining(articlenamecontaining,provider.getId());
-	}
-	
-	@GetMapping("/{id}/{quantity}")
-	public void addQuantity(@PathVariable Long quantity, @PathVariable Long id) {
-		Provider provider = getProvider();
-		articleService.addQuantity(id,quantity,provider);
-	}
-	
-	@GetMapping("/getbyprovider/{id}")
+
+	@GetMapping("getbyprovider/{id}")
 	public List<ArticleDto> getAllArticleByProviderId(@PathVariable Long id){
 		if(id !=(long)0) {
 			ResponseEntity<Provider> provider = providerService.getById(id);
@@ -102,29 +95,16 @@ public class ArticleController {
 		return articleService.getAllArticleByProviderId(provider);
 	}
 	
-	@GetMapping("/articlebyid/{id}")
-	public ResponseEntity<ArticleDto> getArticleById(@PathVariable Long id){
-		return articleService.getArticleById(id);
+
+	@GetMapping("getrandom")
+	public List<ArticleDto> getaertt(){
+		return articleService.getdgdgeg();
 	}
 	
-
-	
-	@PostMapping("/add_exist")
-	public void insertExistArticle(@RequestBody String companyArticleDto) {
-		Company company = getCompany();
-		articleService.insertExistArticle( company);
-	}
-	
-
 	@DeleteMapping("delete/{id}")
 	public ResponseEntity<String> deleteArticleById(@PathVariable Long id){
 		Long companyId = getCompany().getId();
-		return articleService.deleteByIdAndCompanyId(id,companyId);
-	}
-	
-	@GetMapping("/getrandom")
-	public List<ArticleDto> getaertt(){
-		return articleService.getdgdgeg();
+		return articleService.deleteByCompanyArticleId(id,companyId);
 	}
 	
 	private Company getCompany() {
@@ -148,4 +128,14 @@ public class ArticleController {
 		return provider;
 	}
 	
+
+
+	
+
+//	---------------------------------------------------------------- EXCEPTION -----------------------------------------------------------------------------
+	@GetMapping("{articlenamecontaining}")
+	public List<ArticleDto> getByNameContaining(@PathVariable String articlenamecontaining ){
+		Provider provider = getProvider(); 
+		return articleService.getByNameContaining(articlenamecontaining,provider.getId());
+	}
 }

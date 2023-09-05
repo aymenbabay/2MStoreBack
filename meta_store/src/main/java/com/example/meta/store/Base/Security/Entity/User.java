@@ -57,6 +57,10 @@ public class User extends BaseEntity<Long> implements UserDetails, Serializable 
 			
 			private LocalDateTime datetoken;
 			
+			private double logitude;
+			
+			private double latitude;
+			
 			@ManyToMany(fetch = FetchType.EAGER)
 			@JoinTable(name = "user_roles", joinColumns = @JoinColumn(name ="userId"), 
 			inverseJoinColumns = @JoinColumn(name="roleId"))

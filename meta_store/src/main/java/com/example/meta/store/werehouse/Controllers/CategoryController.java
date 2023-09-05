@@ -56,7 +56,7 @@ public class CategoryController {
 
 	}
 	
-	@PostMapping("/add")//file
+	@PostMapping("/add")
 	public ResponseEntity<CategoryDto> insertCategory(
 			@RequestParam("categoryDto") String categoryDto, 
 			@RequestParam(value="file",required=false) MultipartFile file) throws JsonMappingException, JsonProcessingException

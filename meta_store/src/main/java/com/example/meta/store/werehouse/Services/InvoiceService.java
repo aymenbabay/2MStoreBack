@@ -20,12 +20,14 @@ import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Entities.CompanyArticle;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Mappers.CommandLineMapper;
 import com.example.meta.store.werehouse.Mappers.InvoiceMapper;
 import com.example.meta.store.werehouse.Repositories.CommandLineRepository;
 import com.example.meta.store.werehouse.Repositories.InvoiceRepository;
 
+import ch.qos.logback.core.encoder.ByteArrayUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -39,9 +41,31 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	
 	private final InvoiceRepository invoiceRepository;
 	
+	private final ClientService clientService;
+	
 	private final CommandLineRepository commandLineRepository;
 	
-	private final ClientService clientService;
+	public List<InvoiceDto> getMyInvoiceAsProvider(Long companyId) {
+		List<Invoice> invoices =  invoiceRepository.findAllByCompanyId(companyId);
+		List<InvoiceDto> invoicesDto = new ArrayList<>();
+		for(Invoice i : invoices) {
+			InvoiceDto invoiceDto = invoiceMapper.mapToDto(i);
+			invoicesDto.add(invoiceDto);
+		}
+		System.out.println("invoice service before return invoices dto get my invoice as provider "+invoicesDto.get(0).getClient());
+		return invoicesDto;
+	}
+	
+	public List<InvoiceDto> getInvoicesAsClient(Company company) {
+		Client client = clientService.getMeAsClient(company);
+		List<Invoice> invoices = invoiceRepository.findAllByClientId(client.getId());
+		List<InvoiceDto> invoicesDto = new ArrayList<>();
+		for(Invoice i : invoices) {
+			InvoiceDto invoiceDto = invoiceMapper.mapToDto(i);
+			invoicesDto.add(invoiceDto);
+		}
+		return invoicesDto;
+	}
 	
 	public ResponseEntity<InvoiceDto> upDateInvoice( InvoiceDto invoiceDto, Company company) {
 		if(company == null) {
@@ -116,29 +140,7 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 
 
-	public ResponseEntity<InvoiceDto> insertInvoice(Client client, Company company) {
-		if(company == null) {
-			throw new RecordNotFoundException("You Have No Company Please Create One If You need");
-		}
-		Invoice invoice = new Invoice();
-		Long max = this.max(company.getId());
-		if(max != null) {
-			
-			invoice.setCode(max+1);
-		
-		}
-		if(max == null) {
-			invoice.setCode((long) 2053);
-		}
-		invoice.setClient(client);
-		invoice.setCompany(company);		
-		invoiceRepository.save(invoice);
-			return null;
-		
-	}
-
-
-
+//a verifier
 	public void deleteInvoiceById(Long id, Company company) {
 		
 		if(company == null) {
@@ -148,8 +150,13 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 			if(invoice.isEmpty()) {
 				throw new RecordNotFoundException("This Invoice Does Not Exist");
 			}
-		 super.deleteById(id,company.getId());
-			commandLineRepository.deleteByInvoiceId(id);
+			Invoice invoic = invoice.get();
+			if(invoic.getClient().isVirtual() == false) {
+				//send request wwith invoice id to client in order to get delete permission then delete all that related with that invoice
+				return;
+			}
+		 super.deleteById(id);
+			commandLineRepository.deleteAllByInvoiceId(id);
 	}
 
 
@@ -190,7 +197,8 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	}
 
 
-	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines, List<Article> articles) {
+	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines,
+			List<CompanyArticle> articles) {
 		
 
 		Optional<Invoice> invoice = invoiceRepository.lastInvoice(company.getId());
@@ -222,9 +230,9 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 
 
-	public Invoice addInvoice(Company company, Long id) {
+	public Invoice addInvoice(Company company, Long clientId) {
 		Long invoiceCode = getLastInvoice(company.getId());
-		ResponseEntity<Client> client = clientService.getById(id);
+		ResponseEntity<Client> client = clientService.getById(clientId);
 		System.out.println(client.getBody().getId()+" client id");
 		Invoice invoice = new Invoice();
 		invoice.setCode(invoiceCode);
@@ -232,8 +240,14 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		System.out.println(invoice.getClient().getCompany().getId()+" company id from client from invoice id");
 		invoice.setCompany(company);
 		invoiceRepository.save(invoice);
-		System.out.println(invoice.getId()+" invoice id plus id "+id);
+		System.out.println(invoice.getId()+" invoice id plus id "+clientId);
 		return invoice;
 	}
+
+
+
+
+
+	
 
 }

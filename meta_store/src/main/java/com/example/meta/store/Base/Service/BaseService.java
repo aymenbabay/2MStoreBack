@@ -47,7 +47,7 @@ public class BaseService<T extends BaseEntity<ID>,ID extends Number> {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 	
-	public void deleteById(ID id,Long companyId) {
+	public void deleteById(ID id) {
 		
 			baseRepository.deleteById(id);
 		

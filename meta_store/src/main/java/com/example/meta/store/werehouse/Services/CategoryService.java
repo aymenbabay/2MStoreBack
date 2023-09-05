@@ -122,7 +122,7 @@ public class CategoryService extends BaseService<Category, Long>{
 		if(category.isEmpty()) {
 			throw new RecordNotFoundException("This Category Does Not Exist");
 		}
-		super.deleteById(id,company.getId());		
+		super.deleteById(id);		
 	}
 
 	public Category addDefaultCategory(Company company1) {

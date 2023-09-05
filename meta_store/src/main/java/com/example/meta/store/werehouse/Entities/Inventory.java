@@ -26,15 +26,15 @@ public class Inventory extends BaseEntity<Long> implements Serializable{
 
     private static final long serialVersionUID = 12345678112L;
     
-	private Double current_quantity;
+//	private Double current_quantity;
 	
 	private Double out_quantity;
 	
 	private Double in_quantity; 
 	
-	private String libelle_article;
+//	private String libelle_article;
 	
-	private String articleCode;
+//	private String articleCode;
 	
 	private String bestClient;
 	
@@ -46,5 +46,9 @@ public class Inventory extends BaseEntity<Long> implements Serializable{
 	@ManyToOne()
 	@JoinColumn(name = "company_id",referencedColumnName = "id")
 	private Company company;
+	
+	@ManyToOne()
+	@JoinColumn(name = "companyarticleId", referencedColumnName = "id")
+	private CompanyArticle companyArticle;
 	
 }

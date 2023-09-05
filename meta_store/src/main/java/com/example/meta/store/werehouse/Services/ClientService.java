@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,13 +15,13 @@ import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
-import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Mappers.ClientMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
 import com.example.meta.store.werehouse.Repositories.ClientRepository;
+import com.example.meta.store.werehouse.Repositories.InvoiceRepository;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -39,10 +38,8 @@ public class ClientService extends BaseService<Client, Long>{
 	private final ClientMapper clientMapper;
 	
 	private final ProviderService providerService;
-	
-	private final ProviderMapper providerMapper;
-	
-	
+		
+	private final InvoiceRepository invoiceRepository;
 	
 	public Client addMeAsClient(Company company) {
 		Optional<Client> client = clientRepository.findByCompanyId(company.getId());
@@ -87,7 +84,6 @@ public class ClientService extends BaseService<Client, Long>{
 		
 	}
 	
-	//------------------------------------------ properly work ----------------------------------------------------
 
 	
 
@@ -96,73 +92,17 @@ public class ClientService extends BaseService<Client, Long>{
 		if(client == null) {
 			throw new RecordNotFoundException("This Client Is Not Exist Please Create it For You");
 		} 
-		System.out.println(client.getBody().getProviders().size()+"1111zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
-			Provider provider = providerService.getMeProvider(company.getId());
-			System.out.println(provider.getCode()+"22222222zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
+			Provider provider = providerService.getMeAsProvider(company.getId());
 			Set<Provider> providers = new HashSet();
 			providers.add(provider);
 			providers.addAll(client.getBody().getProviders());
 			client.getBody().setProviders(providers);
 			clientRepository.save(client.getBody());
-			System.out.println(client.getBody().getProviders().size()+"3333333zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz");
 			return null;
 		
 	}
 
 
-
-	public ResponseEntity<ClientDto> addMeAsClientExist(ClientDto clientDto, Company company) {
-		Optional<Client> client2 = clientRepository.findByCompanyId(company.getId());
-		if(client2.isPresent()) {
-			throw new RecordIsAlreadyExist("You Are Already Client");
-		}
-		Optional<Client> client = clientRepository.findByCode(clientDto.getCode());
-		if(client.isPresent()) {
-			throw new RecordIsAlreadyExist("This Client Code Is Already Exist");
-		}
-		Client client1 = clientMapper.mapToEntity(clientDto);
-		super.insert(client1);
-		return null;
-	}
-
-	//@Cacheable(value = "client", key = "#root.methodName + '_' + #company.id")
-	public List<ClientDto> getMybyCompanyId(Company company) {
-		List<Client> client = clientRepository.getAllByCompanyId(company.getId());
-		if(client.isEmpty()) {
-			throw new RecordNotFoundException("You Have No Client");
-		}
-		List<ClientDto> clientDto = new ArrayList<>();
-		for(Client i : client) {
-		ClientDto clientDto1 = clientMapper.mapToDto(i);
-		clientDto.add(clientDto1);
-		}
-		return clientDto;
-	}
-
-	//@Cacheable(value = "client", key = "#root.methodName + '_' + #company.id")
-	public ClientDto getMyByCodeAndCompanyId(@Valid String code, Company company) {
-		Optional<Client> client = clientRepository.findByCodeAndCompanyId(code,company.getId());
-		if(client.isPresent()) {
-			ClientDto clientDto = clientMapper.mapToDto(client.get());
-			return clientDto;
-		}else throw new RecordNotFoundException("There Is No Client Has Code : "+code);
-	}
-
-
-
-//	@Cacheable(value = "client", key = "#root.methodName + '_' + #company.id")
-	public List<ClientDto> getMyByNameAndCompanyId(@Valid String name, Company company) {
-		List<Client> client = clientRepository.findByNameAndCompanyId(name,company.getId());
-		if(client.isEmpty()) {
-			throw new RecordNotFoundException("There Is No Client With Name : "+name);	
-		}
-		List<ClientDto> clientsDto = new ArrayList<>();
-		for(Client i : client) {
-		ClientDto clientDto = clientMapper.mapToDto(i);
-		clientsDto.add(clientDto);
-		}
-		return clientsDto;
-	}
 
 
 	public List<ClientDto> getAllMyClient(Company company) {
@@ -179,19 +119,6 @@ public class ClientService extends BaseService<Client, Long>{
 		return clientsDto;
 	}
 
-
-	//@Cacheable(value = "client", key = "#root.methodName + '_' + #company.id")
-	public ClientDto getClientByCode(String code) {
-		Optional<Client> client = clientRepository.findByCode(code);
-		if(client.isEmpty()) {
-			throw new RecordNotFoundException("There Is No Client With Code: "+code);
-		}
-		
-			ClientDto clientDto = clientMapper.mapToDto(client.get());
-			return clientDto;
-			
-		
-	}
 
 
 
@@ -224,14 +151,30 @@ public class ClientService extends BaseService<Client, Long>{
 	}
 
 
-	public void deleteClientById(Long id, Long userId, Company company) {
+	public void deleteClientById(Long id, Company company) {
 		ResponseEntity<Client> client = super.getById(id);
 	        if (client == null || company == null) {
 	        	throw new RecordNotFoundException("Client Not Found ");
 	        }
+	        Client clientt = client.getBody();
+	        if(clientt.getCompany().getId() == company.getId()) {
+	        	
+	        if(clientt.isVirtual() == false) {
+	        	throw new NotPermissonException("you can not delete this client :) ");
+	        }
+	        	boolean isExist = InvoiceRepository.existsByClientId(clientt.getId());
+	        	if(isExist) {
+	        		clientt.setProviders(null);
+	        		clientRepository.save(clientt);
+	        		return;
+	        	}
+	        	super.deleteById(id);
+	        	return;
 	        
-            clientRepository.save(client.getBody());
-		
+	        }
+	        Provider provider = providerService.getMeAsProvider(clientt.getCompany().getId());
+	        clientt.getProviders().remove(provider);
+	       
 		
 	}
 
@@ -256,10 +199,6 @@ public class ClientService extends BaseService<Client, Long>{
 		return clientsDto;
 	}
 
-	public boolean existsMyProvider(Long id, Long id2) {
-		// TODO Auto-generated method stub
-		return false;
-	}
 
 	public Client getMeAsClient(Company company) {
 		Optional<Client> client = clientRepository.findByCompanyId(company.getId());
@@ -283,6 +222,7 @@ public class ClientService extends BaseService<Client, Long>{
 		return clientRepository.findCompanyIdById(clientId);
 	}
 
+	//------------------------------------------ properly work ----------------------------------------------------
 
 
 	

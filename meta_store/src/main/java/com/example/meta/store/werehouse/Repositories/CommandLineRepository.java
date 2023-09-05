@@ -10,7 +10,11 @@ public interface CommandLineRepository extends BaseRepository<CommandLine, Long>
 	List<CommandLine> findByInvoiceCode(Long code);
 
 	List<CommandLine> findByInvoiceId( Long invoiceId);
+
+	void deleteAllByInvoiceId(Long id);
+
+	List<CommandLine> findAllByInvoiceId(Long invoiceId);
+
 	
-	void deleteByInvoiceId(Long invoiceId);
 
 }

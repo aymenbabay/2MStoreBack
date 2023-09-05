@@ -21,6 +21,8 @@ public class CompanyArticleDto extends BaseDto<Long> implements Serializable {
     private static final long serialVersionUID = 12345678120L;
     
 	private double quantity;
+
+	private double minQuantity;
 	
 	private double margin;
 	

@@ -25,6 +25,8 @@ public class CompanyArticle extends BaseEntity<Long> implements Serializable{
     private static final long serialVersionUID = 12345678111L;
     
 	private double quantity;
+
+	private double minQuantity;
 	
 	private double margin;
 	

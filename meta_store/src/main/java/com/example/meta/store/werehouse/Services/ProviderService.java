@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,6 @@ import com.example.meta.store.werehouse.Repositories.ClientRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderRepository;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -33,12 +31,8 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 	private final ProviderRepository providerRepository;
 	
-	//private final ProviderRepository providerRepository;
-
 	private final ProviderMapper providerMapper;
-	
-	//private final ProviderMapper providerMapper;
-	
+		
 	private final ClientRepository clientRepository ;
 	
 
@@ -260,10 +254,10 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 
-	public Provider getMeProvider(Long id) {
-		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(id,false);
-		return provider.get();
-	}
+//	public Provider getMeProvider(Long id) {
+//		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(id,false);
+//		return provider.get();
+//	}
 
 
 	public List<ProviderDto> getAllRealProviders() {

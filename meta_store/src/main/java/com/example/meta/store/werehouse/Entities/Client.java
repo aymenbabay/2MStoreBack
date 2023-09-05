@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +57,7 @@ public class Client extends BaseEntity<Long> implements Serializable {
 	
 	private String email;
     
+	@JsonIgnore
     @ManyToMany()
     @JoinTable(name= "client_provider",
     joinColumns = @JoinColumn(name="clientId"),

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Entities.CompanyArticle;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -31,5 +32,7 @@ public class InventoryDto extends BaseDto<Long> implements Serializable {
 	private Double articleSelling;
 	
 	private Company company;
+	
+	private CompanyArticle companyArticle;
 	
 }

@@ -162,7 +162,7 @@ public class SubCategoryService extends BaseService<SubCategory, Long>{
 		if(subCategory.isEmpty()) {
 			throw new RecordNotFoundException("This SubCategory with id: "+id+" Does Not Exist");
 		}
-	 super.deleteById(id,company.getId());
+	 super.deleteById(id);
 	
 	}
 

@@ -13,6 +13,7 @@ import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
 import com.example.meta.store.werehouse.Dtos.InvoiceDto;
 import com.example.meta.store.werehouse.Entities.Article;
+import com.example.meta.store.werehouse.Entities.ClientInvoice;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.CompanyArticle;
@@ -31,8 +32,6 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 
 	
 	private final CommandLineMapper commandLineMapper;
-	
-	private final InvoiceMapper invoiceMapper;
 
 	private final InvoiceService invoiceService;
 	
@@ -42,16 +41,22 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	
 	private final CommandLineRepository commandLineRepository;
 	
+	private final ClientInvoiceService clientInvoiceService;
+	
 
     DecimalFormat df = new DecimalFormat("#.###");
 
-	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, Long id, String type) {
+	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
+			Long clientId, String type) {
 		List<CommandLine> commandLines = new ArrayList<>();
 		List<Article> articles = new ArrayList<>();
-		Invoice invoice = invoiceService.addInvoice(company,id);
+		List<CompanyArticle> companyArticles = new ArrayList<>();
+		Invoice invoice = invoiceService.addInvoice(company,clientId);
 		
 		for(CommandLineDto i : commandLinesDto) {
 			Article article = articleService.findByCompanyArticleId(i.getCompanyArticle());
+			CompanyArticle companyArticle = articleService.findCompanyArticleById(i.getCompanyArticle());
+			companyArticles.add(companyArticle);
 			articles.add(article);
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
@@ -84,27 +89,33 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		System.out.println("befor insert invoice in command line service");
 		invoiceService.insert(invoice);
 		System.out.println("after insert invoice in command line service");
-		inventoryService.impacteInvoice(company,commandLinesDto,articles);
+	//	articleService.impactInvoice(commandLinesDto,id,articles, companyArticles); //bay the articles for client
+		clientInvoiceService.addClientInvoiceService( clientId, company.getId(), invoice);
 		System.out.println("befor impact invoice in command line service");
-		articleService.impactInvoice(commandLinesDto,id,articles);
+		inventoryService.impacteInvoice(company,commandLinesDto,articles,companyArticles,clientId);
 		System.out.println("after impact invoice in command line service");
 	
 		if (type.equals("pdf-save-client") ) {	
 		
-			return invoiceService.export(company,commandLines,articles);
+			return invoiceService.export(company,commandLines,companyArticles);
 			
 		}
 		
 		return null;
 	}
 
-
-	public void deleteByInvoiceId(Long id) {
-		commandLineRepository.deleteByInvoiceId(id);
-		
+	public List<CommandLineDto> getCommandLines(Long invoiceId) {
+		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoiceId);
+		List<CommandLineDto> commandLinesDto = new ArrayList<>();
+		for(CommandLine i : commandLines) {
+			CommandLineDto commandLineDto = commandLineMapper.mapToDto(i);
+			commandLinesDto.add(commandLineDto);
+		}
+		return commandLinesDto;
 	}
 
-	public List<CommandLine> getCommandLineByInvoiceCode(Long code){
-		return commandLineRepository.findByInvoiceCode(code);
-	}
+
+
+
+
 }

@@ -2,36 +2,35 @@ package com.example.meta.store.werehouse.Controllers;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
-import com.example.meta.store.werehouse.Dtos.ClientDto;
+import com.example.meta.store.werehouse.Dtos.ClientInvoiceDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Services.ClientInvoiceService;
 import com.example.meta.store.werehouse.Services.ClientService;
 import com.example.meta.store.werehouse.Services.CompanyService;
+import com.example.meta.store.werehouse.Services.ProviderService;
 import com.example.meta.store.werehouse.Services.WorkerService;
 
 import lombok.RequiredArgsConstructor;
 
-@Validated
 @RestController
-@RequestMapping("/werehouse/client/")
+@RequestMapping("/werehouse/clientinvoice/")
 @RequiredArgsConstructor
-public class ClientController {
+public class ClientInvoiceController {
 
-	private final ClientService clientService;
+	private final ClientInvoiceService clientInvoiceService;
 	
 	private final JwtAuthenticationFilter authenticationFilter;
 	
@@ -41,51 +40,49 @@ public class ClientController {
 	
 	private final WorkerService workerService;
 	
-	@GetMapping("get_all_my")
-	public List<ClientDto> getAllMyClient(){
+	private final ClientService clientService;
+	
+	private final ProviderService providerService;
+	
+	private final Logger logger = LoggerFactory.getLogger(ClientInvoiceController.class);
+
+	@GetMapping("getnotaccepted")
+	public List<ClientInvoiceDto> getInvoiceNotifications(){
+		Client client = getMeAsClient();
+		Provider provider = getMeAsProvider();
+		return clientInvoiceService.getInvoiceNotifications(client, provider);
+	}
+	
+	@GetMapping("response/{type}/{invoice}")
+	public void statusInvoice(@PathVariable String type, @PathVariable Long invoice) {
+		Client client = getMeAsClient();
+		switch (type) {
+		case "ACCEPT": {
+			logger.warn(type);
+			clientInvoiceService.accepted(invoice,client.getId());
+			break;
+		}
+		case "REFUSE":{
+			logger.warn(type);
+			clientInvoiceService.refused(invoice,client.getId());
+			break;
+		}
+		
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + type);
+		}
+	}
+	
+	private Provider getMeAsProvider() {
 		Company company = getCompany();
-		return clientService.getAllMyClient(company);
+		return providerService.getMeAsProvider(company.getId());
 	}
 	
-	@GetMapping("get_all")
-	public List<ClientDto> getAllClient(){
-		Company company = getCompany();
-		return clientService.getAllClient(company);
-	}
-	
-	@GetMapping("add_exist/{id}")
-	public void addExistClient(@PathVariable Long id) {
-		clientService.addExistClient(id, getCompany());
-	}
-	
-	@PostMapping("add")
-	public void insertClient(@RequestBody ClientDto clientDto) {
-		Company company = getCompany();
-		clientService.insertClient(clientDto, company);
-	}
-	
-	@PutMapping("/update/{id}")
-	public void updateClient(@RequestBody ClientDto clientDto, @PathVariable Long id) {
-		Company company = getCompany();
-		clientService.upDateMyClientById(id, clientDto, company);
-	}
-	
-	@DeleteMapping("delete/{id}")
-	public void deleteById(@PathVariable Long id) {
-		Company company = getCompany();
-		clientService.deleteClientById(id, company);
-	}
-	
-	@GetMapping("get_my_client_id")
-	public Long getMyClientId() {
-		return getClient().getId();
-	}
-	private Client getClient() {
+	private Client getMeAsClient() {
 		Company company = getCompany();
 		Client client = clientService.getMeAsClient(company);
 		return client;
 	}
-	
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Company company = companyService.findCompanyIdByUserId(userId);
@@ -98,6 +95,6 @@ public class ClientController {
 		return company2.getBody();
 		}
 			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-		
+			
 	}
 }

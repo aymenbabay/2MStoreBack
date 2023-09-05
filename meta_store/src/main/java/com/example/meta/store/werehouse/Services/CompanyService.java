@@ -93,42 +93,45 @@ public class CompanyService extends BaseService<Company, Long> {
 	}
 
 	//contient un erreur
-	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Optional<Company> compan) throws JsonMappingException, JsonProcessingException {
+	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Optional<Company> compan)
+			throws JsonMappingException, JsonProcessingException {
+		
 		Company company = compan.get();
 		CompanyDto companyDto1 = objectMapper.readValue(companyDto, CompanyDto.class);
-		boolean existName = companyRepository.existsByName(companyDto1.getName());
-		if(!company.getName().equals(companyDto1.getName())  && existName
-				   && !company.getId().equals(companyDto1.getId())) {
-		System.out.println(companyDto1.getName().toString()+" com "+company.getName());
-			throw new RecordIsAlreadyExist("This Name Is Already Exist Please Choose Another One");
+		if(!company.getName().equals(companyDto1.getName()))
+		{
+			boolean existName = companyRepository.existsByName(companyDto1.getName());
+			if(existName) {				
+				throw new RecordIsAlreadyExist("This Name Is Already Exist Please Choose Another One");
+			}
+		}
 		
-		}
-		boolean existCode = companyRepository.existsByCode(companyDto1.getCode());
-		if(!company.getCode().equals(companyDto1.getCode()) && existCode 
-				   && !company.getId().equals(companyDto1.getId())
-		      ) {
+		if(!company.getCode().equals(companyDto1.getCode()) ) {
+			boolean existCode = companyRepository.existsByCode(companyDto1.getCode());
+			if(existCode) {				
 			throw new RecordIsAlreadyExist("this code is already exist please choose another one");
+			}
 		}
-		boolean existCodeCP = companyRepository.existsByCodecp(companyDto1.getCodecp());
-		if(!company.getCodecp().equals(companyDto1.getCodecp()) && existCodeCP
-				   && !company.getId().equals(companyDto1.getId())) {
-
+		if(!company.getCodecp().equals(companyDto1.getCodecp())) {
+			boolean existCodeCP = companyRepository.existsByCodecp(companyDto1.getCodecp());
+			if(existCodeCP) {				
 			throw new RecordIsAlreadyExist("this codecp is already exist please choose another one");
+			}
 		}
-		boolean existMatfisc = companyRepository.existsByMatfisc(companyDto1.getMatfisc());
-		if(!company.getCodecp().equals(companyDto1.getCodecp()) && existMatfisc
-				   && !company.getId().equals(companyDto1.getId())) {
-
+		if(!company.getCodecp().equals(companyDto1.getCodecp())) {
+			boolean existMatfisc = companyRepository.existsByMatfisc(companyDto1.getMatfisc());
+			if(existMatfisc) {				
 			throw new RecordIsAlreadyExist("this matricule fiscale is already exist please choose another one");
+			}
 		}
-		company = companyMapper.mapToEntity(companyDto1);
+		 Company updatedCompany = companyMapper.mapToEntity(companyDto1);
 		if (file != null) {
 
 			String newFileName = imageService.insertImag(file, company.getUser().getUsername(), "company");
-			company.setLogo(newFileName);
+			updatedCompany.setLogo(newFileName);
 		}
-		company.setPhone("97 896 547");
-		companyRepository.save(company);
+		updatedCompany.setPhone("97 896 547");
+		compan = Optional.of(companyRepository.save(updatedCompany));
 		return ResponseEntity.ok(companyDto1);
 		
 	
@@ -191,15 +194,6 @@ public class CompanyService extends BaseService<Company, Long> {
 	}
 
 	
-
-//	public boolean findByBankaccountnumber(String bankaccountnumber,Long id) {
-//		Optional<Company> company = companyRepository.findByBankaccountnumber(bankaccountnumber);
-//		if(company.isPresent() && ) {
-//			throw new RecordIsAlreadyExist("this account number is related with another provider "+ company.get().getName());
-//			}
-//		return false; 
-//	}
-
 
 
 }

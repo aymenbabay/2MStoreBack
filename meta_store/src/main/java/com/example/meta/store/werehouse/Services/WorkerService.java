@@ -135,7 +135,7 @@ public class WorkerService extends BaseService<Worker, Long> {
 		if(worker.isEmpty()) {
 			throw new RecordNotFoundException("This Worker Does Not Exist");
 		}
-	 super.deleteById(id,company.getId());
+	 super.deleteById(id);
 	}
 
 	public void addVacation(VacationDto vacationDto, Company company) {
