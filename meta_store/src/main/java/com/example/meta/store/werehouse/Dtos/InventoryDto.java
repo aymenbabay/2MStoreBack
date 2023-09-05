@@ -3,8 +3,8 @@ package com.example.meta.store.werehouse.Dtos;
 import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseDto;
+import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.CompanyArticle;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +33,6 @@ public class InventoryDto extends BaseDto<Long> implements Serializable {
 	
 	private Company company;
 	
-	private CompanyArticle companyArticle;
+	private Article article;
 	
 }

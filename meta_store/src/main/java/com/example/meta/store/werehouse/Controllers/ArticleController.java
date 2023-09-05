@@ -19,7 +19,6 @@ import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
 import com.example.meta.store.werehouse.Dtos.ArticleDto;
-import com.example.meta.store.werehouse.Dtos.CompanyArticleDto;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Services.ArticleService;
@@ -66,7 +65,7 @@ public class ArticleController {
 	
 	
 	@GetMapping("getAllMyArticle")
-	public List<CompanyArticleDto> getAllMyArticle() {
+	public List<ArticleDto> getAllMyArticle() {
 		Provider provider = getProvider();
 		return articleService.getAllProvidersArticleByProviderId(provider);
 	}
@@ -79,9 +78,10 @@ public class ArticleController {
 		return articleService.upDateArticle(file,article, provider);
 	}
 	
-	@PutMapping("updatecompanyarticle")
-	public void upDateCompanyArticle(@RequestBody CompanyArticleDto companyArticleDto) {		
-		articleService.upDateCompanyArticle(companyArticleDto);
+	@PutMapping("updatearticle")
+	public void upDateArticle(@RequestBody ArticleDto articleDto) {		
+		Provider provider = getProvider();
+		articleService.upDateArticle(articleDto, provider);
 	}
 	
 
@@ -103,8 +103,8 @@ public class ArticleController {
 	
 	@DeleteMapping("delete/{id}")
 	public ResponseEntity<String> deleteArticleById(@PathVariable Long id){
-		Long companyId = getCompany().getId();
-		return articleService.deleteByCompanyArticleId(id,companyId);
+		Provider provider = getProvider();
+		return articleService.deleteByCompanyArticleId(id,provider);
 	}
 	
 	private Company getCompany() {

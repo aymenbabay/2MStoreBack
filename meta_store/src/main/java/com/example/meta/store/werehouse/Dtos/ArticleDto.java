@@ -41,6 +41,7 @@ public class ArticleDto extends BaseDto<Long> implements Serializable {
 	
 	private Double minQuantity;
 	
+	private String sharedPoint;
 	
 	private Double margin;
 	

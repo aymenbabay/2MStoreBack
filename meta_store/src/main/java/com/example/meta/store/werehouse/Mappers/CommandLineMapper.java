@@ -10,22 +10,22 @@ import com.example.meta.store.werehouse.Entities.CommandLine;
 public interface CommandLineMapper {
 
 
-    @Mapping(source = "companyArticle", target = "companyArticle.id")
-    @Mapping(source = "articleTva", target = "companyArticle.article.tva")
-    @Mapping(source = "articleCost", target = "companyArticle.cost")
-    @Mapping(source = "articleLibelle", target = "companyArticle.article.libelle")
-    @Mapping(source = "articleMargin", target = "companyArticle.margin")
-    @Mapping(source = "articleCode", target = "companyArticle.article.code")
-    @Mapping(source = "articleUnit", target = "companyArticle.article.unit")
+    @Mapping(source = "article", target = "article.id")
+    @Mapping(source = "articleTva", target = "article.tva")
+    @Mapping(source = "articleCost", target = "article.cost")
+    @Mapping(source = "articleLibelle", target = "article.libelle")
+    @Mapping(source = "articleMargin", target = "article.margin")
+    @Mapping(source = "articleCode", target = "article.code")
+    @Mapping(source = "articleUnit", target = "article.unit")
 	CommandLine mapToEntity(CommandLineDto dto);
 	
 
-   @Mapping(source = "companyArticle.id", target = "companyArticle")
-   @Mapping(source = "companyArticle.article.tva", target = "articleTva")
-   @Mapping(source = "companyArticle.cost", target = "articleCost")
-   @Mapping(source = "companyArticle.article.libelle", target = "articleLibelle")
-   @Mapping(source = "companyArticle.margin", target = "articleMargin")
-   @Mapping(source = "companyArticle.article.code", target = "articleCode")
-   @Mapping(source = "companyArticle.article.unit", target = "articleUnit")
+   @Mapping(source = "article.id", target = "article")
+   @Mapping(source = "article.tva", target = "articleTva")
+   @Mapping(source = "article.cost", target = "articleCost")
+   @Mapping(source = "article.libelle", target = "articleLibelle")
+   @Mapping(source = "article.margin", target = "articleMargin")
+   @Mapping(source = "article.code", target = "articleCode")
+   @Mapping(source = "article.unit", target = "articleUnit")
 	CommandLineDto mapToDto(CommandLine entity);
 }

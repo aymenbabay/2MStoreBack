@@ -21,6 +21,9 @@ public interface ArticleRepository extends BaseRepository<Article, Long>{
 	List<Article> findAllByProviderId(Long providerId);
 
 
+	Optional<Article> findBySharedPointAndProviderId(String sharedPoint, Long id);
+
+
 
 
 }

@@ -4,19 +4,21 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
+import com.example.meta.store.werehouse.Controllers.ClientInvoiceController;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
 import com.example.meta.store.werehouse.Dtos.InvoiceDto;
 import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.ClientInvoice;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.CompanyArticle;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Mappers.CommandLineMapper;
 import com.example.meta.store.werehouse.Mappers.InvoiceMapper;
@@ -42,27 +44,27 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	private final CommandLineRepository commandLineRepository;
 	
 	private final ClientInvoiceService clientInvoiceService;
-	
+
+	private final Logger logger = LoggerFactory.getLogger(ClientInvoiceController.class);
 
     DecimalFormat df = new DecimalFormat("#.###");
 
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
 			Long clientId, String type) {
+		logger.warn("the first line in insert line method ");
 		List<CommandLine> commandLines = new ArrayList<>();
 		List<Article> articles = new ArrayList<>();
-		List<CompanyArticle> companyArticles = new ArrayList<>();
 		Invoice invoice = invoiceService.addInvoice(company,clientId);
+		logger.warn("just after add invoice in insert line method ");
 		
 		for(CommandLineDto i : commandLinesDto) {
-			Article article = articleService.findByCompanyArticleId(i.getCompanyArticle());
-			CompanyArticle companyArticle = articleService.findCompanyArticleById(i.getCompanyArticle());
-			companyArticles.add(companyArticle);
+			logger.warn("the first line in for loop in insert line method ");
+			Article article = articleService.findById(i.getArticle());	
+			logger.warn("just after find by id article in insert line method ");
 			articles.add(article);
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
 			}
-			article.setQuantity(article.getQuantity()-i.getQuantity());
-			articleService.insert(article);
 		CommandLine commandLine = commandLineMapper.mapToEntity(i);
 		commandLine.setInvoice(invoice);
 		String prix_article_tot = df.format(i.getQuantity()*article.getCost()*article.getMargin());
@@ -92,12 +94,12 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	//	articleService.impactInvoice(commandLinesDto,id,articles, companyArticles); //bay the articles for client
 		clientInvoiceService.addClientInvoiceService( clientId, company.getId(), invoice);
 		System.out.println("befor impact invoice in command line service");
-		inventoryService.impacteInvoice(company,commandLinesDto,articles,companyArticles,clientId);
+		inventoryService.impacteInvoice(company,commandLinesDto,articles,clientId);
 		System.out.println("after impact invoice in command line service");
 	
 		if (type.equals("pdf-save-client") ) {	
 		
-			return invoiceService.export(company,commandLines,companyArticles);
+			return invoiceService.export(company,commandLines,articles);
 			
 		}
 		

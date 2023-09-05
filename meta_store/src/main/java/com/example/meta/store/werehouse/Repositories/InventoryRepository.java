@@ -12,8 +12,8 @@ public interface InventoryRepository extends BaseRepository<Inventory, Long>{
 
 	List<Inventory> findByCompanyId(Long companyId);
 
-	@Query("SELECT I FROM Inventory I WHERE I.companyArticle.id = :companyArticle AND I.company.id = :id")
-	Optional<Inventory> findByCompanyarticleIdAndCompanyId(Long companyArticle, Long id);
+	@Query("SELECT I FROM Inventory I WHERE I.article.id = :companyArticle AND I.company.id = :id")
+	Optional<Inventory> findByArticleIdAndCompanyId(Long companyArticle, Long id);
 
 	
 	//void deleteByCompanyarticleid(Long companyarticleId);

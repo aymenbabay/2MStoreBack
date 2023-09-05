@@ -36,7 +36,6 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	private String libelle;
 	
 	@NotBlank(message = "Code Field Must Not Be Empty")
-	@Column(unique = true)
 	private String code;
 
 	private String unit;
@@ -58,6 +57,8 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	private String barcode;
 	
 	private Double tva;
+	
+	private String sharedPoint;
 	
 	@ManyToOne(optional = true,fetch=FetchType.EAGER)
 	@JoinColumn(name = "categoryId")

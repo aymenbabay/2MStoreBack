@@ -8,7 +8,6 @@ import com.example.meta.store.Base.Entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -48,7 +47,7 @@ public class Inventory extends BaseEntity<Long> implements Serializable{
 	private Company company;
 	
 	@ManyToOne()
-	@JoinColumn(name = "companyarticleId", referencedColumnName = "id")
-	private CompanyArticle companyArticle;
+	@JoinColumn(name = "articleId", referencedColumnName = "id")
+	private Article article;
 	
 }

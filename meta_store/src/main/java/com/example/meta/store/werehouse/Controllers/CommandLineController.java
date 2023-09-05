@@ -52,10 +52,13 @@ public class CommandLineController {
 
 	private final WorkerService workerService;
 	
+
+	private final Logger logger = LoggerFactory.getLogger(ClientInvoiceController.class);
+	
 	@PostMapping("{type}/{invoicecode}/{clientid}")
 	public ResponseEntity<InputStreamResource> addCommandLine(@RequestBody  List<CommandLineDto> commandLinesDto,
 			@PathVariable Long invoicecode, @PathVariable String type, @PathVariable Long clientid) throws JsonProcessingException {
-	
+	logger.warn(type+" "+ clientid+" " +invoicecode);
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Company company = companyService.findCompanyIdByUserId(userId);
 		return commandLineService.insertLine(commandLinesDto, company,clientid,type);

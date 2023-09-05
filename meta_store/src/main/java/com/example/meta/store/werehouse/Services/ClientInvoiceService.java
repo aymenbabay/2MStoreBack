@@ -74,12 +74,7 @@ public class ClientInvoiceService extends BaseService<ClientInvoice, Long>{
 		Optional<ClientInvoice> ci = clientInvoiceRepository.findByInvoiceCode(invoiceCode,clientId);
 		ClientInvoice clientInvoice = ci.get();
 		List<CommandLine> commandLines = commandLineRepository.findByInvoiceId(clientInvoice.getInvoice().getId());
-		List<Article> articles = new ArrayList<>();
-		for(CommandLine i : commandLines) {
-			Article article = articleService.findByCompanyArticleId(i.getCompanyArticle().getId());
-			articles.add(article);
-		}
-		articleService.impactInvoice(commandLines, clientId, articles);
+		articleService.impactInvoice(commandLines, clientId);
 		clientInvoice.setIsAccepted(InvoiceStatus.ACCEPTED);
 		clientInvoiceRepository.save(clientInvoice);
 	}

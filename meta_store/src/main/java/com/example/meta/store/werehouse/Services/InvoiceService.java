@@ -20,7 +20,6 @@ import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.CompanyArticle;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Mappers.CommandLineMapper;
 import com.example.meta.store.werehouse.Mappers.InvoiceMapper;
@@ -198,7 +197,7 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 
 	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines,
-			List<CompanyArticle> articles) {
+			List<Article> articles) {
 		
 
 		Optional<Invoice> invoice = invoiceRepository.lastInvoice(company.getId());

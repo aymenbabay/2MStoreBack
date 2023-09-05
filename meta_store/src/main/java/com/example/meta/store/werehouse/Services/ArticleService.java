@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,23 +18,20 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
+import com.example.meta.store.werehouse.Controllers.ClientInvoiceController;
 import com.example.meta.store.werehouse.Dtos.ArticleDto;
 import com.example.meta.store.werehouse.Dtos.ArticleUpdateDto;
 import com.example.meta.store.werehouse.Dtos.CategoryDto;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
-import com.example.meta.store.werehouse.Dtos.CompanyArticleDto;
 import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.Category;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.CompanyArticle;
 import com.example.meta.store.werehouse.Entities.Inventory;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.SubCategory;
 import com.example.meta.store.werehouse.Mappers.ArticleMapper;
-import com.example.meta.store.werehouse.Mappers.CompanyArticleMapper;
 import com.example.meta.store.werehouse.Repositories.ArticleRepository;
-import com.example.meta.store.werehouse.Repositories.CompanyArticleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,13 +45,9 @@ import lombok.RequiredArgsConstructor;
 public class ArticleService extends BaseService<Article, Long>{
 
 	private final ArticleRepository articleRepository;
-	
-	private final CompanyArticleRepository companyArticleRepository;
-	
+		
 	private final ArticleMapper articleMapper; 
-	
-	private final CompanyArticleMapper companyArticleMapper;
-	
+		
 	private final InventoryService inventoryService;
 
 	private final ImageService imageService;
@@ -63,7 +58,11 @@ public class ArticleService extends BaseService<Article, Long>{
 	
 	private final CompanyService companyService;
 	
+	private final ProviderService providerService;
+	
 	private final ObjectMapper objectMapper;
+
+	private final Logger logger = LoggerFactory.getLogger(ClientInvoiceController.class);
 	
     DecimalFormat df = new DecimalFormat("#.###");
 	
@@ -78,34 +77,26 @@ public class ArticleService extends BaseService<Article, Long>{
 		if(article1.getProvider() == null) {
 			article1.setProvider(provider);
 		}
-		CompanyArticle companyArticle = new CompanyArticle();
 		if(articleDto.getCategory()==null) {
 			Category category = categoryService.getDefaultCategory(provider.getCompany());
-			article1.setCategory(category);
-			companyArticle.setCategory(category);			
+			article1.setCategory(category);		
 		}
 		if(articleDto.getSubCategory()==null) {
 			SubCategory subCategory = subCategoryService.getDefaultSubCategory(provider.getCompany());
 			article1.setSubCategory(subCategory);
-			companyArticle.setSubCategory(subCategory);
 		}
 		super.insert(article1);
-		companyArticle.setArticle(article1);
-		companyArticle.setCost(article1.getCost());
-		companyArticle.setCompany(provider.getCompany());
-		companyArticle.setQuantity(article1.getQuantity());
-		companyArticle.setMinQuantity(article1.getMinQuantity());
-		companyArticle.setMargin(article1.getMargin());
-		companyArticleRepository.save(companyArticle);
-		inventoryService.makeInventory(companyArticle, provider.getCompany());
+		article1.setSharedPoint(article1.getCreatedBy());
+		
+		inventoryService.makeInventory(article1, provider.getCompany());
 		return ResponseEntity.ok(articleDto);
 	}
 	
-	public List<CompanyArticleDto> getAllProvidersArticleByProviderId(Provider provider) {
-		List<CompanyArticleDto> articlesDto = new ArrayList<CompanyArticleDto>();
-		List<CompanyArticle> articles = companyArticleRepository.findByCompanyId(provider.getCompany().getId());
-		for(CompanyArticle i : articles) {
-			CompanyArticleDto articleDto = companyArticleMapper.mapToDto(i);
+	public List<ArticleDto> getAllProvidersArticleByProviderId(Provider provider) {
+		List<ArticleDto> articlesDto = new ArrayList<ArticleDto>();
+		List<Article> articles = articleRepository.findAllByProviderId(provider.getId());
+		for(Article i : articles) {
+			ArticleDto articleDto = articleMapper.mapToDto(i);
 			articlesDto.add(articleDto);
 		}
 		return articlesDto;
@@ -134,33 +125,27 @@ public class ArticleService extends BaseService<Article, Long>{
 			updatedArticle.setProvider(provider);
 		}
 		article1 = Optional.of(articleRepository.save(updatedArticle));
-		Optional<CompanyArticle> companyArticle = companyArticleRepository.findByArticleIdAndCompanyId(articleDto.getId(),provider.getCompany().getId());
-		CompanyArticle updatedCompanyArticle = companyArticleMapper.mapToCompanyArticle(articleDto);
-		updatedCompanyArticle.setArticle(article1.get());
-		updatedCompanyArticle.setCompany(provider.getCompany());
-		companyArticle = Optional.of(companyArticleRepository.save(updatedCompanyArticle));
 		return null;
 		}
 
-	public void upDateCompanyArticle(CompanyArticleDto companyArticleDto) {
-		Optional<CompanyArticle> companyArticleOptional = companyArticleRepository.findById(companyArticleDto.getId());
-		if(companyArticleOptional == null) {
-			throw new RecordNotFoundException("there is no article with id : "+companyArticleDto.getId());
+	public void upDateArticle(ArticleDto articleDto, Provider provider) {
+		Optional<Article> articleOptional = articleRepository.findById(articleDto.getId());
+		if(articleOptional == null) {
+			throw new RecordNotFoundException("there is no article with id : "+articleDto.getId());
 		}
-		CompanyArticle companyArticle = companyArticleMapper.mapToEntity(companyArticleDto);
-		companyArticle.setArticle(companyArticleOptional.get().getArticle());
-		companyArticle.setCompany(companyArticleOptional.get().getCompany());
-		companyArticleOptional = Optional.of(companyArticleRepository.save(companyArticle));
+		Article article = articleMapper.mapToEntity(articleDto);
+		article.setProvider(provider);
+		articleOptional = Optional.of(articleRepository.save(article));
 	}
 	
 	
 	public void addQuantity(Long id, Long quantity, Provider provider) {
-		Optional<CompanyArticle> article = companyArticleRepository.findById(id);
+		Optional<Article> article = articleRepository.findById(id);
 		if(article.isEmpty()) {
 			throw new RecordNotFoundException("there is no article with id: "+id);
 		}
 		article.get().setQuantity(article.get().getQuantity()+quantity);
-		companyArticleRepository.save(article.get());
+		articleRepository.save(article.get());
 		inventoryService.addQuantity(article.get(),quantity, provider.getCompany());
 
 	}
@@ -192,67 +177,85 @@ public class ArticleService extends BaseService<Article, Long>{
 			return articlesDto;
 	}
 	
-	public ResponseEntity<String> deleteByCompanyArticleId(Long companyArticleId, Long companyId) {
-		Optional<CompanyArticle> companyArticle = companyArticleRepository.findById(companyArticleId);
-			if(companyArticle.isEmpty()) {
+	public ResponseEntity<String> deleteByCompanyArticleId(Long articleId, Provider provider) {
+		Optional<Article> article = articleRepository.findById(articleId);
+			if(article.isEmpty()) {
 				throw new RecordNotFoundException("This Article Does Not Exist");
 			}
-			CompanyArticle companyarticle = companyArticle.get();			
-			if(companyarticle.getCompany().getId() == companyId) {
-				Inventory inventory = inventoryService.findByCompanyArticleIdAndCompanyId(companyArticleId, companyId);
-				companyarticle.setArticle(null);
+			Article art = article.get();			
+			if(art.getProvider().getId() == provider.getId() ||
+					art.getProvider().isVirtual() == true &&
+					art.getProvider().getCompany() == provider.getCompany() ) {
+				Inventory inventory = inventoryService.findByArticleIdAndCompanyId(articleId, provider.getCompany().getId());
 				if(inventory.getOut_quantity() == 0) {
-				inventory.setCompanyArticle(null);	
+				inventory.setArticle(null);	
 				inventoryService.deleteById(inventory.getId());
+				articleRepository.deleteById(articleId);
 				}
-				companyArticleRepository.deleteById(companyArticleId);
+				else {
+					art.setProvider(null);
+					articleRepository.save(art);
+				}
 			}
 			return ResponseEntity.ok("successfuly deleted");
 	}
 
-	public Article findByCompanyArticleId(Long articleId) {
-		Optional<CompanyArticle>  article = companyArticleRepository.findById(articleId);
-		return article.get().getArticle();
-	}
-	public CompanyArticle findCompanyArticleById(Long companyArticleId) {
-		Optional<CompanyArticle> companyArticle = companyArticleRepository.findById(companyArticleId);
-		return companyArticle.get();
+	public Article findById(Long articleId) {
+		Optional<Article>  article = articleRepository.findById(articleId);
+		return article.get();
 	}
 
+
 	//by the article to client , List<CompanyArticle> companyArticles
-	public void impactInvoice(List<CommandLine> commandLines, Long clientId, List<Article> articles) {
+	public void impactInvoice(List<CommandLine> commandLines, Long clientId) {
 		Company company = companyService.findByClientId(clientId);
 		Category category = categoryService.getDefaultCategory(company);
 		SubCategory subCategory = subCategoryService.getDefaultSubCategory(company);
+		Provider provider = providerService.getMeAsProvider(company.getId());
 		System.out.println("before for loop in article service inpact invoice");
-		CompanyArticle article;
+		Article article;
+		//the code below convey that i add article to client table
 		for(int i =0; i < commandLines.size();i++) {
 			System.out.println("in for loop before optional of companyarticle in article service inpact invoice");
-			Optional<CompanyArticle> companyarticle = companyArticleRepository.findByArticleIdAndCompanyId(articles.get(i).getId(),company.getId());
+			Optional<Article> art = articleRepository.findBySharedPointAndProviderId(commandLines.get(i).getArticle().getSharedPoint(), provider.getId());
 			System.out.println("in for loop after optional of companyarticle in article service inpact invoice");
-			String articleCost = df.format(articles.get(i).getCost() + (articles.get(i).getCost()*articles.get(i).getTva()+ articles.get(i).getCost()*articles.get(i).getMargin())/100);
-			if(companyarticle.isPresent()) {
+			String articleCost = df.format(commandLines.get(i).getArticle().getCost() + (commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getTva()+ commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getMargin())/100);
+			articleCost = articleCost.replace(",", ".");
+			double qte  ;
+			if(art.isPresent()) {
 				System.out.println("in if loop in article service inpact invoice");
-				 article = companyarticle.get();
-				article.setQuantity(commandLines.get(i).getQuantity()+article.getQuantity());
-				//if the provider has augmented the article price
+				 article = art.get();
+				 qte= (commandLines.get(i).getQuantity()+article.getQuantity());
+				 logger.warn(articleCost+" article cost "+article.getQuantity()+" article quantity "+qte +" qte");
+				article.setQuantity(qte);
+				//do not remove the above line in case of the provider has augmented the article price
 				article.setCost(Double.parseDouble(articleCost));	
 			}else {				
 				System.out.println("in the else loop in article service inpact invoice");
-				 article = new CompanyArticle();
-				 article.setCompany(company);
-				 article.setQuantity(commandLines.get(i).getQuantity());
+				Article ar = commandLines.get(i).getArticle();
+				qte = commandLines.get(i).getQuantity();
+				 article = new Article();
+				 article.setLibelle(ar.getLibelle());
+				 article.setCode(ar.getCode());
+				 article.setUnit(ar.getUnit());
+				 article.setDiscription(ar.getDiscription());
+				 article.setMinQuantity(ar.getMinQuantity());
+				 article.setBarcode(ar.getBarcode());
+				 article.setTva(ar.getTva());
+				 article.setImage(ar.getImage());
+				 article.setProvider(provider);
+				 article.setQuantity(qte);
 				 article.setMargin(company.getMargin());
-				 article.setArticle(articles.get(i));
 			article.setCategory(category);
 			article.setSubCategory(subCategory);
 			article.setCost(Double.parseDouble(articleCost));
-			companyArticleRepository.save(article);
+			article.setSharedPoint(commandLines.get(i).getArticle().getSharedPoint());
+			articleRepository.save(article);
 			}
-			inventoryService.impactInvoiceOnClient(company,article,Double.parseDouble(articleCost));
-			Optional<CompanyArticle> companyArt = companyArticleRepository.findById(commandLines.get(i).getCompanyArticle().getId());
-			CompanyArticle art = companyArt.get();
-			art.setQuantity(art.getQuantity()-commandLines.get(i).getQuantity());
+			inventoryService.impactInvoiceOnClient(company,article,Double.parseDouble(articleCost),qte);
+			Optional<Article> companyArt = articleRepository.findById(commandLines.get(i).getArticle().getId());
+			Article artt = companyArt.get();
+			artt.setQuantity(artt.getQuantity()-commandLines.get(i).getQuantity());
 			
 		}
 		
