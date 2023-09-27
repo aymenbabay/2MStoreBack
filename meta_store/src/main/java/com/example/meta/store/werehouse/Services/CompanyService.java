@@ -182,9 +182,9 @@ public class CompanyService extends BaseService<Company, Long> {
 		throw new RecordNotFoundException("There Is No Company");
 	}
 
-	public Company findCompanyIdByUserId(Long userId) {
+	public Optional<Company> findCompanyIdByUserId(Long userId) {
 		Optional<Company> company = companyRepository.findByUserId(userId);
-		return company.get();
+		return company;
 	}
 
 	public Company findByClientId(Long clientId) {

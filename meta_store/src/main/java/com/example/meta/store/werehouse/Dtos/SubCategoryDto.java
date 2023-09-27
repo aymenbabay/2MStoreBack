@@ -22,7 +22,7 @@ public class SubCategoryDto extends BaseDto<Long> implements Serializable{
 	
 	private String image;
 	
-	private Category category;
+	private CategoryDto category;
 	
-	private Company company;
+	private CompanyDto company;
 }

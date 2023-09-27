@@ -35,7 +35,7 @@ public class CommandLine extends BaseEntity<Long> implements Serializable{
 	@JoinColumn(name = "invoiceId")
 	private Invoice invoice;
 	
-	@ManyToOne(fetch=FetchType.EAGER)
+	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name = "articleId")
 	private Article article;
 }

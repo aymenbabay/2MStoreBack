@@ -20,19 +20,15 @@ public class InventoryDto extends BaseDto<Long> implements Serializable {
 	private Double out_quantity;
 	
 	private Double in_quantity; 
-	
-	private String libelle_article;
-	
-	private String articleCode;
-	
+		
 	private String bestClient;
 	
 	private Double articleCost;
 	
 	private Double articleSelling;
 	
-	private Company company;
+	private CompanyDto company;
 	
-	private Article article;
+	private ArticleDto article;
 	
 }

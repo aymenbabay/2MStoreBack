@@ -2,34 +2,27 @@ package com.example.meta.store.werehouse.Services;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
-import com.example.meta.store.werehouse.Controllers.ClientInvoiceController;
 import com.example.meta.store.werehouse.Dtos.ArticleDto;
-import com.example.meta.store.werehouse.Dtos.ArticleUpdateDto;
-import com.example.meta.store.werehouse.Dtos.CategoryDto;
-import com.example.meta.store.werehouse.Dtos.CommandLineDto;
 import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.Category;
+import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Inventory;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.SubCategory;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Mappers.ArticleMapper;
 import com.example.meta.store.werehouse.Repositories.ArticleRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -62,7 +55,7 @@ public class ArticleService extends BaseService<Article, Long>{
 	
 	private final ObjectMapper objectMapper;
 
-	private final Logger logger = LoggerFactory.getLogger(ClientInvoiceController.class);
+	private final Logger logger = LoggerFactory.getLogger(ArticleService.class);
 	
     DecimalFormat df = new DecimalFormat("#.###");
 	
@@ -87,14 +80,15 @@ public class ArticleService extends BaseService<Article, Long>{
 		}
 		super.insert(article1);
 		article1.setSharedPoint(article1.getCreatedBy());
-		
+		article1.setIsVisible(PrivacySetting.PUBLIC);
+		article1.setCompany(provider.getCompany());
 		inventoryService.makeInventory(article1, provider.getCompany());
 		return ResponseEntity.ok(articleDto);
 	}
 	
 	public List<ArticleDto> getAllProvidersArticleByProviderId(Provider provider) {
 		List<ArticleDto> articlesDto = new ArrayList<ArticleDto>();
-		List<Article> articles = articleRepository.findAllByProviderId(provider.getId());
+		List<Article> articles = articleRepository.findAllByCompanyId(provider.getCompany().getId());
 		for(Article i : articles) {
 			ArticleDto articleDto = articleMapper.mapToDto(i);
 			articlesDto.add(articleDto);
@@ -104,11 +98,13 @@ public class ArticleService extends BaseService<Article, Long>{
 
 	public ResponseEntity<ArticleDto> upDateArticle( MultipartFile file, String article, Provider provider) 
 			throws JsonMappingException, JsonProcessingException {
-		ArticleUpdateDto articleDto = objectMapper.readValue(article, ArticleUpdateDto.class);
-		Article updatedArticle = articleMapper.mapToArticle(articleDto);
+		logger.warn("update article in article service "+article);
+		ArticleDto articleDto = objectMapper.readValue(article, ArticleDto.class);
+		Article updatedArticle = articleMapper.mapToEntity(articleDto);
 		Optional<Article> article1;
-			 article1 = articleRepository.findById(articleDto.getId());	
-			 if(!article1.get().getProvider().equals(provider)) {
+		
+		article1 = articleRepository.findById(articleDto.getId());	
+			 if(!article1.get().getCompany().equals(provider.getCompany())) {
 				 return null;
 			 }
 		
@@ -117,6 +113,7 @@ public class ArticleService extends BaseService<Article, Long>{
 		}
 		if(file == null) {
 			updatedArticle.setImage(article1.get().getImage());
+			updatedArticle.setSharedPoint(article1.get().getSharedPoint());
 		}else {
 			String newFileName = imageService.insertImag(file,provider.getCompany().getUser().getUsername(), "article");
 			updatedArticle.setImage(newFileName);
@@ -124,22 +121,19 @@ public class ArticleService extends BaseService<Article, Long>{
 		if(updatedArticle.getProvider() == null) {
 			updatedArticle.setProvider(provider);
 		}
+		if(updatedArticle.getQuantity() != article1.get().getQuantity()) {
+			addQuantity(article1.get().getId(), updatedArticle.getQuantity()-article1.get().getQuantity(), provider);
+		}
+		
+		updatedArticle.setCompany(provider.getCompany());
+		updatedArticle.setIsVisible(article1.get().getIsVisible());
 		article1 = Optional.of(articleRepository.save(updatedArticle));
 		return null;
 		}
 
-	public void upDateArticle(ArticleDto articleDto, Provider provider) {
-		Optional<Article> articleOptional = articleRepository.findById(articleDto.getId());
-		if(articleOptional == null) {
-			throw new RecordNotFoundException("there is no article with id : "+articleDto.getId());
-		}
-		Article article = articleMapper.mapToEntity(articleDto);
-		article.setProvider(provider);
-		articleOptional = Optional.of(articleRepository.save(article));
-	}
 	
 	
-	public void addQuantity(Long id, Long quantity, Provider provider) {
+	public void addQuantity(Long id, Double quantity, Provider provider) {
 		Optional<Article> article = articleRepository.findById(id);
 		if(article.isEmpty()) {
 			throw new RecordNotFoundException("there is no article with id: "+id);
@@ -150,22 +144,31 @@ public class ArticleService extends BaseService<Article, Long>{
 
 	}
 	
-	public List<ArticleDto> getAllArticleByProviderId(Provider provider) {
-		List<Article> articles = articleRepository.findAllByProviderId(provider.getId());
-		if(articles.isEmpty()) {
-			throw new RecordNotFoundException("there is no article");
-		}
-		List<ArticleDto> articlesDto = new ArrayList<>();
-		for(Article i : articles) {
-			ArticleDto articleDto = articleMapper.mapToDto(i);
-			articlesDto.add(articleDto);
-		}
-		return articlesDto;
-	}
+//	public List<ArticleDto> getAllArticleByProviderId(Provider provider) {
+//		List<Article> articles = articleRepository.findAllByCompanyId(provider.getCompany().getId());
+//		if(articles.isEmpty()) {
+//			throw new RecordNotFoundException("there is no article");
+//		}
+//		List<ArticleDto> articlesDto = new ArrayList<>();
+//		for(Article i : articles) {
+//			ArticleDto articleDto = articleMapper.mapToDto(i);
+//			articlesDto.add(articleDto);
+//		}
+//		return articlesDto;
+//	}
 	
-	public List<ArticleDto> getdgdgeg() {
-		List<Article> article = articleRepository.findRandomArticles(51.122,51.125);
-		if(article== null) {
+	public List<ArticleDto> findRandomArticlesPub(Client client, Provider provider) {
+		logger.warn("random article in article service just before the list ");
+		List<Article> article = new ArrayList<>();
+		if(client == null) {			
+		 article = articleRepository.findRandomArticles(51.122,51.125,PrivacySetting.PUBLIC);
+		}
+		else {
+			article = articleRepository.findRandomArticlesPro(51.122,51.125,provider.getId(),client.getId(),PrivacySetting.PUBLIC,PrivacySetting.CLIENT);
+			logger.warn("random article in article service just after the list"+article.get(0).getCode());
+		}
+		
+		if(article.isEmpty()) {
 			throw new RecordNotFoundException("No Article");
 		}
 			List<ArticleDto> articlesDto = new ArrayList<>();
@@ -176,6 +179,7 @@ public class ArticleService extends BaseService<Article, Long>{
 	}
 			return articlesDto;
 	}
+	
 	
 	public ResponseEntity<String> deleteByCompanyArticleId(Long articleId, Provider provider) {
 		Optional<Article> article = articleRepository.findById(articleId);
@@ -211,13 +215,13 @@ public class ArticleService extends BaseService<Article, Long>{
 		Company company = companyService.findByClientId(clientId);
 		Category category = categoryService.getDefaultCategory(company);
 		SubCategory subCategory = subCategoryService.getDefaultSubCategory(company);
-		Provider provider = providerService.getMeAsProvider(company.getId());
+		Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
 		System.out.println("before for loop in article service inpact invoice");
 		Article article;
 		//the code below convey that i add article to client table
 		for(int i =0; i < commandLines.size();i++) {
 			System.out.println("in for loop before optional of companyarticle in article service inpact invoice");
-			Optional<Article> art = articleRepository.findBySharedPointAndProviderId(commandLines.get(i).getArticle().getSharedPoint(), provider.getId());
+			Optional<Article> art = articleRepository.findBySharedPointAndProviderId(commandLines.get(i).getArticle().getSharedPoint(), provider.get().getId());
 			System.out.println("in for loop after optional of companyarticle in article service inpact invoice");
 			String articleCost = df.format(commandLines.get(i).getArticle().getCost() + (commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getTva()+ commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getMargin())/100);
 			articleCost = articleCost.replace(",", ".");
@@ -243,7 +247,7 @@ public class ArticleService extends BaseService<Article, Long>{
 				 article.setBarcode(ar.getBarcode());
 				 article.setTva(ar.getTva());
 				 article.setImage(ar.getImage());
-				 article.setProvider(provider);
+				 article.setProvider(provider.get());
 				 article.setQuantity(qte);
 				 article.setMargin(company.getMargin());
 			article.setCategory(category);
@@ -277,6 +281,7 @@ public class ArticleService extends BaseService<Article, Long>{
 		throw new RecordNotFoundException("there is no record cointaining "+articlenamecontaining);
 
 	}
+
 
 	
 }

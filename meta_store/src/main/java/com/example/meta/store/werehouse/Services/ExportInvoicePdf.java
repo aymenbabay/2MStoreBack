@@ -98,17 +98,20 @@ public class ExportInvoicePdf {
 		document.add(client);
 		System.out.println(invoice.getId() + " invoice export to pdf 95ssssssssssssssss");
 		Paragraph name = new Paragraph("name: ", font);
-		name.add(invoice.getClient().getCompany().getName());
+		Paragraph addressclient = new Paragraph("Address: ", font);
+		
+			
+		
+		name.add(invoice.getClient().getName());
 		name.setAlignment(Element.ALIGN_LEFT);
 		document.add(name);
 
-		Paragraph addressclient = new Paragraph("Address: ", font);
-		addressclient.add(invoice.getClient().getCompany().getAddress());
+		addressclient.add(invoice.getClient().getAddress());
 		addressclient.setAlignment(Element.ALIGN_LEFT);
 		document.add(addressclient);
 
 		Paragraph phoneclient = new Paragraph("phone: ", font);
-		phoneclient.add(invoice.getClient().getCompany().getPhone());
+		phoneclient.add(invoice.getClient().getPhone());
 		phoneclient.setAlignment(Element.ALIGN_LEFT);
 		document.add(phoneclient);
 		document.add(Chunk.NEWLINE);

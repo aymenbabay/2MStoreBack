@@ -12,16 +12,12 @@ import org.springframework.stereotype.Service;
 
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
-import com.example.meta.store.werehouse.Controllers.ClientInvoiceController;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
-import com.example.meta.store.werehouse.Dtos.InvoiceDto;
 import com.example.meta.store.werehouse.Entities.Article;
-import com.example.meta.store.werehouse.Entities.ClientInvoice;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Mappers.CommandLineMapper;
-import com.example.meta.store.werehouse.Mappers.InvoiceMapper;
 import com.example.meta.store.werehouse.Repositories.CommandLineRepository;
 
 import jakarta.transaction.Transactional;
@@ -43,24 +39,18 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	
 	private final CommandLineRepository commandLineRepository;
 	
-	private final ClientInvoiceService clientInvoiceService;
-
-	private final Logger logger = LoggerFactory.getLogger(ClientInvoiceController.class);
+	private final Logger logger = LoggerFactory.getLogger(CommandLineService.class);
 
     DecimalFormat df = new DecimalFormat("#.###");
 
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
 			Long clientId, String type) {
-		logger.warn("the first line in insert line method ");
 		List<CommandLine> commandLines = new ArrayList<>();
 		List<Article> articles = new ArrayList<>();
 		Invoice invoice = invoiceService.addInvoice(company,clientId);
-		logger.warn("just after add invoice in insert line method ");
 		
 		for(CommandLineDto i : commandLinesDto) {
-			logger.warn("the first line in for loop in insert line method ");
-			Article article = articleService.findById(i.getArticle());	
-			logger.warn("just after find by id article in insert line method ");
+			Article article = articleService.findById(i.getArticle().getId());
 			articles.add(article);
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
@@ -76,7 +66,7 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		commandLines.add(commandLine);
 		}
 		super.insertAll(commandLines);
-		List<CommandLine> commandLine = commandLineRepository.findByInvoiceCode(invoice.getCode());
+		List<CommandLine> commandLine = commandLineRepository.findAllByInvoiceId(invoice.getId());
 		double totHt= 0;
 		double totTva= 0;
 		double totTtc= 0;
@@ -88,21 +78,11 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		invoice.setPrix_article_tot(totHt);
 		invoice.setTot_tva_invoice(totTva);
 		invoice.setPrix_invoice_tot(totTtc);
-		System.out.println("befor insert invoice in command line service");
 		invoiceService.insert(invoice);
-		System.out.println("after insert invoice in command line service");
-	//	articleService.impactInvoice(commandLinesDto,id,articles, companyArticles); //bay the articles for client
-		clientInvoiceService.addClientInvoiceService( clientId, company.getId(), invoice);
-		System.out.println("befor impact invoice in command line service");
-		inventoryService.impacteInvoice(company,commandLinesDto,articles,clientId);
-		System.out.println("after impact invoice in command line service");
-	
+		inventoryService.impacteInvoice(company,commandLinesDto,articles);
 		if (type.equals("pdf-save-client") ) {	
-		
 			return invoiceService.export(company,commandLines,articles);
-			
 		}
-		
 		return null;
 	}
 

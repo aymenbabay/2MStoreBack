@@ -7,9 +7,6 @@ import com.example.meta.store.werehouse.Entities.CommandLine;
 
 public interface CommandLineRepository extends BaseRepository<CommandLine, Long> {
 
-	List<CommandLine> findByInvoiceCode(Long code);
-
-	List<CommandLine> findByInvoiceId( Long invoiceId);
 
 	void deleteAllByInvoiceId(Long id);
 

@@ -6,6 +6,8 @@ import java.time.LocalDateTime;
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -24,7 +26,7 @@ public class InvoiceDto extends BaseDto<Long> implements Serializable {
 	
 	private Double prix_article_tot;
 	
-	private Boolean status;
+	private Status status;
 	
 	private LocalDateTime createdDate;
 
@@ -34,7 +36,8 @@ public class InvoiceDto extends BaseDto<Long> implements Serializable {
 	
 	private String CreatedBy;
 	
-	private Client client;
+	private InvoiceReturnDto client;
 	
-	private Company company;
+	private InvoiceReturnDto company;
+	
 }

@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
 import com.example.meta.store.Base.Security.Entity.User;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,7 +47,7 @@ public class Company extends BaseEntity<Long> implements Serializable{
 	
 	private String phone;
 
-	//@Column(unique = true)
+	@Column(unique = true)
 	private String bankaccountnumber;
 
 	@Email
@@ -65,6 +66,8 @@ public class Company extends BaseEntity<Long> implements Serializable{
 	private double rate;
 	
 	private int raters;
+	
+	private PrivacySetting isVisible;
 	
 	@OneToOne()
 	@JoinColumn(name = "userId")

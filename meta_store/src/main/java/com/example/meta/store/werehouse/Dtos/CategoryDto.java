@@ -24,6 +24,6 @@ public class CategoryDto extends BaseDto<Long> implements Serializable{
 	
 	private String image;
 	
-	private Company company;
+	private CompanyDto company;
 	
 }

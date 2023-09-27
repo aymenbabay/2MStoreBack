@@ -89,6 +89,10 @@ public class CompanyController {
 		companyService.rateCompany(id,rate);
 	}
 	
+	@GetMapping("get_my_company_id")
+	public Long getMyCompanyId() {
+		return getCompany().get().getId();
+	}
 	private Optional<Company> getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findByUserId(userId);

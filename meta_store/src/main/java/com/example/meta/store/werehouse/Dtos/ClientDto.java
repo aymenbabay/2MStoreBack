@@ -40,9 +40,9 @@ public class ClientDto extends BaseDto<Long> implements Serializable {
 	  
 	  private String email;
 	    
-	  private Provider provider;
+	  private Set<ProviderDto> providers;
 	    
-	 // private Company company;
+	  private CompanyDto company;
 
 	  private String indestrySector;
 

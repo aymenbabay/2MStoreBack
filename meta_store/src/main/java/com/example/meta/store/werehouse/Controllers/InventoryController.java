@@ -34,7 +34,7 @@ public class InventoryController {
 	@GetMapping("/getbycompany")
 	public List<InventoryDto> getInventoryByCompany(){
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		Long companyId = companyService.findCompanyIdByUserId(userId).getId();
+		Long companyId = companyService.findCompanyIdByUserId(userId).get().getId();
 		return inventoryService.getInventoryByCompanyId(companyId);
 	}
 	

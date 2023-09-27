@@ -23,7 +23,7 @@ public class ProviderDto extends BaseDto<Long> implements Serializable{
 	    
 	    private String nature;
 	    
-	  	private Company company;
+	  	private CompanyDto company;
 
 		private String bankaccountnumber;
 

@@ -27,8 +27,8 @@ public interface ProviderRepository extends BaseRepository<Provider, Long>{
 
 	Optional<Provider> findByCompanyIdAndIsVirtual(Long id, boolean b);
 
-	 @Query("SELECT p FROM Provider p WHERE p.isVirtual = false AND NOT EXISTS (SELECT 1 FROM Client c JOIN c.providers cp WHERE cp.id = p.id)")
-	   List<Provider> findAllReal();
+//	 @Query("SELECT p FROM Provider p WHERE p.isVirtual = false AND NOT EXISTS (SELECT 1 FROM Client c JOIN c.providers cp WHERE cp.id = p.id)")
+//	   List<Provider> findAllReal();
 
 
 }

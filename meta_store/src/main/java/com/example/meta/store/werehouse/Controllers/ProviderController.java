@@ -1,7 +1,10 @@
 package com.example.meta.store.werehouse.Controllers;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,7 +40,8 @@ public class ProviderController {
 	private final UserService userService;
 	
 	private final CompanyService companyService;
-	
+
+	private final Logger logger = LoggerFactory.getLogger(ProviderController.class);
 	
 	
 	@PostMapping("/add")
@@ -46,21 +50,16 @@ public class ProviderController {
 		return providerService.insertProvider(providerDto, company);
 	}
 	
-	@GetMapping("/add_exist/{id}")
-	public ResponseEntity<String> addExistProvider(@PathVariable Long id){
+	@GetMapping("/add_as_provider/{id}")
+	public void addExistProvider(@PathVariable Long id){
 		Company company = getCompany();
-		return providerService.addExistProvider(id,company);
+		logger.warn("add as provider provider controller "+id);
+		 providerService.addExistProvider(id,company);
 	}
 	
 	@GetMapping("/get_all")
 	public List<ProviderDto> getAll(){
 		return providerService.getAllProviders();
-	}
-	
-	@GetMapping("/get_all_real")
-	public List<ProviderDto> getAllReal(){
-		System.out.println("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
-		return providerService.getAllRealProviders();
 	}
 	
 	@GetMapping("/get_all_my_virtual")
@@ -125,11 +124,21 @@ public class ProviderController {
 		Company company = getCompany();
 		return providerService.getMeProviderId(company.getId());
 	}
+	
+	
+	
+	@GetMapping("check_provider/{id}")
+	public boolean checkProviderById(@PathVariable Long id) {
+		logger.warn("check provider in provider controller");
+	Company company = getCompany();
+	return providerService.checkProviderById(id,company.getId());
+	}
+	
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		Company company = companyService.findCompanyIdByUserId(userId);
+		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
 		if(company != null) {
-			return company;
+			return company.get();
 		}
 			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
 			

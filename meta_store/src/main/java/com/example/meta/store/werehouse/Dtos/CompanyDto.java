@@ -3,9 +3,11 @@ package com.example.meta.store.werehouse.Dtos;
 import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseDto;
+import com.example.meta.store.Base.Security.Dto.UserDto;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
@@ -50,12 +52,12 @@ public class CompanyDto extends BaseDto<Long> implements Serializable {
 	private double rate;
 	
 	private int raters;
+
+	private PrivacySetting isVisible;
 	
-	private User user;
+	private UserDto user;
 	
-	private Provider provider;
-	
-	private Client client;
+
 		
 	
 }

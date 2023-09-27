@@ -24,23 +24,16 @@ public class Inventory extends BaseEntity<Long> implements Serializable{
 
 
     private static final long serialVersionUID = 12345678112L;
-    
-//	private Double current_quantity;
-	
+    	
 	private Double out_quantity;
 	
 	private Double in_quantity; 
-	
-//	private String libelle_article;
-	
-//	private String articleCode;
-	
+		
 	private String bestClient;
 	
 	private Double articleCost;
 	
 	private Double articleSelling;
-	
 
 	@ManyToOne()
 	@JoinColumn(name = "company_id",referencedColumnName = "id")

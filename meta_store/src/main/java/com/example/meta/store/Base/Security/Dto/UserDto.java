@@ -23,7 +23,7 @@ public class UserDto extends BaseDto<Long> implements Serializable {
 	
 	private String address;
 	
-	private String userName;
+	private String username;
 	
 	private String email;
 	

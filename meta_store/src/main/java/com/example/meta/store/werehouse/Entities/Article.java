@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.werehouse.Dtos.CategoryDto;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,11 +62,13 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	
 	private String sharedPoint;
 	
-	@ManyToOne(optional = true,fetch=FetchType.EAGER)
+	private PrivacySetting isVisible;
+	
+	@ManyToOne(optional = true,fetch=FetchType.LAZY)
 	@JoinColumn(name = "categoryId")
 	private Category category;
 	
-	@ManyToOne(optional = true,fetch=FetchType.EAGER)
+	@ManyToOne(optional = true,fetch=FetchType.LAZY)
 	@JoinColumn(name = "subCategoryId")
 	private SubCategory subCategory;
 	
@@ -72,6 +76,13 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	@JoinColumn(name = "providerId")
 	private Provider provider;
 	
+	@ManyToOne
+	@JoinColumn(name= "companyId")
+	private Company company;
+	
 	private String image;
 
+
+
+	
 }

@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
@@ -44,17 +45,23 @@ public class Client extends BaseEntity<Long> implements Serializable {
     private String nature;
     
     private boolean isVirtual;
+    
+    private PrivacySetting isVisible;
 
+    @Column(unique = true)
 	private String bankaccountnumber;
 
+    @Column(unique = true)
 	private String matfisc;
 
+    @Column(unique = true)
 	private String phone;
 	
 	private String address;
 
 	private String indestrySector;
-	
+
+    @Column(unique = true)
 	private String email;
     
 	@JsonIgnore
@@ -64,6 +71,7 @@ public class Client extends BaseEntity<Long> implements Serializable {
     inverseJoinColumns = @JoinColumn(name= "providerId"))
     private Set<Provider> providers = new HashSet<>();
     
+	
     @ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name= "companyId")
 	private Company company;

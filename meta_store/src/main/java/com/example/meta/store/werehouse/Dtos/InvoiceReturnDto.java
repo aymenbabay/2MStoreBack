@@ -1,41 +1,25 @@
 package com.example.meta.store.werehouse.Dtos;
 
-import com.example.meta.store.Base.Entity.BaseDto;
-import com.example.meta.store.werehouse.Enums.InvoiceStatus;
-
 import lombok.Getter;
 import lombok.Setter;
 
-@Setter
 @Getter
-public class ClientInvoiceDto extends BaseDto<Long> {
+@Setter
+public class InvoiceReturnDto {
 
-	private String providerName;
+	private Long id;
 	
-	private Long providerId;
+	private String name;
+
+	private String phone;
 	
-	private String providerPhone;
+	private String address;
 	
-	private String providerMatriculeFiscal;
+	private String matfisc;
 	
-	private String providerAddress;
+	private String indestrySector;
 	
-	private Long clientId;
-	
-	private String clientName;
-	
-	private String clientPhone;
-	
-	private String clientMatriculeFiscal;
-	
-	private String clientAddress;
-	
-	private Long invoice;
-	
-	private String invoiceDate;
-	
-	private Long invoiceId;
-	
-	private InvoiceStatus isAccepted;
+	private String email;
 	
 }
+

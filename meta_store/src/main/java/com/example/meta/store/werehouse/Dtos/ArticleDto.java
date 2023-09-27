@@ -49,11 +49,13 @@ public class ArticleDto extends BaseDto<Long> implements Serializable {
 	
 	private Double tva;
 	
-	private Category category;
+	private CategoryDto category;
 	
-	private SubCategory subCategory;
+	private SubCategoryDto subCategory;
 	
-	private Provider provider;
+	private ProviderDto provider;
+	
+	private CompanyDto company;
 	
 	private String image;
 

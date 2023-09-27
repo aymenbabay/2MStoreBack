@@ -46,7 +46,7 @@ public class SubCategoryService extends BaseService<SubCategory, Long>{
 		Optional<SubCategory> subCategory = subCategoryRepository.findByIdAndCompanyId(subCategoryDto.getId(),company.getId());
 		if(subCategory.isPresent()) {
 			SubCategory categ = subCategoryMapper.mapToEntity(subCategoryDto);
-			if(subCategoryDto.getCategory() != subCategory.get().getCategory()) {
+			if(subCategoryDto.getCategory().getId() != subCategory.get().getCategory().getId()) {
 				ResponseEntity<Category> category = categoryService.getById(subCategoryDto.getCategory().getId());
 				if(category == null) {
 					throw new RecordNotFoundException("there is no category with libelle: "+subCategoryDto.getCategory().getLibelle());

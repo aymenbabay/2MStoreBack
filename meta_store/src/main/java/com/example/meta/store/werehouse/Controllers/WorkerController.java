@@ -1,6 +1,7 @@
 package com.example.meta.store.werehouse.Controllers;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -85,9 +86,9 @@ public class WorkerController {
 	
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		Company company = companyService.findCompanyIdByUserId(userId);
+		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
 		if(company != null) {
-			return company;
+			return company.get();
 		}
 			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
 			

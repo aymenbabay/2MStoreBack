@@ -3,6 +3,7 @@ package com.example.meta.store.werehouse.Entities;
 import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,8 +39,12 @@ public class Provider extends BaseEntity<Long> implements Serializable {
     
     private boolean isVirtual;
 
+    private PrivacySetting isVisible;
+
+    @Column(unique = true)
 	private String bankaccountnumber;
 
+    @Column(unique = true)
 	private String matfisc;
 	
 	private String phone;
@@ -50,7 +55,8 @@ public class Provider extends BaseEntity<Long> implements Serializable {
 
 	@PositiveOrZero(message = "Mvt Field Must Be A Positive Number Or Zero")
     private Double mvt;
-	
+
+    @Column(unique = true)
 	private String email;
     
 

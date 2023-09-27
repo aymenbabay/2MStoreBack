@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
-import com.example.meta.store.werehouse.Controllers.ClientInvoiceController;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
 import com.example.meta.store.werehouse.Dtos.InventoryDto;
 import com.example.meta.store.werehouse.Entities.Article;
@@ -72,7 +71,7 @@ public class InventoryService extends BaseService<Inventory, Long> {
 		return inventoryRepository.findByArticleIdAndCompanyId(companyarticleId,company.getId());
 	}
 
-	public void addQuantity(Article article, Long quantity, Company company) {
+	public void addQuantity(Article article, Double quantity, Company company) {
 		Optional<Inventory> inventori = inventoryRepository.findByArticleIdAndCompanyId(article.getId(),company.getId());
 		Inventory inventory = inventori.get();
 		String articleCost = df.format((article.getCost() + article.getCost()*article.getTva()/100) *quantity);
@@ -92,26 +91,18 @@ public class InventoryService extends BaseService<Inventory, Long> {
 		inventoryRepository.save(inventory);
 	}
 
-	public void impacteInvoice( Company company, List<CommandLineDto> commandLinesDto, List<Article> articles, Long clientId) {
-		Company clientCompany = companyService.findByClientId(clientId);
-		for(CommandLineDto i : commandLinesDto) {
-//			
-		Inventory providerInventory = findByArticleIdAndCompanyId(i.getArticle(),company.getId());
-		System.out.println("after provider inventory . get() inventory service "+i.getArticle()+" "+clientCompany.getId());
-		System.out.println("after provider inventory . get() inventory service "+i.getArticle()+" "+company.getId());
+	public void impacteInvoice( Company company, List<CommandLineDto> commandLinesDto, List<Article> articles) {
 		
-		System.out.println("efore provider inventory . get() inventory service");
+		for(CommandLineDto i : commandLinesDto) {			
+		Inventory providerInventory = findByArticleIdAndCompanyId(i.getArticle().getId(),company.getId());
 		providerInventory.setOut_quantity(providerInventory.getOut_quantity()+i.getQuantity());
 		for(Article a : articles) {
 			String articleCost = df.format((a.getCost() + a.getCost() * a.getTva() * a.getMargin()/100) * i.getQuantity());
 			articleCost = articleCost.replace(",", ".");
-			System.out.println("in for loop provider inventory . get() inventory service");
 			if(a.getId().equals(i.getArticle())) {
 				providerInventory.setArticleSelling(providerInventory.getArticleSelling() + Double.parseDouble(articleCost));
 			}
-		
 		inventoryRepository.save(providerInventory);
-
 		}
 		}
 		
