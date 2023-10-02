@@ -174,22 +174,27 @@ public class ProviderService extends BaseService<Provider, Long> {
 		providerRepository.delete(provider.get());
 	}
 
-	public void deleteProviderById(Long id, Company company) {
+	public void deleteProviderById(Long id, Company myCompany) {
 		Optional<Provider> provider = providerRepository.findById(id);
+		Provider hisProvider = provider.get();
 		if(provider.isEmpty()) {
 			throw new RecordNotFoundException("there is no provider with id: "+id);
 		}
-		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(company.getId());
+		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(myCompany.getId());
+		Optional<Client> hisClient = clientRepository.findByIsVirtualFalseAndCompanyId(hisProvider.getCompany().getId());
+		Optional<Provider> myProvider = getMeAsProvider(myCompany.getId());
+		Client myClient = client.get();
 		boolean existRelation = false;
-		for(Provider i : client.get().getProviders()) {
-			if(i == provider.get()) {
+		for(Provider i : myClient.getProviders()) {
+			if(i == hisProvider) {
 				existRelation = true;
 			}
 		}
 		if(!existRelation) {
 			throw new RecordNotFoundException("is already not your provider");
 		}
-		client.get().getProviders().remove(provider.get());
+		myClient.getProviders().remove(hisProvider);
+		invetationClientProviderRepository.deleteByClientOrProviderAndCompany(hisClient.get(), myClient, hisProvider, myProvider.get(), hisProvider.getCompany(), myCompany);
 				
 	}
 	
@@ -248,8 +253,8 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 
-	public Optional<Provider> getMeAsProvider(Long id) {
-		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(id,false);
+	public Optional<Provider> getMeAsProvider(Long companyId) {
+		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(companyId,false);
 		if(provider.isEmpty()) {
 			throw new RecordNotFoundException("you are not a provider ");
 		}

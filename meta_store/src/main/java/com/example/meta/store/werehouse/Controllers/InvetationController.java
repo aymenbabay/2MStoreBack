@@ -62,12 +62,9 @@ public class InvetationController {
 	
 	@GetMapping("response/{status}/{id}")
 	public void requestResponse(@PathVariable Long id, @PathVariable Status status) {
-		logger.warn("invetation controller in  the first line of request response function ");
-		Optional<Client> client = getClient();
+		
 		logger.warn("invetation controller in  the second line of request response function ");
-		Optional<Provider> provider = getProvider();
-		logger.warn("invetation controller in  the therd line of request response function ");
-		invetationService.requestResponse(client, provider, id,status);
+		invetationService.requestResponse(id,status);
 	}
 	
 	@GetMapping("cancel/{id}")

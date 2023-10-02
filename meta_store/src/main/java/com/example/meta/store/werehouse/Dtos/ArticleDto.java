@@ -9,6 +9,7 @@ import com.example.meta.store.werehouse.Entities.Category;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.SubCategory;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
@@ -58,5 +59,7 @@ public class ArticleDto extends BaseDto<Long> implements Serializable {
 	private CompanyDto company;
 	
 	private String image;
+	
+	private PrivacySetting isVisible;
 
 }

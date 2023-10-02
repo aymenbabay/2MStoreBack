@@ -3,6 +3,8 @@ package com.example.meta.store.werehouse.Controllers;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,6 +44,8 @@ public class SubCategoryController {
 	private final UserService userService;
 	
 	private final CompanyService companyService;
+
+	private final Logger logger = LoggerFactory.getLogger(SubCategoryController.class);
 	
 	@GetMapping("/getbycompany")
 	public ResponseEntity<List<SubCategoryDto>> getSubCategoryByCompany(){
@@ -56,10 +60,11 @@ public class SubCategoryController {
 		
 	}
 	
-	@GetMapping("/{categoryId}")
-	public List<SubCategoryDto> getAllSubCategoriesByCompanyIdAndCategoryId(@PathVariable Long categoryId){
+	@GetMapping("/{categoryId}/{companyId}")
+	public List<SubCategoryDto> getAllSubCategoriesByCompanyIdAndCategoryId(@PathVariable Long categoryId, @PathVariable Long companyId){
 		Company company = getCompany();
-		return subCategoryService.getAllSubCategoryByCompanyIdAndCategoryId(categoryId, company);
+		logger.warn(categoryId+" category id ");
+		return subCategoryService.getAllSubCategoryByCompanyIdAndCategoryId(categoryId, company, companyId);
 	}
 	
 	@PostMapping("/add")

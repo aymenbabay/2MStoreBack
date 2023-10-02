@@ -15,6 +15,7 @@ import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
 import com.example.meta.store.werehouse.Dtos.InventoryDto;
 import com.example.meta.store.werehouse.Entities.Article;
+import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Inventory;
 import com.example.meta.store.werehouse.Mappers.InventoryMapper;
@@ -133,6 +134,19 @@ public class InventoryService extends BaseService<Inventory, Long> {
 				
 				
 			}
+		
+	}
+
+	public void rejectInvoice(List<CommandLine> commandLines, Long companyId) {
+		for(CommandLine i : commandLines) {
+			Optional<Inventory> inventory = inventoryRepository.findByArticleIdAndCompanyId(i.getArticle().getId(),companyId);
+			if(inventory.isPresent()) {
+				Inventory inventori = inventory.get();
+				inventori.setOut_quantity(inventori.getOut_quantity()-i.getQuantity());
+				inventoryRepository.save(inventori);
+			}
+		}
+		
 		
 	}
 

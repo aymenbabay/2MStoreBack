@@ -72,5 +72,6 @@ public interface ClientRepository extends BaseRepository<Client, Long>{
 
 	
 	
+	
 
 }

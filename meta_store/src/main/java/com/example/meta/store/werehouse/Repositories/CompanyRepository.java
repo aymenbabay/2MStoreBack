@@ -22,6 +22,8 @@ public interface CompanyRepository extends BaseRepository<Company, Long> {
 
 	boolean existsByMatfisc(String matfisc);
 
+	boolean existsByBankaccountnumber(String bankaccountnumber);
+
 	//Company findByClientId(Long clientId);
 
 

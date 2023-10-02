@@ -54,6 +54,7 @@ public class ClientService extends BaseService<Client, Long>{
 
 	private final ProviderMapper providerMapper;
 	
+	
 	private final Logger logger = LoggerFactory.getLogger(ClientService.class);
 	
 	public Client addMeAsClient(Company company) {
@@ -166,29 +167,30 @@ public class ClientService extends BaseService<Client, Long>{
 	}
 
 
-	public void deleteClientById(Long id, Company company) {
+	public void deleteClientById(Long id, Client myClient) {
 		ResponseEntity<Client> client = super.getById(id);
-	        if (client == null || company == null) {
+	        if (client == null || myClient == null) {
 	        	throw new RecordNotFoundException("Client Not Found ");
 	        }
-	        Client clientt = client.getBody();
-	        if(clientt.getCompany() == company) {
+	        Client hisClient = client.getBody();
+	        if(hisClient.getCompany() == myClient.getCompany()) {
 	        	
-	        if(clientt.isVirtual() == false) {
-	        	throw new NotPermissonException("you can not delete this client :) ");
-	        }
-	        	boolean isExist = InvoiceRepository.existsByClientId(clientt.getId());
+	        if(hisClient.isVirtual() == true) {
+	        	boolean isExist = InvoiceRepository.existsByClientId(hisClient.getId());
 	        	if(isExist) {
-	        		clientt.setProviders(null);
-	        		clientRepository.save(clientt);
+	        		hisClient.setProviders(null);
+	        		clientRepository.save(hisClient);
 	        		return;
 	        	}
 	        	super.deleteById(id);
 	        	return;
+	        }
 	        
 	        }
-	        Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
-	        clientt.getProviders().remove(provider.get());
+	        Provider myProvider = providerService.getMeAsProvider(myClient.getCompany().getId()).get();
+	        Provider hisProvider = providerService.getMeAsProvider(hisClient.getCompany().getId()).get();
+	        hisClient.getProviders().remove(myProvider);
+	         invetationClientProviderRepository.deleteByClientOrProviderAndCompany(hisClient,myClient,hisProvider, myProvider, hisClient.getCompany(), myClient.getCompany());
 	       
 		
 	}
@@ -260,33 +262,33 @@ public class ClientService extends BaseService<Client, Long>{
 
 	public boolean checkClient(Long clientId, Long providerId) {
 		Optional<Client> isClient = clientRepository.findById(clientId);
-		for(Provider i : isClient.get().getProviders()) {
-			if(i.getId() == providerId) {
-				return true;
-			}
-		}
+		 if (isClient.isPresent()) {
+	            return isClient.get().getProviders().stream()
+	                    .anyMatch(provider -> provider.getId().equals(providerId));
+	        }
 		return false;
 	}
 
-		public void acceptedClientInvetation(InvetationClientProvider invetation) {
-		Optional<Provider> cProvider = providerService.getMeAsProvider(invetation.getCompany().getId());
-		Client client = super.getById(invetation.getClient().getId()).getBody();
-		Set<Provider> providers = new HashSet<>();
-		providers.add(cProvider.get());
-		providers.addAll(client.getProviders());
-		client.setProviders(providers);
-		logger.warn("providersz size = "+client.getProviders().size());
+		public void acceptedInvetation(InvetationClientProvider invetation) {
+			Client client;
+			if(invetation.getClient() != null) {				
+				Optional<Provider> cProvider = providerService.getMeAsProvider(invetation.getCompany().getId());
+				 client = super.getById(invetation.getClient().getId()).getBody();
+				Set<Provider> providers = new HashSet<>();
+				providers.add(cProvider.get());
+				providers.addAll(client.getProviders());
+				client.setProviders(providers);
+			}
+			else {
+				 client = getByCompanyId(invetation.getCompany().getId()).get();
+				Set<Provider> providers = new HashSet<>();
+				providers.add(invetation.getProvider());
+				providers.addAll(client.getProviders());
+				client.setProviders(providers);
+			}
 		clientRepository.save(client);
 	}
 
-		public void acceptedProviderInvetation(Provider provider) {
-			Optional<Client> cClient = getByCompanyId(provider.getCompany().getId());
-			Set<Provider> providers = new HashSet<>();
-			providers.add(provider);
-			providers.addAll(cClient.get().getProviders());
-			cClient.get().setProviders(providers);
-			clientRepository.save(cClient.get());
-		}
 
 		public List<ClientDto> getAllMyContaining(String search,Client clientt) {
 			List<Client> clients = clientRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search,clientt.getCompany().getId(),clientt.getId());

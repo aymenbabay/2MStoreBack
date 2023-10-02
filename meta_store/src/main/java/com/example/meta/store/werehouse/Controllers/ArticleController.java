@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.meta.store.Base.ErrorHandler.NotPermissonException;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
@@ -25,6 +26,7 @@ import com.example.meta.store.werehouse.Dtos.ArticleDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Services.ArticleService;
 import com.example.meta.store.werehouse.Services.ClientService;
 import com.example.meta.store.werehouse.Services.CompanyService;
@@ -77,6 +79,35 @@ public class ArticleController {
 		Optional<Provider> provider = getProvider();
 		return articleService.getAllProvidersArticleByProviderId(provider.get());
 	}
+	 	
+
+	@GetMapping("get_all_articles/{id}")
+	public List<ArticleDto> getAllArticleByProviderId(@PathVariable Long id){
+		Company company = companyService.getById(id).getBody();
+
+			Optional<Client> client = getClient();
+			Long providerId=null;
+			Client client1 = null;
+			if(client.isPresent()) {				
+				 providerId = providerService.getMeProviderId(id);
+				 client1 = client.get();
+			}
+			return articleService.getAllArticleByCompanyId(id,client1,providerId);
+			
+		
+	}
+	
+	@GetMapping("category/{categoryId}/{companyId}")
+	public List<ArticleDto> getAllArticelsByCategoryId(@PathVariable Long categoryId, @PathVariable Long companyId){
+		Client client = getClient().get();
+		return articleService.getAllArticleByCategoryId(categoryId, companyId, client);
+	}
+	
+	@GetMapping("sub_category/{subcategoryId}/{companyId}")
+	public List<ArticleDto> getAllArticleBySubCategoryIdAnd( @PathVariable Long subcategoryId, @PathVariable Long companyId) {
+		Client client = getClient().get();
+		return articleService.getAllArticleBySubCategoryIdAndCompanyId(subcategoryId, companyId,client);
+	}
 	
 	@PutMapping("update")
 	public ResponseEntity<ArticleDto> upDateArticle(
@@ -87,18 +118,7 @@ public class ArticleController {
 		logger.warn("update article in article controller 2");
 		return articleService.upDateArticle(file,article, provider.get());
 	}
-		
-
-//	@GetMapping("getbyprovider/{id}")
-//	public List<ArticleDto> getAllArticleByProviderId(@PathVariable Long id){
-//		if(id !=(long)0) {
-//			ResponseEntity<Provider> provider = providerService.getById(id);
-//			return articleService.getAllArticleByProviderId(provider.getBody());
-//		}
-//		Optional<Provider> provider = getProvider();
-//		return articleService.getAllArticleByProviderId(provider.get());
-//	}
-//	
+	
 
 	@GetMapping("getrandom")
 	public List<ArticleDto> findRandomArticles(){

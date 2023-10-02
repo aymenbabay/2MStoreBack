@@ -80,7 +80,12 @@ public class ArticleService extends BaseService<Article, Long>{
 		}
 		super.insert(article1);
 		article1.setSharedPoint(article1.getCreatedBy());
-		article1.setIsVisible(PrivacySetting.PUBLIC);
+		if(provider.getCompany().getIsVisible() == PrivacySetting.ONLY_ME) {			
+		article1.setIsVisible(PrivacySetting.ONLY_ME);
+		}
+		if(provider.getCompany().getIsVisible() == PrivacySetting.CLIENT && articleDto.getIsVisible() == PrivacySetting.PUBLIC) {
+			article1.setIsVisible(PrivacySetting.CLIENT);
+		}
 		article1.setCompany(provider.getCompany());
 		inventoryService.makeInventory(article1, provider.getCompany());
 		return ResponseEntity.ok(articleDto);
@@ -88,7 +93,7 @@ public class ArticleService extends BaseService<Article, Long>{
 	
 	public List<ArticleDto> getAllProvidersArticleByProviderId(Provider provider) {
 		List<ArticleDto> articlesDto = new ArrayList<ArticleDto>();
-		List<Article> articles = articleRepository.findAllByCompanyId(provider.getCompany().getId());
+		List<Article> articles = articleRepository.findAllMyByCompanyId(provider.getCompany().getId());
 		for(Article i : articles) {
 			ArticleDto articleDto = articleMapper.mapToDto(i);
 			articlesDto.add(articleDto);
@@ -126,7 +131,16 @@ public class ArticleService extends BaseService<Article, Long>{
 		}
 		
 		updatedArticle.setCompany(provider.getCompany());
-		updatedArticle.setIsVisible(article1.get().getIsVisible());
+		if(articleDto.getIsVisible() != article1.get().getIsVisible()) {
+			if(provider.getCompany().getIsVisible() == PrivacySetting.ONLY_ME) {			
+				updatedArticle.setIsVisible(PrivacySetting.ONLY_ME);
+				}
+			if(provider.getCompany().getIsVisible() == PrivacySetting.CLIENT && articleDto.getIsVisible() == PrivacySetting.PUBLIC) {
+					updatedArticle.setIsVisible(PrivacySetting.CLIENT);
+				}
+		}else {			
+			updatedArticle.setIsVisible(article1.get().getIsVisible());
+		}
 		article1 = Optional.of(articleRepository.save(updatedArticle));
 		return null;
 		}
@@ -144,18 +158,24 @@ public class ArticleService extends BaseService<Article, Long>{
 
 	}
 	
-//	public List<ArticleDto> getAllArticleByProviderId(Provider provider) {
-//		List<Article> articles = articleRepository.findAllByCompanyId(provider.getCompany().getId());
-//		if(articles.isEmpty()) {
-//			throw new RecordNotFoundException("there is no article");
-//		}
-//		List<ArticleDto> articlesDto = new ArrayList<>();
-//		for(Article i : articles) {
-//			ArticleDto articleDto = articleMapper.mapToDto(i);
-//			articlesDto.add(articleDto);
-//		}
-//		return articlesDto;
-//	}
+	public List<ArticleDto> getAllArticleByCompanyId(Long companyId,Client client, Long providerId) {
+		Long myCompanyId = client.getCompany().getId();
+		List<Article> articles;
+		if(myCompanyId == companyId) {
+			articles = articleRepository.findAllMyByCompanyId(myCompanyId);			
+		}else {			
+		 articles = articleRepository.findAllByCompanyId(companyId,client.getId(),providerId);
+		}
+		if(articles.isEmpty()) {
+			throw new RecordNotFoundException("there is no article");
+		}
+		List<ArticleDto> articlesDto = new ArrayList<>();
+		for(Article i : articles) {
+			ArticleDto articleDto = articleMapper.mapToDto(i);
+			articlesDto.add(articleDto);
+		}
+		return articlesDto;
+	}
 	
 	public List<ArticleDto> findRandomArticlesPub(Client client, Provider provider) {
 		logger.warn("random article in article service just before the list ");
@@ -164,7 +184,7 @@ public class ArticleService extends BaseService<Article, Long>{
 		 article = articleRepository.findRandomArticles(51.122,51.125,PrivacySetting.PUBLIC);
 		}
 		else {
-			article = articleRepository.findRandomArticlesPro(51.122,51.125,provider.getId(),client.getId(),PrivacySetting.PUBLIC,PrivacySetting.CLIENT);
+			article = articleRepository.findRandomArticlesPro(51.122,51.125,provider.getId(),client.getId());
 			logger.warn("random article in article service just after the list"+article.get(0).getCode());
 		}
 		
@@ -210,8 +230,9 @@ public class ArticleService extends BaseService<Article, Long>{
 	}
 
 
-	//by the article to client , List<CompanyArticle> companyArticles
+	//by the article to client 
 	public void impactInvoice(List<CommandLine> commandLines, Long clientId) {
+		
 		Company company = companyService.findByClientId(clientId);
 		Category category = categoryService.getDefaultCategory(company);
 		SubCategory subCategory = subCategoryService.getDefaultSubCategory(company);
@@ -281,6 +302,53 @@ public class ArticleService extends BaseService<Article, Long>{
 		throw new RecordNotFoundException("there is no record cointaining "+articlenamecontaining);
 
 	}
+
+	public List<ArticleDto> getAllArticleByCategoryId(Long categoryId, Long companyId, Client client) {
+		logger.warn("getAllArticleByCategoryId mrigel outside for loop ");
+		List<Article> articles;
+		Long myCompanyId = client.getCompany().getId();
+		if(companyId == myCompanyId) {
+			logger.warn("getAllArticleByCategoryId mrigel inside for loop ");
+			articles = articleRepository.findAllMyByCategoryIdAndCompanyId(categoryId, myCompanyId);
+		}else {
+			Long providerId = providerService.getMeProviderId(companyId);
+			articles = articleRepository.findAllByCategoryIdAndCompanyId(categoryId, companyId,providerId, client.getId());
+		}
+
+		if(articles == null) {
+			throw new RecordNotFoundException("there is no article");
+		}
+		List<ArticleDto> articlesDto = new ArrayList<>();
+		for(Article i : articles) {
+			ArticleDto articleDto = articleMapper.mapToDto(i);
+			articlesDto.add(articleDto);
+		}
+		return articlesDto;
+	}
+
+	public List<ArticleDto> getAllArticleBySubCategoryIdAndCompanyId(Long subcategoryId,
+			Long companyId, Client client) {
+		Long companId = client.getCompany().getId();
+		List<Article> articles;
+		if(companyId == companId) {
+			logger.warn("getAllArticleBySubCategoryIdAndCompanyId mrigel");
+			articles = articleRepository.findAllMyBySubCategoryIdAndCompanyId(subcategoryId, companId);
+		}else {
+			Long providerId = providerService.getMeProviderId(companyId);
+			articles = articleRepository.findAllBySubCategoryIdAndCompanyId(subcategoryId, companyId, providerId , client.getId());
+		}
+		if(articles == null) {
+			throw new RecordNotFoundException("there is no article");
+		}
+		List<ArticleDto> articlesDto = new ArrayList<>();
+		for(Article i : articles) {
+			ArticleDto articleDto = articleMapper.mapToDto(i);
+			articlesDto.add(articleDto);
+		}
+		return articlesDto;
+	}
+
+	
 
 
 	

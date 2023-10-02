@@ -41,15 +41,17 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 	private final InvoiceMapper invoiceMapper;
 	
-	private final InvoiceRepository invoiceRepository;
+	private final ClientInvoiceMapper clientInvoiceMapper;
 	
-	private final ClientService clientService;
+	private final InvoiceRepository invoiceRepository;
 	
 	private final CommandLineRepository commandLineRepository;
 	
-	private final ArticleService articleService;
+	private final ClientService clientService;
 	
-	private final ClientInvoiceMapper clientInvoiceMapper;
+	private final ArticleService articleService;
+
+	private final InventoryService inventoryService;
 	
 	private final Logger logger = LoggerFactory.getLogger(InvoiceService.class);
 	
@@ -143,6 +145,8 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 	public void refused(Long code, Long clientId) {
 		Invoice invoice = getInvoice(code,clientId);
+		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoice.getId());
+		inventoryService.rejectInvoice(commandLines, invoice.getCompany().getId());
 		invoice.setStatus(Status.REFUSED);
 		invoiceRepository.save(invoice);
 	}

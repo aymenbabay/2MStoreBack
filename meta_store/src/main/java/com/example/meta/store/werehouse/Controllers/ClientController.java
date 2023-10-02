@@ -96,8 +96,8 @@ public class ClientController {
 	
 	@DeleteMapping("delete/{id}")
 	public void deleteById(@PathVariable Long id) {
-		Optional<Company> company = getCompany();
-		clientService.deleteClientById(id, company.get());
+		Client client = getClient();
+		clientService.deleteClientById(id, client);
 	}
 	
 	@GetMapping("get_my_client_id")

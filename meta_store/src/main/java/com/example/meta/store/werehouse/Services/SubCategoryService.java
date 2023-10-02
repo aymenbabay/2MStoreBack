@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
+import com.example.meta.store.werehouse.Controllers.SubCategoryController;
 import com.example.meta.store.werehouse.Dtos.SubCategoryDto;
 import com.example.meta.store.werehouse.Entities.Category;
 import com.example.meta.store.werehouse.Entities.Company;
@@ -40,7 +43,8 @@ public class SubCategoryService extends BaseService<SubCategory, Long>{
 	private final ImageService imageService;
 	
 	private final ObjectMapper objectMapper;
-	
+
+	private final Logger logger = LoggerFactory.getLogger(SubCategoryService.class);
 	public ResponseEntity<SubCategoryDto> upDateSubCategory( String dto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
 		SubCategoryDto subCategoryDto = objectMapper.readValue(dto, SubCategoryDto.class);
 		Optional<SubCategory> subCategory = subCategoryRepository.findByIdAndCompanyId(subCategoryDto.getId(),company.getId());
@@ -130,8 +134,14 @@ public class SubCategoryService extends BaseService<SubCategory, Long>{
 		
 	}
 
-	public List<SubCategoryDto> getAllSubCategoryByCompanyIdAndCategoryId(Long categoryId, Company company) {
-		List<SubCategoryDto> subCategoryDto = getByCompanyIdAndCategoryId(company.getId(),categoryId);
+	public List<SubCategoryDto> getAllSubCategoryByCompanyIdAndCategoryId(Long categoryId, Company company, Long companyId) {
+		List<SubCategoryDto> subCategoryDto;
+		if(companyId == 0 ) {
+			subCategoryDto = getByCompanyIdAndCategoryId(company.getId(),categoryId);			
+		}else {
+			subCategoryDto = getByCompanyIdAndCategoryId(companyId,categoryId);			
+			
+		}
 		if(subCategoryDto == null) {
 			throw new RecordNotFoundException("there is no sub category inside this category");
 		}

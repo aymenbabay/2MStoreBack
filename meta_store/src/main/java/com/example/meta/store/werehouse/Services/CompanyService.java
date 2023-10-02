@@ -34,7 +34,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
-@Transactional
+//@Transactional
 @RequiredArgsConstructor
 public class CompanyService extends BaseService<Company, Long> {
 
@@ -96,7 +96,8 @@ public class CompanyService extends BaseService<Company, Long> {
 	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Optional<Company> compan)
 			throws JsonMappingException, JsonProcessingException {
 		
-		Company company = compan.get();
+		Optional<Company> cmpany = companyRepository.findById(compan.get().getId());
+		Company company = cmpany.get();
 		CompanyDto companyDto1 = objectMapper.readValue(companyDto, CompanyDto.class);
 		if(!company.getName().equals(companyDto1.getName()))
 		{
@@ -124,14 +125,21 @@ public class CompanyService extends BaseService<Company, Long> {
 			throw new RecordIsAlreadyExist("this matricule fiscale is already exist please choose another one");
 			}
 		}
-		 Company updatedCompany = companyMapper.mapToEntity(companyDto1);
+		if(!company.getBankaccountnumber().equals(companyDto1.getBankaccountnumber())) {
+			boolean existBanckAccount = companyRepository.existsByBankaccountnumber(companyDto1.getBankaccountnumber());
+			if(existBanckAccount) {
+				throw new RecordIsAlreadyExist("this banck account is already in use ");
+			}
+		}
+		// Company updatedCompany = companyMapper.mapToEntity(companyDto1);
+		 Company updatedCompany = company;
 		if (file != null) {
 
 			String newFileName = imageService.insertImag(file, company.getUser().getUsername(), "company");
 			updatedCompany.setLogo(newFileName);
 		}
 		updatedCompany.setPhone("97 896 547");
-		compan = Optional.of(companyRepository.save(updatedCompany));
+		companyRepository.save(updatedCompany);
 		return ResponseEntity.ok(companyDto1);
 		
 	

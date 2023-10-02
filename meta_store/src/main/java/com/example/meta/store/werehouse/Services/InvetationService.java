@@ -55,7 +55,7 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 		return invetationsDto;
 	}
 
-	public void requestResponse(Optional<Client> client, Optional<Provider> provider, Long id, Status status) {
+	public void requestResponse(Long id, Status status) {
 		logger.warn("invetation service in the first line of request response function");
 		Optional<InvetationClientProvider> invi = invetationClientProviderRepository.findById(id);
 		logger.warn("invetation service in the second line of request response function");
@@ -65,15 +65,7 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 		}
 		InvetationClientProvider invetation = invi.get();
 			if(status == Status.ACCEPTED) {
-				logger.warn("invetation service in the forth line of request response function");
-				if(invetation.getClient() != null) {
-					logger.warn("company id in request response in invetation service "+invetation.getClient().getCompany().getId());
-					clientService.acceptedClientInvetation(invetation);	
-				}
-				else {
-					logger.warn("invetation service in the fifth line of request response function");
-					clientService.acceptedProviderInvetation(invetation.getProvider());
-				}
+				clientService.acceptedInvetation(invetation);
 				invetation.setStatus(Status.ACCEPTED);				
 			}else {
 				invetation.setStatus(Status.REFUSED);								

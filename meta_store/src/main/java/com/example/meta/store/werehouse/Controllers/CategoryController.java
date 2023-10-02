@@ -3,6 +3,8 @@ package com.example.meta.store.werehouse.Controllers;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -42,12 +44,13 @@ public class CategoryController {
 	private final UserService UserService;
 	
 	private final CompanyService companyService;
-	
 
-	@GetMapping("/getbycompany")
-	public List<CategoryDto> getCategoryByCompany(){
+	private final Logger logger = LoggerFactory.getLogger(CategoryController.class);
+
+	@GetMapping("/getbycompany/{id}")
+	public List<CategoryDto> getCategoryByCompany(@PathVariable Long id){
 		Company company = getCompany();
-		return categoryService.getCategoryByCompany(company);
+		return categoryService.getCategoryByCompany(company,id);
 	}
 	
 	@GetMapping("/l/{name}")

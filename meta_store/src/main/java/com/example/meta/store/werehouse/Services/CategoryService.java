@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
+import com.example.meta.store.werehouse.Controllers.ArticleController;
 import com.example.meta.store.werehouse.Dtos.CategoryDto;
 import com.example.meta.store.werehouse.Entities.Category;
 import com.example.meta.store.werehouse.Entities.Company;
@@ -38,6 +41,7 @@ public class CategoryService extends BaseService<Category, Long>{
 	
 	private final ObjectMapper objectMapper;
 
+	private final Logger logger = LoggerFactory.getLogger(CategoryService.class);
 	
 	public ResponseEntity<CategoryDto> upDateCategory( String catDto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
 		CategoryDto categoryDto = objectMapper.readValue(catDto, CategoryDto.class);
@@ -75,8 +79,14 @@ public class CategoryService extends BaseService<Category, Long>{
 
 	
 
-	public List<CategoryDto> getCategoryByCompany(Company company) {
-		List<Category> categorys = getAllByCompanyId(company.getId());
+	public List<CategoryDto> getCategoryByCompany(Company company, Long id) {
+		logger.warn(id+" <== id ");
+		List<Category> categorys;
+		if(id == 0) {			
+			categorys = getAllByCompanyId(company.getId());
+		}else {
+			categorys = getAllByCompanyId(id);
+		}
 		if(categorys.isEmpty()) {
 			throw new RecordNotFoundException("there is no category");
 		}

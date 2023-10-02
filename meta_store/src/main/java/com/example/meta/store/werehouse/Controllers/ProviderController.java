@@ -116,7 +116,6 @@ public class ProviderController {
 	public void deleteProvider(@PathVariable Long id) {
 		Company company = getCompany();
 		providerService.deleteProviderById(id,company);
-		
 	}
 	
 	@GetMapping("/get_my_provider_id")
@@ -124,8 +123,6 @@ public class ProviderController {
 		Company company = getCompany();
 		return providerService.getMeProviderId(company.getId());
 	}
-	
-	
 	
 	@GetMapping("check_provider/{id}")
 	public boolean checkProviderById(@PathVariable Long id) {
