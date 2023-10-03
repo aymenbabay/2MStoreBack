@@ -45,23 +45,39 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
 			Long clientId, String type) {
+		
+		
 		List<CommandLine> commandLines = new ArrayList<>();
 		List<Article> articles = new ArrayList<>();
-		Invoice invoice = invoiceService.addInvoice(company,clientId);
+		Invoice invoice ;
+		if(commandLinesDto.get(0).getId() == null) {
+			 invoice = invoiceService.addInvoice(company,clientId);			
+		}else {
+			 invoice = invoiceService.getById(commandLinesDto.get(0).getInvoice().getId()).getBody();
+			 logger.warn("before delete");
+			 commandLineRepository.deleteAllByInvoiceId(invoice.getId());
+			 logger.warn("after delete");
+				
+		}
 		
 		for(CommandLineDto i : commandLinesDto) {
+			
 			Article article = articleService.findById(i.getArticle().getId());
 			articles.add(article);
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
 			}
 		CommandLine commandLine = commandLineMapper.mapToEntity(i);
+//		if(i.getId() != null) {
+//			CommandLine command = commandLineRepository.findById(i.getId()).get();
+//			commandLineRepository.delete(command);
+//		}
 		commandLine.setInvoice(invoice);
 		String prix_article_tot = df.format(i.getQuantity()*article.getCost()*article.getMargin());
 		prix_article_tot = prix_article_tot.replace(",", ".");
 		commandLine.setPrixArticleTot(Double.parseDouble(prix_article_tot));
 		String tot_tva = df.format(article.getTva()*i.getQuantity()*article.getCost()*article.getMargin()/100);
-		tot_tva = tot_tva.replace(",", ".");
+		tot_tva = tot_tva.replace(",", "."); 
 		commandLine.setTotTva(Double.parseDouble(tot_tva));
 		commandLines.add(commandLine);
 		}
@@ -71,10 +87,12 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		double totTva= 0;
 		double totTtc= 0;
 		for(CommandLine i : commandLine) {
-			 totHt =+ i.getPrixArticleTot();
-			 totTva =+ i.getTotTva();
-			 totTtc =+ totHt+totTva;
+			 totHt += i.getPrixArticleTot();
+			 totTva += i.getTotTva();
+			 totTtc += totHt+totTva;
+			 logger.warn("total ttc "+totTtc);
 		}
+		logger.warn("total ttc "+totTtc);
 		invoice.setPrix_article_tot(totHt);
 		invoice.setTot_tva_invoice(totTva);
 		invoice.setPrix_invoice_tot(totTtc);
