@@ -113,13 +113,8 @@ public class CompanyService extends BaseService<Company, Long> {
 			throw new RecordIsAlreadyExist("this code is already exist please choose another one");
 			}
 		}
-		if(!company.getCodecp().equals(companyDto1.getCodecp())) {
-			boolean existCodeCP = companyRepository.existsByCodecp(companyDto1.getCodecp());
-			if(existCodeCP) {				
-			throw new RecordIsAlreadyExist("this codecp is already exist please choose another one");
-			}
-		}
-		if(!company.getCodecp().equals(companyDto1.getCodecp())) {
+		
+		if(!company.getMatfisc().equals(companyDto1.getMatfisc())) {
 			boolean existMatfisc = companyRepository.existsByMatfisc(companyDto1.getMatfisc());
 			if(existMatfisc) {				
 			throw new RecordIsAlreadyExist("this matricule fiscale is already exist please choose another one");

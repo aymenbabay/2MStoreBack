@@ -237,26 +237,22 @@ public class ArticleService extends BaseService<Article, Long>{
 		Category category = categoryService.getDefaultCategory(company);
 		SubCategory subCategory = subCategoryService.getDefaultSubCategory(company);
 		Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
-		System.out.println("before for loop in article service inpact invoice");
 		Article article;
 		//the code below convey that i add article to client table
 		for(int i =0; i < commandLines.size();i++) {
-			System.out.println("in for loop before optional of companyarticle in article service inpact invoice");
-			Optional<Article> art = articleRepository.findBySharedPointAndProviderId(commandLines.get(i).getArticle().getSharedPoint(), provider.get().getId());
-			System.out.println("in for loop after optional of companyarticle in article service inpact invoice");
+			Optional<Article> art = articleRepository.findByCodeAndProviderId(commandLines.get(i).getArticle().getCode(), provider.get().getId());
+			logger.warn("quantity of problem ==> "+commandLines.get(i).getQuantity());
 			String articleCost = df.format(commandLines.get(i).getArticle().getCost() + (commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getTva()+ commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getMargin())/100);
 			articleCost = articleCost.replace(",", ".");
 			double qte  ;
 			if(art.isPresent()) {
-				System.out.println("in if loop in article service inpact invoice");
 				 article = art.get();
-				 qte= (commandLines.get(i).getQuantity()+article.getQuantity());
+				 qte= (commandLines.get(i).getQuantity());
 				 logger.warn(articleCost+" article cost "+article.getQuantity()+" article quantity "+qte +" qte");
-				article.setQuantity(qte);
+				article.setQuantity(qte+article.getQuantity());
 				//do not remove the above line in case of the provider has augmented the article price
 				article.setCost(Double.parseDouble(articleCost));	
 			}else {				
-				System.out.println("in the else loop in article service inpact invoice");
 				Article ar = commandLines.get(i).getArticle();
 				qte = commandLines.get(i).getQuantity();
 				 article = new Article();
@@ -271,16 +267,20 @@ public class ArticleService extends BaseService<Article, Long>{
 				 article.setProvider(provider.get());
 				 article.setQuantity(qte);
 				 article.setMargin(company.getMargin());
+				 article.setCompany(company);
+				 article.setIsVisible(company.getIsVisible());
 			article.setCategory(category);
 			article.setSubCategory(subCategory);
 			article.setCost(Double.parseDouble(articleCost));
 			article.setSharedPoint(commandLines.get(i).getArticle().getSharedPoint());
 			articleRepository.save(article);
+			logger.warn("new article saved");
 			}
+			logger.warn("just before invontory impact function ");
 			inventoryService.impactInvoiceOnClient(company,article,Double.parseDouble(articleCost),qte);
-			Optional<Article> companyArt = articleRepository.findById(commandLines.get(i).getArticle().getId());
-			Article artt = companyArt.get();
-			artt.setQuantity(artt.getQuantity()-commandLines.get(i).getQuantity());
+//			Optional<Article> companyArt = articleRepository.findById(commandLines.get(i).getArticle().getId());
+//			Article artt = companyArt.get();
+//			artt.setQuantity(artt.getQuantity()-commandLines.get(i).getQuantity());
 			
 		}
 		

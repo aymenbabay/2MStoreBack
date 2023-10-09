@@ -30,6 +30,8 @@ public class CommandLine extends BaseEntity<Long> implements Serializable{
 	private Double totTva;
 
 	private Double prixArticleTot;
+	
+	private Double discount;
 
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name = "invoiceId")

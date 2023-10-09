@@ -34,6 +34,8 @@ public class Invoice extends BaseEntity<Long> implements Serializable {
 	
 	private Double prix_article_tot;
 	
+	private Double discount;
+	
 	private Status status;
 	
 

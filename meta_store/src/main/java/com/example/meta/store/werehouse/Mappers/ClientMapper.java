@@ -14,7 +14,5 @@ public interface ClientMapper {
 	
 	ClientDto mapToDto(Client entity);
 
-
-    @Mapping(source = "codecp", target = "code")
 	Client mapCompanyToClient(Company company);
 }

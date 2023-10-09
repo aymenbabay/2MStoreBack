@@ -104,12 +104,10 @@ public class InvoiceController {
 		Client client = getMeAsClient();
 		switch (type) {
 		case "ACCEPT": {
-			logger.warn(type);
 			invoiceService.accepted(invoice,client.getId());
 			break;
 		}
 		case "REFUSE":{
-			logger.warn(type);
 			invoiceService.refused(invoice,client.getId());
 			break;
 		}

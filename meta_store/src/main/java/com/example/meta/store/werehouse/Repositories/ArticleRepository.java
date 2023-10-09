@@ -38,7 +38,7 @@ public interface ArticleRepository extends BaseRepository<Article, Long>{
 	List<Article> findAllByCompanyId(Long companyId,Long clientId, Long providerId);
 
 
-	Optional<Article> findBySharedPointAndProviderId(String sharedPoint, Long id);
+	Optional<Article> findByCodeAndProviderId(String code, Long id);
 
 
 	List<Article> findAllMyByCompanyId(Long id);

@@ -32,10 +32,7 @@ public class InventoryService extends BaseService<Inventory, Long> {
 	private final InventoryMapper inventoryMapper;
 	
 	private final InventoryRepository inventoryRepository;
-	
-	private final CompanyService companyService;
-	
-	
+		
 
 	private final Logger logger = LoggerFactory.getLogger(InventoryService.class);
 	
@@ -94,13 +91,14 @@ public class InventoryService extends BaseService<Inventory, Long> {
 
 	public void impacteInvoice( Company company, List<CommandLineDto> commandLinesDto, List<Article> articles) {
 		
-		for(CommandLineDto i : commandLinesDto) {			
+		for(CommandLineDto i : commandLinesDto) {	
+			logger.warn("c bon wsol lil inventory in the function start");
 		Inventory providerInventory = findByArticleIdAndCompanyId(i.getArticle().getId(),company.getId());
 		providerInventory.setOut_quantity(providerInventory.getOut_quantity()+i.getQuantity());
 		for(Article a : articles) {
 			String articleCost = df.format((a.getCost() + a.getCost() * a.getTva() * a.getMargin()/100) * i.getQuantity());
 			articleCost = articleCost.replace(",", ".");
-			if(a.getId().equals(i.getArticle())) {
+			if(a.getId().equals(i.getArticle().getId())) {
 				providerInventory.setArticleSelling(providerInventory.getArticleSelling() + Double.parseDouble(articleCost));
 			}
 		inventoryRepository.save(providerInventory);
@@ -109,31 +107,30 @@ public class InventoryService extends BaseService<Inventory, Long> {
 		
 	}
 
-	public Inventory findByArticleIdAndCompanyId(Long companyArticleId, Long companyId) {
-		Optional<Inventory> inventory = inventoryRepository.findByArticleIdAndCompanyId(companyArticleId, companyId);
+	public Inventory findByArticleIdAndCompanyId(Long articleId, Long companyId) {
+		Optional<Inventory> inventory = inventoryRepository.findByArticleIdAndCompanyId(articleId, companyId);
 		return inventory.get();
 	}
 
 	public void impactInvoiceOnClient(Company company, Article article, double parseDouble, double qte) {
 		Optional<Inventory> clientInventory = inventoryRepository.findByArticleIdAndCompanyId(article.getId(),company.getId());
+		Inventory clientInventori ;
 		if(clientInventory.isPresent()) {
-			Inventory clientInventori = clientInventory.get();
-			clientInventori.setIn_quantity(clientInventori.getIn_quantity()+qte);
-			clientInventori.setArticleCost(clientInventori.getArticleCost()+parseDouble);
+			 clientInventori = clientInventory.get();
+			 clientInventori.setIn_quantity(clientInventori.getIn_quantity()+qte);
+			clientInventori.setArticleCost(clientInventori.getArticleCost()+(parseDouble*qte));
 		}else {
-			Inventory clientInventori = new Inventory();
-			logger.warn("inventory service impact invoice on client else");
-		//	Optional<CompanyArticle> companyArt = companyArticleRepository.findByArticleIdAndCompanyId(a.getArticle().getId(), clientCompany.getId());
+			 clientInventori = new Inventory();
 			clientInventori.setArticle(article);
 			clientInventori.setCompany(company);
-			clientInventori.setArticleCost(parseDouble);
+			clientInventori.setArticleCost(parseDouble*qte);
 			clientInventori.setArticleSelling((double)0);
-			clientInventori.setIn_quantity(article.getQuantity());
+			logger.warn("quantity of in quantity "+qte);
 			clientInventori.setOut_quantity((double)0);
-			inventoryRepository.save(clientInventori);
-				
-				
+			clientInventori.setIn_quantity(qte);
+								
 			}
+		inventoryRepository.save(clientInventori);
 		
 	}
 

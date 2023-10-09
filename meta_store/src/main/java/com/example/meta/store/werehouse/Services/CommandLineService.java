@@ -44,22 +44,20 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
     DecimalFormat df = new DecimalFormat("#.###");
 
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
-			Long clientId, String type) {
+			Long clientId, Double discount, String type) {
 		
 		
 		List<CommandLine> commandLines = new ArrayList<>();
 		List<Article> articles = new ArrayList<>();
 		Invoice invoice ;
 		if(commandLinesDto.get(0).getId() == null) {
-			 invoice = invoiceService.addInvoice(company,clientId);			
+			 invoice = invoiceService.addInvoice(company,clientId);	
+			 
 		}else {
 			 invoice = invoiceService.getById(commandLinesDto.get(0).getInvoice().getId()).getBody();
-			 logger.warn("before delete");
 			 commandLineRepository.deleteAllByInvoiceId(invoice.getId());
-			 logger.warn("after delete");
-				
 		}
-		
+		invoice.setDiscount(discount);
 		for(CommandLineDto i : commandLinesDto) {
 			
 			Article article = articleService.findById(i.getArticle().getId());
@@ -67,16 +65,14 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
 			}
+			logger.warn("article quantity "+article.getQuantity()+" command line quantity "+i.getQuantity());
+			article.setQuantity(article.getQuantity() - i.getQuantity());
 		CommandLine commandLine = commandLineMapper.mapToEntity(i);
-//		if(i.getId() != null) {
-//			CommandLine command = commandLineRepository.findById(i.getId()).get();
-//			commandLineRepository.delete(command);
-//		}
 		commandLine.setInvoice(invoice);
-		String prix_article_tot = df.format(i.getQuantity()*article.getCost()*article.getMargin());
+		String prix_article_tot = df.format(i.getQuantity()*(article.getCost()+ article.getCost()*article.getMargin()/100));
 		prix_article_tot = prix_article_tot.replace(",", ".");
 		commandLine.setPrixArticleTot(Double.parseDouble(prix_article_tot));
-		String tot_tva = df.format(article.getTva()*i.getQuantity()*article.getCost()*article.getMargin()/100);
+		String tot_tva = df.format(article.getTva()*Double.parseDouble(prix_article_tot)/100);
 		tot_tva = tot_tva.replace(",", "."); 
 		commandLine.setTotTva(Double.parseDouble(tot_tva));
 		commandLines.add(commandLine);
@@ -90,7 +86,6 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 			 totHt += i.getPrixArticleTot();
 			 totTva += i.getTotTva();
 			 totTtc += totHt+totTva;
-			 logger.warn("total ttc "+totTtc);
 		}
 		logger.warn("total ttc "+totTtc);
 		invoice.setPrix_article_tot(totHt);

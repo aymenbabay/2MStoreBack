@@ -128,12 +128,12 @@ public class ProviderService extends BaseService<Provider, Long> {
 	
 	public Provider addMeAsProvider(Company company) {
 		
-		Optional<Provider> provider = providerRepository.findByCode(company.getCodecp());
+		Optional<Provider> provider = providerRepository.findByCode(company.getCode());
 		if(provider.isPresent()) {
 			throw new RecordIsAlreadyExist("This Provider Code Is Already Exist Please Choose Another One");
 		}
 		Provider provider1 = new Provider();
-		provider1.setCode(company.getCodecp());
+		provider1.setCode(company.getCode());
 		provider1.setCompany(company);
 		provider1.setCredit((double)0);
 		provider1.setMvt((double)0);

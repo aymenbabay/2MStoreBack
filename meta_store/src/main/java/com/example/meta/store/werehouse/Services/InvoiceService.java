@@ -62,13 +62,12 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 			InvoiceDto invoiceDto = invoiceMapper.mapToDto(i);
 			invoicesDto.add(invoiceDto);
 		}
-		System.out.println("invoice service before return invoices dto get my invoice as provider "+invoicesDto.get(0).getClient());
 		return invoicesDto;
 	}
 	
 	public List<InvoiceDto> getInvoicesAsClient(Company company) {
 		Client client = clientService.getMeAsClient(company).get();
-		List<Invoice> invoices = invoiceRepository.findAllByClientId(client.getId());
+		List<Invoice> invoices = invoiceRepository.findAllByClientIdAndStatus(client.getId(),Status.ACCEPTED);
 		List<InvoiceDto> invoicesDto = new ArrayList<>();
 		for(Invoice i : invoices) {
 			InvoiceDto invoiceDto = invoiceMapper.mapToDto(i);

@@ -18,8 +18,6 @@ public interface CompanyRepository extends BaseRepository<Company, Long> {
 
 	boolean existsByCode(String code);
 
-	boolean existsByCodecp(String codecp);
-
 	boolean existsByMatfisc(String matfisc);
 
 	boolean existsByBankaccountnumber(String bankaccountnumber);

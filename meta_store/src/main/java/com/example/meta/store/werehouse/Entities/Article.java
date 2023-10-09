@@ -18,6 +18,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,16 +45,16 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	
 	private String discription;
 	
-	@Positive(message = "Cost Field Must Be A Positive Number")
+	@PositiveOrZero(message = "Cost Field Must Be A Positive Number")
 	private Double cost;
 
-	@Positive(message = "Quantity Field Must Be A Positive Number")
+	@PositiveOrZero(message = "Quantity Field Must Be A Positive Number")
 	private Double quantity;
 	
 	private Double minQuantity;
 	
 	
-	@Positive(message = "Selling_Price Field Must Be A Positive Number")
+	@PositiveOrZero(message = "Selling_Price Field Must Be A Positive Number")
 	private Double margin;
 	
 	private String barcode;

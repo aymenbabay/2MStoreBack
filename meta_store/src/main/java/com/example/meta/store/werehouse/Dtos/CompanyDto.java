@@ -25,9 +25,7 @@ public class CompanyDto extends BaseDto<Long> implements Serializable {
 	private String name;
 	
 	private String code;
-	
-	private String codecp;
-	
+		
 	private String matfisc;
 	
 	private String address;

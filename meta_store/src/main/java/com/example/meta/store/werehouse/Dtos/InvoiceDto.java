@@ -25,6 +25,8 @@ public class InvoiceDto extends BaseDto<Long> implements Serializable {
 	private Double prix_invoice_tot;
 	
 	private Double prix_article_tot;
+
+	private Double discount;
 	
 	private Status status;
 	

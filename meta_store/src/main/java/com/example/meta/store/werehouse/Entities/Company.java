@@ -38,9 +38,6 @@ public class Company extends BaseEntity<Long> implements Serializable{
 	private String code;
 
 	@Column(unique = true)
-	private String codecp;
-
-	@Column(unique = true)
 	private String matfisc;
 	
 	private String address;

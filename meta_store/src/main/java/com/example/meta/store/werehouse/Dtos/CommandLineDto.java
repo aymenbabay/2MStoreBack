@@ -20,6 +20,8 @@ public class CommandLineDto extends BaseDto<Long> implements Serializable{
 	private Double totTva;
 
 	private Double prixArticleTot;
+	
+	private Double discount;
 		
 	private ArticleDto article;
 	

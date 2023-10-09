@@ -33,7 +33,7 @@ public interface InvoiceRepository extends BaseRepository<Invoice, Long> {
 
 	List<Invoice> findAllByCompanyId(Long companyId);
 
-	List<Invoice> findAllByClientId(Long clientId);
+	List<Invoice> findAllByClientIdAndStatus(Long clientId, Status status);
 
 	static boolean existsByClientId(Long id) {
 		// TODO Auto-generated method stub
