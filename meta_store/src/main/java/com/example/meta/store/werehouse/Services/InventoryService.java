@@ -18,6 +18,7 @@ import com.example.meta.store.werehouse.Entities.Article;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Inventory;
+import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Mappers.InventoryMapper;
 import com.example.meta.store.werehouse.Repositories.InventoryRepository;
 
@@ -60,14 +61,13 @@ public class InventoryService extends BaseService<Inventory, Long> {
 		inventory.setArticle(article);
 		inventory.setArticleCost(Double.parseDouble(articleCost));
 		inventory.setArticleSelling((double)0);
+		inventory.setDiscountIn((double)0);
+		inventory.setDiscountOut((double)0);
 		inventoryRepository.save(inventory);
 		return null;
 		 
 	}
 
-	public Optional<Inventory> getArticleCompanyArticleId( Long companyarticleId, Company company) {
-		return inventoryRepository.findByArticleIdAndCompanyId(companyarticleId,company.getId());
-	}
 
 	public void addQuantity(Article article, Double quantity, Company company) {
 		Optional<Inventory> inventori = inventoryRepository.findByArticleIdAndCompanyId(article.getId(),company.getId());
@@ -89,20 +89,29 @@ public class InventoryService extends BaseService<Inventory, Long> {
 		inventoryRepository.save(inventory);
 	}
 
-	public void impacteInvoice( Company company, List<CommandLineDto> commandLinesDto, List<Article> articles) {
+	public void impacteInvoice( Company company, List<CommandLine> commandLinesDto) {
 		
-		for(CommandLineDto i : commandLinesDto) {	
-			logger.warn("c bon wsol lil inventory in the function start");
+		for(CommandLine i : commandLinesDto) {
 		Inventory providerInventory = findByArticleIdAndCompanyId(i.getArticle().getId(),company.getId());
 		providerInventory.setOut_quantity(providerInventory.getOut_quantity()+i.getQuantity());
-		for(Article a : articles) {
-			String articleCost = df.format((a.getCost() + a.getCost() * a.getTva() * a.getMargin()/100) * i.getQuantity());
+		
+				if(i.getDiscount() != 0) {
+					String articleDiscount = df.format(providerInventory.getDiscountOut()+i.getArticle().getCost()*i.getDiscount()/100);
+					articleDiscount = articleDiscount.replace(",", ".");
+					providerInventory.setDiscountOut(Double.parseDouble(articleDiscount));
+				}
+				if(i.getInvoice().getDiscount() !=0) {
+					String invoiceDiscount = df.format(providerInventory.getDiscountOut()+i.getArticle().getCost()*i.getInvoice().getDiscount()/100);
+					invoiceDiscount = invoiceDiscount.replace(",", ".");
+					providerInventory.setDiscountOut(Double.parseDouble(invoiceDiscount));
+					
+				}
+			String articleCost = df.format((i.getArticle().getCost() + i.getArticle().getCost() * i.getArticle().getTva() * i.getArticle().getMargin()/100) * i.getQuantity());
 			articleCost = articleCost.replace(",", ".");
-			if(a.getId().equals(i.getArticle().getId())) {
 				providerInventory.setArticleSelling(providerInventory.getArticleSelling() + Double.parseDouble(articleCost));
-			}
+			
 		inventoryRepository.save(providerInventory);
-		}
+		
 		}
 		
 	}
@@ -112,25 +121,52 @@ public class InventoryService extends BaseService<Inventory, Long> {
 		return inventory.get();
 	}
 
-	public void impactInvoiceOnClient(Company company, Article article, double parseDouble, double qte) {
-		Optional<Inventory> clientInventory = inventoryRepository.findByArticleIdAndCompanyId(article.getId(),company.getId());
+	public void impactInvoiceOnClient(Company company, CommandLine i, Article article) {
+		
+			Optional<Inventory> clientInventory = inventoryRepository.findByArticleIdAndCompanyId(article.getId(),company.getId());
+			String articleCost = df.format(i.getArticle().getCost() + (i.getArticle().getCost()*i.getArticle().getTva()+ i.getArticle().getCost()*i.getArticle().getMargin())/100);
+			articleCost = articleCost.replace(",", ".");
+			
 		Inventory clientInventori ;
 		if(clientInventory.isPresent()) {
 			 clientInventori = clientInventory.get();
-			 clientInventori.setIn_quantity(clientInventori.getIn_quantity()+qte);
-			clientInventori.setArticleCost(clientInventori.getArticleCost()+(parseDouble*qte));
+			 clientInventori.setIn_quantity(clientInventori.getIn_quantity()+i.getQuantity());
+			clientInventori.setArticleCost(clientInventori.getArticleCost()+(Double.parseDouble(articleCost)*i.getQuantity()));
+			if(i.getDiscount() !=null) {				
+				String articleDiscount = df.format(clientInventori.getDiscountIn()+article.getCost()*i.getDiscount()/100);
+				articleDiscount = articleDiscount.replace(",", ".");
+				clientInventori.setDiscountIn(Double.parseDouble(articleDiscount));
+				}
+				if(i.getInvoice().getDiscount() != null) {
+					String articleDiscount = df.format(clientInventori.getDiscountIn()+article.getCost()*i.getInvoice().getDiscount()/100);
+					articleDiscount = articleDiscount.replace(",", ".");
+					clientInventori.setDiscountIn(Double.parseDouble(articleDiscount));
+				}
 		}else {
 			 clientInventori = new Inventory();
 			clientInventori.setArticle(article);
 			clientInventori.setCompany(company);
-			clientInventori.setArticleCost(parseDouble*qte);
+			clientInventori.setArticleCost(Double.parseDouble(articleCost)*i.getQuantity());
 			clientInventori.setArticleSelling((double)0);
-			logger.warn("quantity of in quantity "+qte);
+			logger.warn("quantity of in quantity "+i.getQuantity());
 			clientInventori.setOut_quantity((double)0);
-			clientInventori.setIn_quantity(qte);
-								
+			clientInventori.setDiscountIn((double)0);
+			clientInventori.setDiscountOut((double)0);
+			clientInventori.setIn_quantity(i.getQuantity());
+			if(i.getDiscount() !=null) {				
+				String articleDiscount = df.format(clientInventori.getDiscountIn() +i.getArticle().getCost()*i.getDiscount()/100);
+				articleDiscount = articleDiscount.replace(",", ".");
+				clientInventori.setDiscountIn(Double.parseDouble(articleDiscount));
+				}
+				if(i.getInvoice().getDiscount() != null) {
+					String articleDiscount = df.format(clientInventori.getDiscountIn() +i.getArticle().getCost()*i.getInvoice().getDiscount()/100);
+					articleDiscount = articleDiscount.replace(",", ".");
+					clientInventori.setDiscountIn( Double.parseDouble(articleDiscount));
+				}
 			}
+		
 		inventoryRepository.save(clientInventori);
+		
 		
 	}
 

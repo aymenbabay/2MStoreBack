@@ -17,16 +17,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ClientDto extends BaseDto<Long> implements Serializable {
-	 
+
+	//we can delete all entitis and dtos those related by provider and client and make all in one entity and dto
+	
 	  private static final long serialVersionUID = 12345678105L;
 	  
 	  private String name;
 	  
 	  private String code;
-	    
-	  private Double mvt;
-	    
-	  private Double credit;
 	    
 	  private String nature;
 	  
@@ -39,9 +37,7 @@ public class ClientDto extends BaseDto<Long> implements Serializable {
 	  private String address;
 	  
 	  private String email;
-	    
-	  private Set<ProviderDto> providers;
-	    
+	    	    
 	  private CompanyDto company;
 
 	  private String indestrySector;

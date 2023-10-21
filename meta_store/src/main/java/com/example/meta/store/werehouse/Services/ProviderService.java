@@ -17,16 +17,22 @@ import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Controllers.ArticleController;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
+import com.example.meta.store.werehouse.Dtos.ProviderCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Client;
+import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.InvetationClientProvider;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.example.meta.store.werehouse.Mappers.ProviderCompanyMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
+import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ClientRepository;
 import com.example.meta.store.werehouse.Repositories.InvetationClientProviderRepository;
+import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderRepository;
 
 import jakarta.transaction.Transactional;
@@ -39,17 +45,22 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 	private final ProviderRepository providerRepository;
 	
-	private final ProviderMapper providerMapper;
-		
 	private final ClientRepository clientRepository ;
-
+	
+	private final ClientCompanyRepository clientCompanyRepository;
+		
 	private final InvetationClientProviderRepository invetationClientProviderRepository;
+
+	private final ProviderCompanyRepository providerCompanyRepository;
+	
+	private final ProviderMapper providerMapper;
+	
+	private final ProviderCompanyMapper providerCompanyMapper;
 	
 	private final Logger logger = LoggerFactory.getLogger(ProviderService.class);
 
 	public List<ProviderDto> getAllMyVirtaul(Company company){
-		Long id = clientRepository.findidByCompanyId(company.getId());
-		List<Provider> providers = providerRepository.findAllByCompanyId(id);
+		List<Provider> providers = providerRepository.findAllMyVirtualByCompanyId(company.getId());
 		if(providers == null) {
 			throw new RecordNotFoundException("there is no provider yet");
 		}
@@ -66,15 +77,15 @@ public class ProviderService extends BaseService<Provider, Long> {
 		Optional<Provider> provider2 = providerRepository.findByCodeAndCompanyId(providerDto.getCode(), company.getId());
 		if( provider2.isEmpty())  {
 				Provider provider = providerMapper.mapToEntity(providerDto);
-				provider.setCompany(company);
 				provider.setVirtual(true);
 				provider.setIsVisible(PrivacySetting.ONLY_ME);
 				providerRepository.save(provider);
-				Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(company.getId());
-				Set<Provider> providers = new HashSet<>();
-				providers.addAll(client.get().getProviders());
-				providers.add(provider);
-				client.get().setProviders(providers);
+				ProviderCompany providerCompany = new ProviderCompany();
+				providerCompany.setCompany(company);
+				providerCompany.setProvider(provider);
+				providerCompany.setMvt((double)0);
+				providerCompany.setCredit((double)0);
+				providerCompanyRepository.save(providerCompany);
 				return new ResponseEntity<ProviderDto>(HttpStatus.ACCEPTED);
 		}
 			throw new RecordIsAlreadyExist("Provider Code Is Already Exist Please Choose Another One");
@@ -82,11 +93,10 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 	
 
-	public ProviderDto upDateMyVirtualProviderById(Long id, ProviderDto providerDto, Company company) {
-		Provider provider = providerRepository.findById(id).get();
-		System.out.println("1aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-		if(provider == null) {
-			throw new RecordNotFoundException("there is no provider with id: "+id);
+	public ProviderDto upDateMyVirtualProviderById( ProviderDto providerDto, Company company) {
+		Optional<Provider> provider = providerRepository.findById(providerDto.getId());
+		if(provider.isEmpty()) {
+			throw new RecordNotFoundException("there is no provider with id: "+providerDto.getId());
 		}
 //		Optional<Provider> provider2 = providerRepository.findByCodeAndCompanyId(providerDto.getCode(), company.getId());
 //		System.out.println("2aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
@@ -105,10 +115,8 @@ public class ProviderService extends BaseService<Provider, Long> {
 //		}
 		Provider provider1 = providerMapper.mapToEntity(providerDto);
 		provider1.setCompany(company);
-		provider1.setIsVisible(provider.getIsVisible());
-		provider1.setMvt(provider.getMvt());
-		provider1.setCredit(provider.getCredit());
-		provider1.setVirtual(provider.isVirtual());
+		provider1.setIsVisible(provider.get().getIsVisible());
+		provider1.setVirtual(provider.get().isVirtual());
 		providerRepository.save(provider1);
 		return  providerDto;
 		
@@ -135,8 +143,6 @@ public class ProviderService extends BaseService<Provider, Long> {
 		Provider provider1 = new Provider();
 		provider1.setCode(company.getCode());
 		provider1.setCompany(company);
-		provider1.setCredit((double)0);
-		provider1.setMvt((double)0);
 		provider1.setNature("personne Moral");
 		provider1.setVirtual(false);
 		provider1.setBankaccountnumber(company.getBankaccountnumber());
@@ -147,7 +153,16 @@ public class ProviderService extends BaseService<Provider, Long> {
 		provider1.setAddress(company.getAddress());
 		provider1.setEmail(company.getEmail());
 		provider1.setIsVisible(company.getIsVisible());
-		super.insert(provider1);
+		providerRepository.save(provider1);
+		logger.warn("just befor provider company ");
+		ProviderCompany providerCompany = new ProviderCompany();
+		providerCompany.setCompany(company);
+		providerCompany.setProvider(provider1);
+		providerCompany.setCredit((double)0);
+		logger.warn("just after adding provider1 provider company "+provider1.getId());
+		providerCompany.setMvt((double)0);
+		logger.warn("just after adding mvt company ");
+		providerCompanyRepository.save(providerCompany);
 		return null;
 	}
 	
@@ -175,28 +190,48 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 	public void deleteProviderById(Long id, Company myCompany) {
-		Optional<Provider> provider = providerRepository.findById(id);
-		Provider hisProvider = provider.get();
-		if(provider.isEmpty()) {
-			throw new RecordNotFoundException("there is no provider with id: "+id);
+		Optional<ProviderCompany> providercompany = providerCompanyRepository.findByProviderIdAndCompanyId(id, myCompany.getId());
+		if(providercompany.isEmpty()) {
+			throw new RecordNotFoundException("this provider is not yours");
 		}
-		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(myCompany.getId());
-		Optional<Client> hisClient = clientRepository.findByIsVirtualFalseAndCompanyId(hisProvider.getCompany().getId());
-		Optional<Provider> myProvider = getMeAsProvider(myCompany.getId());
-		Client myClient = client.get();
-		boolean existRelation = false;
-		for(Provider i : myClient.getProviders()) {
-			if(i == hisProvider) {
-				existRelation = true;
-			}
+		ProviderCompany providerCompany = providercompany.get();
+		if(providerCompany.getMvt() !=0) {
+			providerCompany.setDeleted(true);
+			return;
 		}
-		if(!existRelation) {
-			throw new RecordNotFoundException("is already not your provider");
+		if(providerCompany.getProvider().isVirtual()) {
+			super.deleteById(id);
+			providerCompanyRepository.deleteByProviderId(id);
+			return;
 		}
-		myClient.getProviders().remove(hisProvider);
-		invetationClientProviderRepository.deleteByClientOrProviderAndCompany(hisClient.get(), myClient, hisProvider, myProvider.get(), hisProvider.getCompany(), myCompany);
+		providerCompanyRepository.deleteByProviderIdAndCompanyId(id,myCompany.getId());
+		invetationClientProviderRepository.deleteByProviderIdAndCompanyId(id, myCompany.getId());
 				
 	}
+	
+	
+	
+   
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 
 	public ProviderDto getMyByCodeAndCompanyId(String code, Company company) {
@@ -216,15 +251,17 @@ public class ProviderService extends BaseService<Provider, Long> {
 			return providerDto;		
 	}
 	
-	public List<ProviderDto> getAllMyProvider(Company company) {
-		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(company.getId());
-		List<Provider> providers = clientRepository.findAllProvider(client.get().getId());
+	public List<ProviderCompanyDto> getAllMyProvider(Company company) {
+		logger.warn("in the first line of get all my provider");
+		logger.warn("id of company in  get all my provider"+company.getId());
+		List<ProviderCompany> providers = providerCompanyRepository.findAllMyProvider(company.getId());
 		if(providers == null) {
 			throw new RecordNotFoundException("There Is No Provider Yet");
 		}
-		List<ProviderDto> providersDto = new ArrayList<>();
-		for(Provider i : providers) {
-			ProviderDto providerDto = providerMapper.mapToDto(i);
+		List<ProviderCompanyDto> providersDto = new ArrayList<>();
+		for(ProviderCompany i : providers) {
+			logger.warn("in for loop");
+			ProviderCompanyDto providerDto = providerCompanyMapper.mapToDto(i);
 			providersDto.add(providerDto);
 		}
 		return providersDto;
@@ -269,8 +306,19 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 	public boolean checkProviderById(Long providerId, Long companyId) {
 		logger.warn("check provider in provider service just before the function ");
-		return clientRepository.checkProvider(providerId, companyId);
+		return providerRepository.checkProvider(providerId, companyId);
 		
+	}
+
+
+	public List<ProviderDto> getAllProvidersContaining(Company company, String search) {
+		List<Provider> providers = providerRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search, company.getId());
+		List<ProviderDto> providersDto = new ArrayList<>();
+		for(Provider i : providers) {
+			ProviderDto providerDto = providerMapper.mapToDto(i);
+			providersDto.add(providerDto);
+		}
+		return providersDto;
 	}
 
 

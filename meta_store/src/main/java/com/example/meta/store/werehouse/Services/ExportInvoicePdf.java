@@ -41,7 +41,8 @@ public class ExportInvoicePdf {
 
     static DecimalFormat df = new DecimalFormat("#.###");
     
-	public static ByteArrayInputStream invoicePdf(List<CommandLine> commandLines, Invoice invoice, Company company, List<Article> articles)  {
+	public static ByteArrayInputStream invoicePdf(List<CommandLine> commandLines, Company company)  {
+		Invoice invoice = commandLines.get(0).getInvoice();
 		Document document = new Document();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try {
@@ -131,10 +132,9 @@ public class ExportInvoicePdf {
 		});
 		
 		for(CommandLine i : commandLines) {
-			for(Article j : articles) {
-				if(i.getArticle().getId() == j.getId()) {
+			
 		
-		PdfPCell libelleCell = new PdfPCell(new Phrase(j.getLibelle()));
+		PdfPCell libelleCell = new PdfPCell(new Phrase(i.getArticle().getLibelle()));
 		libelleCell.setPaddingLeft(1);
 		libelleCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		libelleCell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -147,18 +147,18 @@ public class ExportInvoicePdf {
 		qteCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(qteCell);
 		
-		PdfPCell unitCell = new PdfPCell(new Phrase(j.getUnit()));
+		PdfPCell unitCell = new PdfPCell(new Phrase(i.getArticle().getUnit()));
 		unitCell.setPaddingLeft(1);
 		unitCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		unitCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(unitCell);
 		
-		PdfPCell tvaCell = new PdfPCell(new Phrase(j.getTva().toString()));
+		PdfPCell tvaCell = new PdfPCell(new Phrase(i.getArticle().getTva().toString()));
 		tvaCell.setPaddingLeft(1);
 		tvaCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		tvaCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(tvaCell);
-		String x = df.format( j.getCost()*j.getMargin());
+		String x = df.format( i.getArticle().getCost()*i.getArticle().getMargin());
 		PdfPCell puCell = new PdfPCell(new Phrase(x));
 		puCell.setPaddingLeft(1);
 		puCell.setVerticalAlignment(Element.ALIGN_CENTER);
@@ -176,9 +176,7 @@ public class ExportInvoicePdf {
 		prixtotCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		prixtotCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(prixtotCell);
-		}
-		
-		}
+	
 		
 		}
 		PdfPTable totalTable = new PdfPTable(3);

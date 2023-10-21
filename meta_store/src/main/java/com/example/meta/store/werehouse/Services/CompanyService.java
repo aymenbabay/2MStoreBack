@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,11 +20,11 @@ import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.RoleService;
 import com.example.meta.store.Base.Security.Service.UserService;
 import com.example.meta.store.Base.Service.BaseService;
+import com.example.meta.store.werehouse.Controllers.ArticleController;
+import com.example.meta.store.werehouse.Controllers.CompanyController;
 import com.example.meta.store.werehouse.Dtos.CompanyDto;
 import com.example.meta.store.werehouse.Entities.Category;
-import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Mappers.CompanyMapper;
 import com.example.meta.store.werehouse.Repositories.CompanyRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,11 +32,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Service
-//@Transactional
+@Transactional
 @RequiredArgsConstructor
 public class CompanyService extends BaseService<Company, Long> {
 
@@ -58,6 +59,9 @@ public class CompanyService extends BaseService<Company, Long> {
 	
 	private final ObjectMapper objectMapper;
 
+
+	private final Logger logger = LoggerFactory.getLogger(CompanyController.class);
+	
 	public ResponseEntity<CompanyDto> insertCompany(String company, MultipartFile file, User user)
 			throws JsonMappingException, JsonProcessingException {
 		boolean exist = companyRepository.existsByUserId(user.getId());
@@ -84,8 +88,10 @@ public class CompanyService extends BaseService<Company, Long> {
 		role.addAll(user.getRoles());
 		user.setRoles(role);
 		userService.save(user);
-		super.insert(company1);
+		companyRepository.save(company1);
+		logger.warn("just befor add me as provider");
 		 providerService.addMeAsProvider(company1);
+		 logger.warn("just after add me as provider");
 		 clientService.addMeAsClient(company1);
 		Category category =   categoryService.addDefaultCategory(company1);
 		subCategoryService.addDefaultSubCategory(company1, category);
@@ -190,11 +196,6 @@ public class CompanyService extends BaseService<Company, Long> {
 		return company;
 	}
 
-	public Company findByClientId(Long clientId) {
-		Long id = clientService.findCompanyIdByCientId(clientId);
-		Optional<Company> company = companyRepository.findById(id);
-		return company.get();
-	}
 
 	
 

@@ -48,7 +48,6 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		
 		
 		List<CommandLine> commandLines = new ArrayList<>();
-		List<Article> articles = new ArrayList<>();
 		Invoice invoice ;
 		if(commandLinesDto.get(0).getId() == null) {
 			 invoice = invoiceService.addInvoice(company,clientId);	
@@ -61,7 +60,6 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		for(CommandLineDto i : commandLinesDto) {
 			
 			Article article = articleService.findById(i.getArticle().getId());
-			articles.add(article);
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
 			}
@@ -92,9 +90,9 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		invoice.setTot_tva_invoice(totTva);
 		invoice.setPrix_invoice_tot(totTtc);
 		invoiceService.insert(invoice);
-		inventoryService.impacteInvoice(company,commandLinesDto,articles);
+		inventoryService.impacteInvoice(company,commandLines);
 		if (type.equals("pdf-save-client") ) {	
-			return invoiceService.export(company,commandLines,articles);
+			return invoiceService.export(company,commandLines);
 		}
 		return null;
 	}

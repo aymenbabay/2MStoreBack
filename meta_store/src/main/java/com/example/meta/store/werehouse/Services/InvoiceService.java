@@ -85,12 +85,10 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	}
 
 
-	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines,
-			List<Article> articles) {
+	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines) {
 		
 
-		Optional<Invoice> invoice = invoiceRepository.lastInvoice(company.getId());
-		ByteArrayInputStream bais = ExportInvoicePdf.invoicePdf(commandLines,invoice.get(),company,articles);
+		ByteArrayInputStream bais = ExportInvoicePdf.invoicePdf(commandLines,company);
 		HttpHeaders headers = new HttpHeaders();
 		headers.add("Content-Disposition", "inline; filename=invoice.pdf");
 		 ResponseEntity<InputStreamResource> response = ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(bais));
@@ -134,10 +132,10 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	}
 	
 
-	public void accepted(Long code, Long clientId) {
-		Invoice invoice = getInvoice(code,clientId);
+	public void accepted(Long code, Client client) {
+		Invoice invoice = getInvoice(code,client.getId());
 		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoice.getId());
-		articleService.impactInvoice(commandLines, clientId);
+		articleService.impactInvoice(commandLines, client);
 		invoice.setStatus(Status.ACCEPTED);
 		invoiceRepository.save(invoice);
 	}

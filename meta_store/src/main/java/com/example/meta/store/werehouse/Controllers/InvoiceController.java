@@ -104,7 +104,7 @@ public class InvoiceController {
 		Client client = getMeAsClient();
 		switch (type) {
 		case "ACCEPT": {
-			invoiceService.accepted(invoice,client.getId());
+			invoiceService.accepted(invoice,client);
 			break;
 		}
 		case "REFUSE":{

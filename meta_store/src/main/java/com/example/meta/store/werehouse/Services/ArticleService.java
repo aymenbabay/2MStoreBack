@@ -231,9 +231,9 @@ public class ArticleService extends BaseService<Article, Long>{
 
 
 	//by the article to client 
-	public void impactInvoice(List<CommandLine> commandLines, Long clientId) {
+	public void impactInvoice(List<CommandLine> commandLines, Client client) {
 		
-		Company company = companyService.findByClientId(clientId);
+		Company company = client.getCompany();
 		Category category = categoryService.getDefaultCategory(company);
 		SubCategory subCategory = subCategoryService.getDefaultSubCategory(company);
 		Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
@@ -277,11 +277,8 @@ public class ArticleService extends BaseService<Article, Long>{
 			logger.warn("new article saved");
 			}
 			logger.warn("just before invontory impact function ");
-			inventoryService.impactInvoiceOnClient(company,article,Double.parseDouble(articleCost),qte);
-//			Optional<Article> companyArt = articleRepository.findById(commandLines.get(i).getArticle().getId());
-//			Article artt = companyArt.get();
-//			artt.setQuantity(artt.getQuantity()-commandLines.get(i).getQuantity());
 			
+			inventoryService.impactInvoiceOnClient(company,commandLines.get(i), article);
 		}
 		
 		System.out.println("get out of for loop in article service inpact invoice");
@@ -311,8 +308,7 @@ public class ArticleService extends BaseService<Article, Long>{
 			logger.warn("getAllArticleByCategoryId mrigel inside for loop ");
 			articles = articleRepository.findAllMyByCategoryIdAndCompanyId(categoryId, myCompanyId);
 		}else {
-			Long providerId = providerService.getMeProviderId(companyId);
-			articles = articleRepository.findAllByCategoryIdAndCompanyId(categoryId, companyId,providerId, client.getId());
+			articles = articleRepository.findAllByCategoryIdAndCompanyId(categoryId, companyId, client.getId());
 		}
 
 		if(articles == null) {
@@ -334,8 +330,7 @@ public class ArticleService extends BaseService<Article, Long>{
 			logger.warn("getAllArticleBySubCategoryIdAndCompanyId mrigel");
 			articles = articleRepository.findAllMyBySubCategoryIdAndCompanyId(subcategoryId, companId);
 		}else {
-			Long providerId = providerService.getMeProviderId(companyId);
-			articles = articleRepository.findAllBySubCategoryIdAndCompanyId(subcategoryId, companyId, providerId , client.getId());
+			articles = articleRepository.findAllBySubCategoryIdAndCompanyId(subcategoryId, companyId , client.getId());
 		}
 		if(articles == null) {
 			throw new RecordNotFoundException("there is no article");

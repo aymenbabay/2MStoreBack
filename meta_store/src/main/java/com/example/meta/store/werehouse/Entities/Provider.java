@@ -53,21 +53,17 @@ public class Provider extends BaseEntity<Long> implements Serializable {
 	
 	private String indestrySector;
 
-	@PositiveOrZero(message = "Mvt Field Must Be A Positive Number Or Zero")
-    private Double mvt;
 
     @Column(unique = true)
 	private String email;
     
-
-	@PositiveOrZero(message = "Credit Field Must Be A Positive Number Or Zero")
-    private Double credit;
     
     private String nature;
     
     //eager because error of serialization when get all my provider
-    @ManyToOne(fetch=FetchType.EAGER)
+    @OneToOne(fetch=FetchType.EAGER)
     @JoinColumn(name = "companyId")
     private Company company;
+    
     
 }

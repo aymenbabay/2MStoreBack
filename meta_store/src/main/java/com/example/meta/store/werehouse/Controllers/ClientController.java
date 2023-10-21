@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
+import com.example.meta.store.werehouse.Dtos.ClientCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Client;
@@ -52,15 +53,15 @@ public class ClientController {
 	private final Logger logger = LoggerFactory.getLogger(ClientController.class);
 	
 	@GetMapping("get_all_my")
-	public List<ClientDto> getAllMyClient(){
-		Optional<Company> company = getCompany();
-		return clientService.getAllMyClient(company.get());
+	public List<ClientCompanyDto> getAllMyClient(){
+		Client client = getClient();
+		return clientService.getAllMyClient(client);
 	}
 	
 	@GetMapping("get_all_containing/{var}")
 	public List<ClientDto> getAllClient(@PathVariable String var){
-		Optional<Provider> provider = getProvider();
-		return clientService.getAllClient(var,provider.get());
+		Optional<Company> company = getCompany();
+		return clientService.getAllClientContaining(var,company.get());
 	}
 
 	@GetMapping("get_all_my_containing/{value}")
@@ -68,14 +69,7 @@ public class ClientController {
 		Client client = getClient();
 		return clientService.getAllMyContaining(value,client);
 	}
-	
-	@GetMapping("get_all_provider_containing/{var}")
-	public List<ProviderDto> getAllProviderContaining(@PathVariable String var){
-		logger.warn("get all provider containing in clinet controller");
-		Client client = getClient();
-		Optional<Provider> provider = getProvider();
-		return clientService.getAllProviderContaining(var,client, provider.get());
-	}
+
 	  
 	@GetMapping("add_as_client/{id}")
 	public void addExistClient(@PathVariable Long id) {
@@ -88,16 +82,16 @@ public class ClientController {
 		clientService.insertClient(clientDto, company.get());
 	}
 	
-	@PutMapping("/update/{id}")
-	public void updateClient(@RequestBody ClientDto clientDto, @PathVariable Long id) {
+	@PutMapping("/update")
+	public void updateClient(@RequestBody ClientDto clientDto) {
 		Optional<Company> company = getCompany();
-		clientService.upDateMyClientById(id, clientDto, company.get());
+		clientService.upDateMyClientById( clientDto, company.get());
 	}
 	
 	@DeleteMapping("delete/{id}")
 	public void deleteById(@PathVariable Long id) {
-		Client client = getClient();
-		clientService.deleteClientById(id, client);
+		Company company = getCompany().get();
+		clientService.deleteClientById(id, company);
 	}
 	
 	@GetMapping("get_my_client_id")
@@ -107,8 +101,8 @@ public class ClientController {
 	
 	@GetMapping("checkClient/{id}")
 	public boolean checkClient(@PathVariable Long id) {
-		Optional<Provider> provider = getProvider();
-		return clientService.checkClient(id,provider.get().getId());
+		Optional<Company> company = getCompany();
+		return clientService.checkClient(id,company.get().getId());
 	}
 	
 	private Client getClient() {

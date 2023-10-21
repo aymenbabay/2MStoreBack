@@ -34,6 +34,10 @@ public class Inventory extends BaseEntity<Long> implements Serializable{
 	private Double articleCost;
 	
 	private Double articleSelling;
+	
+	private Double discountOut;
+	
+	private Double discountIn;
 
 	@ManyToOne()
 	@JoinColumn(name = "company_id",referencedColumnName = "id")

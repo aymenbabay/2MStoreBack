@@ -53,9 +53,7 @@ public class CommandLineController {
 	public ResponseEntity<InputStreamResource> addCommandLine(@RequestBody  List<CommandLineDto> commandLinesDto,
 			@PathVariable Long invoicecode, @PathVariable String type, @PathVariable Long clientid, @PathVariable Double discount)
 					 throws JsonProcessingException {
-		logger.warn("add command line controller "+commandLinesDto.get(0).getId());	
 		Company company = getCompany();
-		logger.warn("add command line controller 1");
 		return commandLineService.insertLine(commandLinesDto, company,clientid,discount,type);
 		
 	}

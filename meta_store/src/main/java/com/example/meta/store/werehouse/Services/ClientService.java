@@ -16,21 +16,31 @@ import org.springframework.stereotype.Service;
 import com.example.meta.store.Base.ErrorHandler.NotPermissonException;
 import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
+import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Controllers.InvoiceController;
+import com.example.meta.store.werehouse.Dtos.ClientCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Client;
+import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.InvetationClientProvider;
+import com.example.meta.store.werehouse.Entities.PassingClient;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Entities.ProviderCompany;
+import com.example.meta.store.werehouse.Enums.Nature;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.example.meta.store.werehouse.Mappers.ClientCompanyMapper;
 import com.example.meta.store.werehouse.Mappers.ClientMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
+import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ClientRepository;
 import com.example.meta.store.werehouse.Repositories.InvetationClientProviderRepository;
 import com.example.meta.store.werehouse.Repositories.InvoiceRepository;
+import com.example.meta.store.werehouse.Repositories.PassingClientRepository;
+import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
 
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -43,8 +53,8 @@ import lombok.RequiredArgsConstructor;
 public class ClientService extends BaseService<Client, Long>{
 	
 	private final ClientRepository clientRepository;
-		
-	private final InvoiceRepository invoiceRepository;
+			
+	private final PassingClientRepository passingClientRepository;
 	
 	private final InvetationClientProviderRepository invetationClientProviderRepository;
 	
@@ -52,13 +62,16 @@ public class ClientService extends BaseService<Client, Long>{
 		
 	private final ClientMapper clientMapper;
 
-	private final ProviderMapper providerMapper;
+	private final ClientCompanyMapper clientCompanyMapper;
 	
+	private final ClientCompanyRepository clientCompanyRepository;
+	
+	private final ProviderCompanyRepository providerCompanyRepository;
 	
 	private final Logger logger = LoggerFactory.getLogger(ClientService.class);
 	
 	public Client addMeAsClient(Company company) {
-		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(company.getId());
+		Optional<Client> client = clientRepository.getByCompanyIdAndIsVirtualFalse(company.getId());
 		if(client.isPresent()) {
 			throw new RecordIsAlreadyExist("You Are Already Client");
 		}
@@ -67,19 +80,25 @@ public class ClientService extends BaseService<Client, Long>{
 		if(client1.isPresent()) {
 			throw new RecordIsAlreadyExist("This Code is already found Please Try another Code");
 		}
+		logger.warn("just before mapping to client ");
 		Client meClient = clientMapper.mapCompanyToClient(company);
-		meClient.setCredit((double)0);
-		meClient.setMvt((double)0);
+		logger.warn("just after  mapping to client ");
 		meClient.setNature("personne Moral");
 		meClient.setCompany(company);
 		meClient.setVirtual(false);
 		meClient.setEmail(company.getEmail());
 		meClient.setIsVisible(company.getIsVisible());
-		Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
-		Set<Provider> providers = new HashSet<>();
-		providers.add(provider.get());
-		meClient.setProviders(providers);
+		logger.warn("just before client repository save new client ");
 		clientRepository.save(meClient);
+		ClientCompany clientCompany = new ClientCompany();
+		logger.warn("just after adding new clientCompany id =>  "+meClient.getId());
+		clientCompany.setClient(meClient);
+		logger.warn("just before setting client ");
+		clientCompany.setMvt((double)0);
+		clientCompany.setCredit((double)0);
+		clientCompany.setCompany(company);
+		logger.warn("just after clientCompany repository save new clientCompany id company "+company.getId());
+		clientCompanyRepository.save(clientCompany);
 		return null;
 		
 	}
@@ -87,20 +106,21 @@ public class ClientService extends BaseService<Client, Long>{
 	public ResponseEntity<ClientDto> insertClient(ClientDto clientDto,Company company) {
 		
 		Optional<Client> client2 = clientRepository.findByCodeAndCompanyId(clientDto.getCode(), company.getId());
-		if( client2.isEmpty())  {
+		if( client2.isPresent())  {
+			throw new RecordIsAlreadyExist("Client Code Is Already Exist Please Choose Another One");
+		}
 				Client client = clientMapper.mapToEntity(clientDto);
-				client.setCompany(company);
 				client.setVirtual(true);
 				client.setIsVisible(PrivacySetting.ONLY_ME);
-				Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
-				Set<Provider> providers = new HashSet<>();
-				providers.add(provider.get());
-				client.setProviders(providers);
+				client.setCompany(company);
 				super.insert(client);
+				ClientCompany clientCompany = new ClientCompany();
+				clientCompany.setClient(client);
+				clientCompany.setCompany(company);
+				clientCompany.setMvt((double)0);
+				clientCompany.setCredit((double)0);
+				clientCompanyRepository.save(clientCompany);
 				return new ResponseEntity<ClientDto>(HttpStatus.ACCEPTED);
-		}else 
-			throw new RecordIsAlreadyExist("Client Code Is Already Exist Please Choose Another One");
-		
 	}
 	
 
@@ -108,25 +128,31 @@ public class ClientService extends BaseService<Client, Long>{
 
 	public void addExistClient(Long id, Company company) {
 		ResponseEntity<Client> client = super.getById(id);
-		InvetationClientProvider invetationClientProvider = new InvetationClientProvider();
-		invetationClientProvider.setClient(client.getBody());
-		invetationClientProvider.setCompany(company);
-		invetationClientProvider.setStatus(Status.INWAITING);
-		invetationClientProviderRepository.save(invetationClientProvider);
+		if(client.getBody().isVirtual()) {
+			Optional<ClientCompany> clientCompany = clientCompanyRepository.findByClientIdAndCompanyId(id, company.getId());
+			clientCompany.get().setDeleted(false);
+			return;
+		}
+		InvetationClientProvider invetationClientCompany = new InvetationClientProvider();
+		invetationClientCompany.setClient(client.getBody());
+		invetationClientCompany.setCompany(company);
+		invetationClientCompany.setStatus(Status.INWAITING);
+		invetationClientProviderRepository.save(invetationClientCompany);
 	}
 
 
 
 
-	public List<ClientDto> getAllMyClient(Company company) {
-		Long providerId = providerService.getMeProviderId(company.getId());
-		List<Client> clients = clientRepository.getAllMyClients(providerId);
+	public List<ClientCompanyDto> getAllMyClient(Client client) {
+		logger.warn("client id => "+client.getId()+" company id =>"+client.getCompany().getId());
+		List<ClientCompany> clients = clientCompanyRepository.getAllMyClients(client.getCompany().getId());
 		if(clients == null) {
 			throw new RecordNotFoundException("There Is No Client Yet");
 		}
-		List<ClientDto> clientsDto = new ArrayList<>();
-		for(Client i : clients) {
-			ClientDto clientDto = clientMapper.mapToDto(i);
+		List<ClientCompanyDto> clientsDto = new ArrayList<>();
+		for(ClientCompany i : clients) {
+			logger.warn("client id ="+i.getId()+" company id = "+i.getCompany().getId());
+			ClientCompanyDto clientDto = clientCompanyMapper.mapToDto(i);
 			clientsDto.add(clientDto);
 		}
 		return clientsDto;
@@ -134,15 +160,15 @@ public class ClientService extends BaseService<Client, Long>{
 
 
 
-
-	public ClientDto upDateMyClientById(Long id, ClientDto clientDto, Company company) {
-		Client client = super.getById(id).getBody();
+//maybe there is a problem because of mapping
+	public ClientDto upDateMyClientById( ClientDto clientDto, Company company) {
+		Client client = super.getById(clientDto.getId()).getBody();
 		if(client == null) {
 			throw new RecordNotFoundException("Client Not Found");
 		}
 		
 		if( client.getCompany() != null) {
-			if(client.getCompany().getId() != company.getId()) {
+			if(client.getCompany() != company) {
 				throw new NotPermissonException("You Have No Permission");
 			}
 		
@@ -151,59 +177,43 @@ public class ClientService extends BaseService<Client, Long>{
 			throw new NotPermissonException("You Have No Permission");
 		}
 			Optional<Client> client1 = clientRepository.findByCodeAndCompanyId(clientDto.getCode(),company.getId());
-			if(client1.isPresent() && client1.get().getId() != id) {
+			if(client1.isPresent() && client1.get().getId() != clientDto.getId()) {
 				throw new RecordIsAlreadyExist("This Client Code Is Already Exist for "+client1.get().getName()+", Please Choose Another One");
 			}
 			Client client2 = clientMapper.mapToEntity(clientDto);
-			client2.setCompany(company);
-			client2.setProviders(client.getProviders());
 			client2.setIsVisible(client.getIsVisible());
 			client2.setVirtual(client.isVirtual());
-			client2.setCredit(client.getCredit());
-			client2.setMvt(client.getMvt());
 			clientRepository.save(client2);
 			return clientDto;
 		
 	}
 
 
-	public void deleteClientById(Long id, Client myClient) {
-		ResponseEntity<Client> client = super.getById(id);
-	        if (client == null || myClient == null) {
+	public void deleteClientById(Long id, Company company) {
+		Optional<ClientCompany> clientcompany = clientCompanyRepository.findByClientIdAndCompanyId(id, company.getId());
+	        if (clientcompany.isEmpty()) {
 	        	throw new RecordNotFoundException("Client Not Found ");
 	        }
-	        Client hisClient = client.getBody();
-	        if(hisClient.getCompany() == myClient.getCompany()) {
-	        	
-	        if(hisClient.isVirtual() == true) {
-	        	boolean isExist = InvoiceRepository.existsByClientId(hisClient.getId());
-	        	if(isExist) {
-	        		hisClient.setProviders(null);
-	        		clientRepository.save(hisClient);
-	        		return;
-	        	}
-	        	super.deleteById(id);
+	        ClientCompany clientCompany = clientcompany.get();
+	        if(clientCompany.getMvt() != 0) {
+	        	clientCompany.setDeleted(true);
 	        	return;
-	        }
-	        
-	        }
-	        Provider myProvider = providerService.getMeAsProvider(myClient.getCompany().getId()).get();
-	        Provider hisProvider = providerService.getMeAsProvider(hisClient.getCompany().getId()).get();
-	        hisClient.getProviders().remove(myProvider);
-	         invetationClientProviderRepository.deleteByClientOrProviderAndCompany(hisClient,myClient,hisProvider, myProvider, hisClient.getCompany(), myClient.getCompany());
+	        } 
+	        if(clientCompany.getClient().isVirtual()) {
+        		super.deleteById(id);
+        		clientCompanyRepository.deleteByClientId(id);	
+        		return;
+        	}
+	        clientCompanyRepository.deleteByClientIdAndCompanyId(id, company.getId());
+	        invetationClientProviderRepository.deleteByClientIdAndCompanyId(id, company.getId());
 	       
 		
 	}
 
 
-	public Optional<Client> getByCompanyId(Long companyId) {
-		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(companyId);
-		return client;
-	}
 
-
-
-	public List<ClientDto> getAllPermissionClient() {
+//maybe unuse
+	public List<ClientDto> getAllPermissionClientt() {
 		List<Client> clients = clientRepository.findAllHasCompanyId();
 		if(clients == null) {
 			throw new RecordNotFoundException("There Is No Client Yet");
@@ -216,21 +226,21 @@ public class ClientService extends BaseService<Client, Long>{
 		return clientsDto;
 	}
 
-
+//maybe unuse
 	public Optional<Client> getMeAsClient(Company company) {
-		Optional<Client> client = clientRepository.findByIsVirtualFalseAndCompanyId(company.getId());
+		Optional<Client> client = clientRepository.getByCompanyIdAndIsVirtualFalse(company.getId());
 		if(client.isEmpty()) {
 			throw new RecordNotFoundException("you are not a client ");
 		}
 		return client;
 	}
 
-	public List<ClientDto> getAllClient(String var, Provider provider) {
+	public List<ClientDto> getAllClientContaining(String var, Company company) {
 		List<Client> clients = new ArrayList<>();
-		if(provider == null) {
+		if(company == null) {
 			clients = clientRepository.findAllByIsVisibleTrueAndNameContainingOrCodeContaining(var);
 		}else {			
-			clients = clientRepository.findAllByIsVisibleAndNameContainingOrCodeContaining(var,provider.getCompany().getId(), provider.getId());
+			clients = clientRepository.findAllByIsVisibleAndNameContainingOrCodeContaining(var,company.getId());
 		}
 		if(clients.isEmpty()) {
 			throw new RecordNotFoundException("there is no client containing "+var +" word");
@@ -242,56 +252,55 @@ public class ClientService extends BaseService<Client, Long>{
 			}		
 		return clientsDto;
 	}
-
-	public List<ProviderDto> getAllProviderContaining(String var, Client client, Provider provider) {
-		logger.warn(var+" "+provider.getCompany().getId());
-		List<Provider> providers = clientRepository.findProviderByIsVisibleAndNameAndCodeContaining(var,client.getId(),provider.getId(), provider.getCompany().getId());
-		List<ProviderDto> dtos = new ArrayList<>();
-		for(Provider i : providers) {
-			logger.warn(var+" for loop "+provider.getCompany().getId());
-			ProviderDto providerDto = providerMapper.mapToDto(i);
-			dtos.add(providerDto);
-		}
-		return dtos;
-	}
 	
+
+	public boolean checkClient(Long clientId, Long companyId) {
+		boolean exists = clientCompanyRepository.existsByClientIdAndCompanyIdAndIsDeletedFalse(clientId,companyId);
+		return exists;
+	}
+
 	
-	public Long findCompanyIdByCientId(Long clientId) {
-		return clientRepository.findCompanyIdById(clientId);
-	}
-
-	public boolean checkClient(Long clientId, Long providerId) {
-		Optional<Client> isClient = clientRepository.findById(clientId);
-		 if (isClient.isPresent()) {
-	            return isClient.get().getProviders().stream()
-	                    .anyMatch(provider -> provider.getId().equals(providerId));
-	        }
-		return false;
-	}
-
 		public void acceptedInvetation(InvetationClientProvider invetation) {
-			Client client;
-			if(invetation.getClient() != null) {				
-				Optional<Provider> cProvider = providerService.getMeAsProvider(invetation.getCompany().getId());
-				 client = super.getById(invetation.getClient().getId()).getBody();
-				Set<Provider> providers = new HashSet<>();
-				providers.add(cProvider.get());
-				providers.addAll(client.getProviders());
-				client.setProviders(providers);
+			ClientCompany clientCompany = new ClientCompany();
+			ProviderCompany providerCompany = new ProviderCompany();
+			boolean existClient = false;
+			boolean existProvider = false;
+			if(invetation.getClient() != null) {	
+				clientCompany.setCompany(invetation.getCompany());
+				clientCompany.setClient(invetation.getClient());
+				Optional<Provider> provider = providerService.getMeAsProvider(invetation.getCompany().getId());
+				existProvider = providerCompanyRepository.existsByProviderIdAndCompanyId(provider.get().getId(), invetation.getClient().getCompany().getId());
+				if(!existProvider) {
+					providerCompany.setCompany(invetation.getClient().getCompany());
+					providerCompany.setProvider(provider.get());					
+				}
 			}
 			else {
-				 client = getByCompanyId(invetation.getCompany().getId()).get();
-				Set<Provider> providers = new HashSet<>();
-				providers.add(invetation.getProvider());
-				providers.addAll(client.getProviders());
-				client.setProviders(providers);
+					providerCompany.setProvider(invetation.getProvider());
+					providerCompany.setCompany(invetation.getCompany());
+					Optional<Client> client = getMeAsClient(invetation.getCompany());
+					existClient = clientCompanyRepository.existsByClientIdAndCompanyId(client.get().getId(), invetation.getProvider().getCompany().getId());
+					if(!existClient) {						
+						clientCompany.setCompany(invetation.getProvider().getCompany());
+						clientCompany.setClient(client.get());
+					}
 			}
-		clientRepository.save(client);
+			if(!existClient) {
+			clientCompany.setMvt((double)0);
+			clientCompany.setCredit((double)0);
+			clientCompanyRepository.save(clientCompany);
+			}
+			if(!existProvider) {				
+			providerCompany.setMvt((double)0);
+			providerCompany.setCredit((double)0);
+			providerCompanyRepository.save(providerCompany);
+			}
+			invetation.setStatus(Status.ACCEPTED);
 	}
 
 
 		public List<ClientDto> getAllMyContaining(String search,Client clientt) {
-			List<Client> clients = clientRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search,clientt.getCompany().getId(),clientt.getId());
+			List<Client> clients = clientRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search,clientt.getCompany().getId());
 			if(clients.isEmpty()) {
 				throw new RecordNotFoundException("there is no client containig "+search +" nedher name ether code");
 			}
@@ -303,10 +312,23 @@ public class ClientService extends BaseService<Client, Long>{
 			return clientsDto;
 		}
 
-		public void deleteClientFromMyList(Long id) {
-			// TODO Auto-generated method stub
-			
+		public PassingClient findPassingClientBUser(User user) {
+			Optional<PassingClient> client = passingClientRepository.findByUserId(user.getId());
+			if(client.isEmpty()) {
+				client = addMeAsClientByUser(user);
+			}
+			return client.get();
 		}
+
+		public Optional<PassingClient> addMeAsClientByUser(User user) {
+			PassingClient client = new PassingClient();
+			client.setUser(user);
+			client.setNature(Nature.INDIVIDUAL);
+			passingClientRepository.save(client);
+			return Optional.of(client);
+		}
+
+	
 
 	//------------------------------------------ properly work ----------------------------------------------------
 

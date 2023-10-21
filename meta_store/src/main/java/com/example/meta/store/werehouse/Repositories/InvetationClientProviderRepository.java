@@ -23,6 +23,10 @@ public interface InvetationClientProviderRepository extends BaseRepository<Invet
 	@Query("DELETE FROM InvetationClientProvider i WHERE ((i.client = :hisClient OR i.client = :myClient) OR (i.provider = :hisProvider OR i.provider = :myProvider)) AND (i.company = :hisCompany Or i.company = :myCompany)")
 	void deleteByClientOrProviderAndCompany(Client hisClient, Client myClient, Provider hisProvider, Provider myProvider, Company hisCompany, Company myCompany);
 
+	void deleteByClientIdAndCompanyId(Long id, Long id2);
+
+	void deleteByProviderIdAndCompanyId(Long id, Long id2);
+
 }
 
 

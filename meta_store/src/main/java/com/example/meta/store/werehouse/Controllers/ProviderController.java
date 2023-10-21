@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
+import com.example.meta.store.werehouse.Dtos.ProviderCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Services.CompanyService;
@@ -69,7 +70,7 @@ public class ProviderController {
 	}
 	
 	@GetMapping("/get_all_my")
-	public List<ProviderDto> getAllMy(){
+	public List<ProviderCompanyDto> getAllMy(){
 		Company company = getCompany();
 		return providerService.getAllMyProvider(company);
 	}
@@ -98,19 +99,19 @@ public class ProviderController {
 				
 	}
 	
-	@PutMapping("/update/{id}")
-	public ProviderDto upDateMyProviderById(@PathVariable Long id, @RequestBody @Valid ProviderDto providerDto) {
+	@PutMapping("/update")
+	public ProviderDto upDateMyProviderById( @RequestBody @Valid ProviderDto providerDto) {
 		System.out.println("haw fi update provider"+providerDto.getId());
 		Company company = getCompany();
-		return providerService.upDateMyVirtualProviderById(id,providerDto,company);
+		return providerService.upDateMyVirtualProviderById(providerDto,company);
 	}
-	
-	@DeleteMapping("/delete_my/{id}")
-	public void deleteMyProvider(@PathVariable Long id) {
-		Company company = getCompany();
-		providerService.deleteVirtualProviderById(id,company);
-		
-	}
+//	
+//	@DeleteMapping("/delete_my/{id}")
+//	public void deleteMyProvider(@PathVariable Long id) {
+//		Company company = getCompany();
+//		providerService.deleteVirtualProviderById(id,company);
+//		
+//	}
 	
 	@DeleteMapping("/delete/{id}")
 	public void deleteProvider(@PathVariable Long id) {
@@ -129,6 +130,12 @@ public class ProviderController {
 		logger.warn("check provider in provider controller");
 	Company company = getCompany();
 	return providerService.checkProviderById(id,company.getId());
+	}
+	
+	@GetMapping("get_all_provider_containing/{search}")
+	public List<ProviderDto> getAllProviderContaining(@PathVariable String search){
+		Company company = getCompany();
+		return providerService.getAllProvidersContaining(company, search);
 	}
 	
 	private Company getCompany() {

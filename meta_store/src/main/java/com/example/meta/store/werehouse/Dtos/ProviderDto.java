@@ -11,15 +11,14 @@ import lombok.Setter;
 @Setter
 public class ProviderDto extends BaseDto<Long> implements Serializable{
 
+
+	//we can delete all entitis and dtos those related by provider and client and make all in one entity and dto
+	
     private static final long serialVersionUID = 12345678106L;
 	
     	private String name;
     
 	    private String code;
-	    
-	    private Double mvt;
-	    
-	    private Double credit;
 	    
 	    private String nature;
 	    
