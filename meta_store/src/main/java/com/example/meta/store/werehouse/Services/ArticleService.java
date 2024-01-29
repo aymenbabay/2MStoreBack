@@ -20,11 +20,14 @@ import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Inventory;
+import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Entities.SubCategory;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Mappers.ArticleMapper;
 import com.example.meta.store.werehouse.Repositories.ArticleRepository;
+import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,6 +42,8 @@ public class ArticleService extends BaseService<Article, Long>{
 
 	private final ArticleRepository articleRepository;
 		
+	private final ProviderCompanyRepository providerCompanyRepository;
+	
 	private final ArticleMapper articleMapper; 
 		
 	private final InventoryService inventoryService;
@@ -79,7 +84,7 @@ public class ArticleService extends BaseService<Article, Long>{
 			article1.setSubCategory(subCategory);
 		}
 		super.insert(article1);
-		article1.setSharedPoint(article1.getCreatedBy());
+		article1.setSharedPoint(provider.getCompany().getUser().getUsername());
 		if(provider.getCompany().getIsVisible() == PrivacySetting.ONLY_ME) {			
 		article1.setIsVisible(PrivacySetting.ONLY_ME);
 		}
@@ -236,11 +241,11 @@ public class ArticleService extends BaseService<Article, Long>{
 		Company company = client.getCompany();
 		Category category = categoryService.getDefaultCategory(company);
 		SubCategory subCategory = subCategoryService.getDefaultSubCategory(company);
-		Optional<Provider> provider = providerService.getMeAsProvider(company.getId());
+		Provider provider = providerService.getMeAsProvider(company.getId()).get();
 		Article article;
 		//the code below convey that i add article to client table
 		for(int i =0; i < commandLines.size();i++) {
-			Optional<Article> art = articleRepository.findByCodeAndProviderId(commandLines.get(i).getArticle().getCode(), provider.get().getId());
+			Optional<Article> art = articleRepository.findByCodeAndProviderId(commandLines.get(i).getArticle().getCode(), provider.getId());
 			logger.warn("quantity of problem ==> "+commandLines.get(i).getQuantity());
 			String articleCost = df.format(commandLines.get(i).getArticle().getCost() + (commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getTva()+ commandLines.get(i).getArticle().getCost()*commandLines.get(i).getArticle().getMargin())/100);
 			articleCost = articleCost.replace(",", ".");
@@ -264,7 +269,7 @@ public class ArticleService extends BaseService<Article, Long>{
 				 article.setBarcode(ar.getBarcode());
 				 article.setTva(ar.getTva());
 				 article.setImage(ar.getImage());
-				 article.setProvider(provider.get());
+				 article.setProvider(provider);
 				 article.setQuantity(qte);
 				 article.setMargin(company.getMargin());
 				 article.setCompany(company);
@@ -280,7 +285,15 @@ public class ArticleService extends BaseService<Article, Long>{
 			
 			inventoryService.impactInvoiceOnClient(company,commandLines.get(i), article);
 		}
-		
+		Invoice invoice = commandLines.get(0).getInvoice();
+		Long providerId = providerService.getMeProviderId(invoice.getCompany().getId());
+		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(providerId,company.getId()).get();
+		String credit = df.format(providerCompany.getCredit()+ invoice.getPrix_invoice_tot());
+		credit = credit.replace(",",".");
+		providerCompany.setCredit(Double.parseDouble(credit));
+		String mvt = df.format(providerCompany.getMvt() + invoice.getPrix_invoice_tot());
+		mvt = mvt.replace(",", ".");
+		providerCompany.setMvt(Double.parseDouble(mvt));
 		System.out.println("get out of for loop in article service inpact invoice");
 	}
 

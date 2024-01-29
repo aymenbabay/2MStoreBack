@@ -25,23 +25,25 @@ import lombok.Setter;
 public class BaseEntity<ID> implements Serializable{
 
     private static final long serialVersionUID = 1234567813L;
-    
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private ID id;
 	
 	@CreatedBy
 	@Column(updatable = false)
-	private String createdBy;
+	private Long createdBy;
 	
 	@CreatedDate
 	@Column(updatable = false)
 	private LocalDateTime createdDate;
 	
 	@LastModifiedBy
-	private String lastModifiedBy;
+	private Long lastModifiedBy;
 	
 	@LastModifiedDate
 	private LocalDateTime lastModifiedDate;
+
+	
 	
 }

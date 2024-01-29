@@ -24,6 +24,7 @@ import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Services.CompanyService;
 import com.example.meta.store.werehouse.Services.ProviderService;
+import com.example.meta.store.werehouse.Services.WorkerService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,8 @@ public class ProviderController {
 	private final UserService userService;
 	
 	private final CompanyService companyService;
+	
+	private final WorkerService workerService;
 
 	private final Logger logger = LoggerFactory.getLogger(ProviderController.class);
 	
@@ -141,8 +144,13 @@ public class ProviderController {
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company != null) {
+		if(company.isPresent()) {
 			return company.get();
+		}
+		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
+		if(companyId != null) {			
+		ResponseEntity<Company> company2 = companyService.getById(companyId);
+		return (company2.getBody());
 		}
 			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
 			

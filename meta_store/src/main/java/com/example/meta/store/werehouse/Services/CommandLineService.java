@@ -3,6 +3,7 @@ package com.example.meta.store.werehouse.Services;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +15,15 @@ import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.CommandLineDto;
 import com.example.meta.store.werehouse.Entities.Article;
+import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Invoice;
+import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Mappers.CommandLineMapper;
+import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.CommandLineRepository;
+import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,14 +44,17 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	
 	private final CommandLineRepository commandLineRepository;
 	
+	private final ClientCompanyRepository clientCompanyRepository;
+	
+	private final ProviderCompanyRepository providerCompanyRepository;
+	
 	private final Logger logger = LoggerFactory.getLogger(CommandLineService.class);
 
     DecimalFormat df = new DecimalFormat("#.###");
 
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
 			Long clientId, Double discount, String type) {
-		
-		
+				
 		List<CommandLine> commandLines = new ArrayList<>();
 		Invoice invoice ;
 		if(commandLinesDto.get(0).getId() == null) {
@@ -91,6 +99,16 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		invoice.setPrix_invoice_tot(totTtc);
 		invoiceService.insert(invoice);
 		inventoryService.impacteInvoice(company,commandLines);
+		ClientCompany clientCompany = clientCompanyRepository.findByClientIdAndCompanyId(clientId, company.getId()).get();
+		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(commandLinesDto.get(0).getArticle().getProvider().getId(), clientCompany.getClient().getCompany().getId()).get();
+		String credit = df.format(clientCompany.getCredit()+invoice.getPrix_invoice_tot());
+		credit = credit.replace(",", ".");
+		String mvt = df.format(clientCompany.getMvt()+ invoice.getPrix_invoice_tot());
+		mvt = mvt.replace(",", ".");
+		clientCompany.setCredit(Double.parseDouble(credit));
+		clientCompany.setMvt(Double.parseDouble(mvt));
+		providerCompany.setCredit(Double.parseDouble(credit));
+		providerCompany.setMvt(Double.parseDouble(mvt));
 		if (type.equals("pdf-save-client") ) {	
 			return invoiceService.export(company,commandLines);
 		}

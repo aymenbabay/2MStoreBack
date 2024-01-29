@@ -54,6 +54,12 @@ public class WorkerController {
 		
 	}
 	
+	@GetMapping("/get/{name}")
+	public List<WorkerDto> getMyWorkerByName(@PathVariable String name){
+		Company company = getCompany();
+		return workerService.getMyWorkerByName(name,company);
+	}
+	
 	@PostMapping("/add")
 	public ResponseEntity<WorkerDto> insertWorker(@RequestBody @Valid WorkerDto workerDto){
 		Company company = getCompany();

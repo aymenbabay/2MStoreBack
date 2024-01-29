@@ -26,7 +26,7 @@ public interface ClientRepository extends BaseRepository<Client, Long>{
 			+ " AND (c.name LIKE %:search% OR c.code LIKE %:search%)")
 	List<Client> findAllByIsVisibleAndNameContainingOrCodeContaining(String search, Long companyId);
 	
-	@Query("SELECT c FROM Client c JOIN ClientCompany p WHERE ((c.company.id = :companyId OR p.company.id =:companyId ) AND (c.name LIKE %:search% OR c.code LIKE %:search%))")
+	@Query("SELECT c FROM Client c JOIN ClientCompany p WHERE ((c.company.id = :companyId OR p.company.id = :companyId ) AND (c.name LIKE %:search% OR c.code LIKE %:search%))")
 	List<Client> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long companyId);
 	
 	///////////////// CE BON /////////////////////////

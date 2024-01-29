@@ -63,7 +63,9 @@ public class ArticleController {
 			 @RequestParam(value ="file", required = false) MultipartFile file,
 			 @RequestParam("article") String article)
 			throws Exception{
+		logger.warn("just before get provider in insert client function ");
 		Optional<Provider> provider = getProvider();
+		logger.warn("just after get provider in insert client function " +provider.get().getCompany().getId());
 		return articleService.insertArticle(file,article,provider.get());
 	}
 	
@@ -124,7 +126,8 @@ public class ArticleController {
 	public List<ArticleDto> findRandomArticles(){
 		Optional<Client> client = getClient();
 		Optional<Provider> provider = getProvider();
-		if(client == null) {
+	//	logger.warn(" client "+client.get());
+		if(client.isEmpty()) {
 			return articleService.findRandomArticlesPub(null, null);
 		}
 		return articleService.findRandomArticlesPub(client.get(), provider.get());
@@ -140,7 +143,7 @@ public class ArticleController {
 	private Optional<Company> getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company != null) {
+		if(company.isPresent()) {
 			return company;
 		}
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
@@ -148,14 +151,13 @@ public class ArticleController {
 		ResponseEntity<Company> company2 = companyService.getById(companyId);
 		return Optional.of(company2.getBody());
 		}
-			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-			
+			return Optional.empty();
 	}
 	
 	private Optional<Provider> getProvider() {
 		Optional<Company> company = getCompany();
 		if(company.isEmpty()) {
-			return null;
+			return Optional.empty();
 		}
 		Optional<Provider> provider = providerService.getMeAsProvider(company.get().getId());
 		return provider;
@@ -164,7 +166,7 @@ public class ArticleController {
 	private Optional<Client> getClient(){
 		Optional<Company> company = getCompany();
 		if(company.isEmpty()) {
-			return null;
+			return Optional.empty();
 		}
 		Optional<Client> client = clientService.getMeAsClient(company.get());
 		return client;

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +25,7 @@ import com.example.meta.store.Base.Security.Entity.AuthenticationResponse;
 import com.example.meta.store.Base.Security.Entity.RegisterRequest;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.UserService;
+import com.example.meta.store.werehouse.Controllers.ArticleController;
 
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,7 +46,8 @@ public class UserController {
 	 private final  ServletContext context;
 	 
 	 private static final long EXPIRE_TOKEN_AFTER_MINUTES = 30;
-	 
+
+		private final Logger logger = LoggerFactory.getLogger(UserController.class);
 	@GetMapping("/all")
 	public ResponseEntity<?> getAll(){
 		List<User> users = userService.findAll();
@@ -58,6 +62,7 @@ public class UserController {
 	
 	@PostMapping("/register")
 	public ResponseEntity<AuthenticationResponse> register(@RequestBody @Valid RegisterRequest request){
+		logger.warn("je mrigeul fi registre ");
 		return ResponseEntity.ok(userService.register(request));
 	}
 	
@@ -114,7 +119,7 @@ public class UserController {
 	 }
 	 
 	 @GetMapping("/get/{username}")
-	 public UserDto getByUserName(@PathVariable String username) {
+	 public List<UserDto> getByUserName(@PathVariable String username) {
 		 return userService.getByUserName(username);
 	 }
 }

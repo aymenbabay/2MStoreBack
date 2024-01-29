@@ -67,7 +67,7 @@ public class CommandLineController {
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company != null) {
+		if(company.isPresent()) {
 			return company.get();
 		}
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);

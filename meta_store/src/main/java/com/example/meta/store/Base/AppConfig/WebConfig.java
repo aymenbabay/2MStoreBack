@@ -30,7 +30,7 @@ public class WebConfig {
 
 	  
 	@Bean
-	public AuditorAware<String> auditorAware(JwtAuthenticationFilter jwtAuthenticationFilter) {
+	public AuditorAware<Long> auditorAware(JwtAuthenticationFilter jwtAuthenticationFilter) {
 	    return new AuditorAwareImpl(jwtAuthenticationFilter);
 	}
 

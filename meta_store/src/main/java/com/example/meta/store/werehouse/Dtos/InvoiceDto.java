@@ -38,8 +38,10 @@ public class InvoiceDto extends BaseDto<Long> implements Serializable {
 	
 	private String CreatedBy;
 	
-	private InvoiceReturnDto client;
+	private ClientDto client;
 	
-	private InvoiceReturnDto company;
+	private CompanyDto company;
+	
+	private Boolean paid;
 	
 }

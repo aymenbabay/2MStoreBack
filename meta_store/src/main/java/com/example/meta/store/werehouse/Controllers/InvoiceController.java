@@ -53,14 +53,20 @@ public class InvoiceController {
 	
 	@GetMapping("getMyInvoiceAsProvider")
 	public List<InvoiceDto> getMyInvoiceAsProvider(){
-		Company company = getCompany();
-		return invoiceService.getMyInvoiceAsProvider(company.getId());
+		Optional<Company> company = getMyCompany();
+		if(company.get().getId() != null) {
+			return invoiceService.getMyInvoiceAsProvider(company.get().getId(),null);
+		}
+		company = getHisCompany();
+		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		return invoiceService.getMyInvoiceAsProvider(company.get().getId(),userId);
 		
 	}
 	
 	@GetMapping("getMyInvoiceAsClient")
 	public List<InvoiceDto> getInvoicesAsClient(){
 		Company company = getCompany();
+		logger.warn("company id "+company.getId());
 		return invoiceService.getInvoicesAsClient(company);
 	}
 	
@@ -70,31 +76,55 @@ public class InvoiceController {
 		invoiceService.cancelInvoice(company, id);
 	}
 	
-	private Company getCompany() {
+	private Optional<Company> getMyCompany(){
+		logger.warn("begin of get my company ");
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company != null) {
-			return company.get();
+		logger.warn("just after company in get my company ");
+		if(company.isPresent()) {			
+			return company;
 		}
+		return Optional.of(new Company());
+		
+	}
+	
+	private Optional<Company> getHisCompany() {
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
 		if(companyId != null) {			
 		ResponseEntity<Company> company2 = companyService.getById(companyId);
-		return company2.getBody();
+		return Optional.of(company2.getBody());
 		}
+		return null;
+	}
+	
+	private Company getCompany() {
+		Optional<Company> company = getMyCompany();
+		if(company.get().getId() != null) {
+			return company.get();
+		}
+		 company = getHisCompany();
+		if(company.get().getId() != null) {
+			return company.get();
+		}
+		
 			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");			
 	}
 	
-	/////////////////////// clinet invoice methods////////////////////
 	
 	@GetMapping("getnotaccepted")
 	public List<InvoiceDto> getInvoiceNotifications(){
+		logger.warn("begin of get not accepted ");
 		Client client = getMeAsClient();
-		return invoiceService.getInvoiceNotifications(client);
+		Optional<Company> company = getHisCompany();
+		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		return invoiceService.getInvoiceNotifications(client,company,userId);
 	}
 	
 	private Client getMeAsClient() {
-		Company company = getCompany();
-		Client client = clientService.getMeAsClient(company).get();
+		logger.warn("begin of get me as client ");
+		Optional<Company> company = getMyCompany();
+		logger.warn("just after get company in get me as client ");
+		Client client = clientService.getMeAsClient(company.get()).get();
 		return client;
 	}
 	

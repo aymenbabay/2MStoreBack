@@ -3,6 +3,7 @@ package com.example.meta.store.werehouse.Dtos;
 import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseDto;
+import com.example.meta.store.Base.Security.Dto.UserDto;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.werehouse.Entities.Company;
 
@@ -36,7 +37,7 @@ public class WorkerDto extends BaseDto<Long> implements Serializable {
 
 	private boolean statusvacation;
 	
-	private User user;
+	private UserDto user;
 
-	private Company company;
+	private CompanyDto company;
 }

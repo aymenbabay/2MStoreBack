@@ -25,7 +25,6 @@ import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Enums.Status;
-import com.example.meta.store.werehouse.Mappers.ClientInvoiceMapper;
 import com.example.meta.store.werehouse.Mappers.InvoiceMapper;
 import com.example.meta.store.werehouse.Repositories.CommandLineRepository;
 import com.example.meta.store.werehouse.Repositories.InvoiceRepository;
@@ -40,9 +39,7 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 
 	private final InvoiceMapper invoiceMapper;
-	
-	private final ClientInvoiceMapper clientInvoiceMapper;
-	
+		
 	private final InvoiceRepository invoiceRepository;
 	
 	private final CommandLineRepository commandLineRepository;
@@ -55,8 +52,14 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	
 	private final Logger logger = LoggerFactory.getLogger(InvoiceService.class);
 	
-	public List<InvoiceDto> getMyInvoiceAsProvider(Long companyId) {
-		List<Invoice> invoices =  invoiceRepository.findAllByCompanyId(companyId);
+	public List<InvoiceDto> getMyInvoiceAsProvider(Long companyId, Long userId) {
+		List<Invoice> invoices = new ArrayList<Invoice>();
+		if(userId == null) {
+			 invoices =  invoiceRepository.findAllByCompanyId(companyId);
+		}
+		else {
+			invoices = invoiceRepository.findAllByCompanyIdAndCreatedBy(companyId,userId);
+		}
 		List<InvoiceDto> invoicesDto = new ArrayList<>();
 		for(Invoice i : invoices) {
 			InvoiceDto invoiceDto = invoiceMapper.mapToDto(i);
@@ -113,19 +116,21 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 ////////////////////////// client service method ////
 
-	public List<InvoiceDto> getInvoiceNotifications(Client client) {
-		logger.warn("client id "+client.getId()+" company id "+client.getCompany().getId());
-		List<Invoice> invoices = invoiceRepository.findAllByClientIdOrCompanyId(client.getId(), client.getCompany().getId());
+	public List<InvoiceDto> getInvoiceNotifications(Client client, Optional<Company> company,Long userId) {
+		List<Invoice> invoices = new ArrayList<>();
+		if(company != null) {
+			logger.warn("company is not null "+ company.get().getId()+" ==> user id = "+userId);
+			invoices = invoiceRepository.findAllByCompanyIdAndCreatedBy(company.get().getId(), userId);
+		}else {			
+			logger.warn("company is null ");
+			invoices = invoiceRepository.findAllByClientIdOrCompanyId(client.getId(), client.getCompany().getId());
+		}
 		if(invoices.isEmpty()) {
 			throw new RecordNotFoundException("there is no invoice not accepted");
 		}
 		List<InvoiceDto> invoicesDto = new ArrayList<>();
 		for(Invoice i : invoices) {
 			InvoiceDto invoiceDto = invoiceMapper.mapToDto(i);
-			InvoiceReturnDto clientInvoice = clientInvoiceMapper.mapClientToClientInvoice(i.getClient());
-			InvoiceReturnDto companyInvoice = clientInvoiceMapper.mapCompanyToClientInvoice(i.getCompany());
-			invoiceDto.setClient(clientInvoice);
-			invoiceDto.setCompany(companyInvoice);
 			invoicesDto.add(invoiceDto);
 		}
 		return invoicesDto;

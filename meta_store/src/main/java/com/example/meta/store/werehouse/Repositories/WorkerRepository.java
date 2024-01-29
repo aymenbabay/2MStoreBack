@@ -22,5 +22,11 @@ public interface WorkerRepository extends BaseRepository<Worker, Long> {
 	@Query("SELECT a.company.id FROM Worker a WHERE a.name = :name")
 	Long findByName(@Param("name") String name);
 
+	@Query("SELECT w FROM Worker w WHERE w.company.id = :companyId AND w.name LIKE %:name%")
+	List<Worker> findByCompanyIdAndNameContaining(String name, Long companyId);
+
+	@Query("SELECT w.company.id FROM Worker w WHERE w.user.id = :userId")
+	Long findCompanyIdByUserId(Long userId);
+
 
 }

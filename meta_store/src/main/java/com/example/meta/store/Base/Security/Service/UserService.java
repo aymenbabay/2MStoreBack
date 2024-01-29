@@ -1,10 +1,13 @@
 package com.example.meta.store.Base.Security.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,8 +25,10 @@ import com.example.meta.store.Base.Security.Entity.AuthenticationResponse;
 import com.example.meta.store.Base.Security.Entity.RegisterRequest;
 import com.example.meta.store.Base.Security.Entity.Role;
 import com.example.meta.store.Base.Security.Entity.User;
+import com.example.meta.store.Base.Security.Enums.RoleEnum;
 import com.example.meta.store.Base.Security.Mappers.UserMapper;
 import com.example.meta.store.Base.Security.Repository.UserRepository;
+import com.example.meta.store.werehouse.Controllers.ArticleController;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -49,6 +54,8 @@ public class UserService {
 
 	private final JwtAuthenticationFilter authenticationFilter;
 
+
+	private final Logger logger = LoggerFactory.getLogger(UserService.class);
 	
 	public List<User> findAll(){
 		return userRepository.findAll();
@@ -77,6 +84,7 @@ public class UserService {
 	
 
 	public AuthenticationResponse register(RegisterRequest request) {
+		logger.warn("je li service fi registre");
 		Set<Role> role = new HashSet<>();
 		ResponseEntity<Role> role1 = roleService.getById((long)2);
 		role.add(role1.getBody());
@@ -129,10 +137,18 @@ var jwtToken = jwtService.generateToken(user);
 		return userRepository.existsByUsername(username);
 	}
 
-	public UserDto getByUserName(String username) {
-		Optional<User> user = userRepository.findByUsername(username);
-		UserDto appUserDto = userMapper.mapToDto(user.get());
-		return appUserDto;
+	public List<UserDto> getByUserName(String username) {
+		List<User> users = userRepository.searchByName(username);
+		if(users.isEmpty()) {
+			throw new RecordNotFoundException("there is no user with name "+username+" or maybe is already worker for another company");
+		}
+		List<UserDto> usersDto = new ArrayList<>();
+		for(User i : users) {
+			
+		UserDto appUserDto = userMapper.mapToDto(i);
+		usersDto.add(appUserDto);
+		}
+		return usersDto;
 	}
 
 	public AuthenticationResponse refreshToken(String token) {

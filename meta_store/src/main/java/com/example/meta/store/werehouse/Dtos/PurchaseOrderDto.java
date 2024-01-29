@@ -4,24 +4,27 @@ import java.io.Serializable;
 import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseDto;
-import com.example.meta.store.werehouse.Entities.PassingClient;
+import com.example.meta.store.werehouse.Enums.Status;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class PurchaseOrderDto extends BaseDto<Long> implements Serializable {
+public class PurchaseOrderDto extends BaseDto<Long> implements Serializable{
 
+	private Set<PurchaseOrderLineDto> lines;
+	
+	
 	private CompanyDto company;
+	
 	
 	private ClientDto client;
 	
-	private PassingClient pclient;
 	
-	private Set<ArticleDto> articles;
+	private PassingClientDto pclient;
 	
-	private Double quantity;
-	
-	private String comment;
+	private Status status;
+
+	private String orderNumber;
 }

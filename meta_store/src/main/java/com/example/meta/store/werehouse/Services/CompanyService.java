@@ -85,7 +85,7 @@ public class CompanyService extends BaseService<Company, Long> {
 		Set<Role> role = new HashSet<>();
 		ResponseEntity<Role> role2 = roleService.getById((long) 1);
 		role.add(role2.getBody());
-		role.addAll(user.getRoles());
+	//	role.addAll(user.getRoles());
 		user.setRoles(role);
 		userService.save(user);
 		companyRepository.save(company1);
@@ -99,10 +99,10 @@ public class CompanyService extends BaseService<Company, Long> {
 	}
 
 	//contient un erreur
-	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Optional<Company> compan)
+	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Company compan)
 			throws JsonMappingException, JsonProcessingException {
 		
-		Optional<Company> cmpany = companyRepository.findById(compan.get().getId());
+		Optional<Company> cmpany = companyRepository.findById(compan.getId());
 		Company company = cmpany.get();
 		CompanyDto companyDto1 = objectMapper.readValue(companyDto, CompanyDto.class);
 		if(!company.getName().equals(companyDto1.getName()))
@@ -145,12 +145,13 @@ public class CompanyService extends BaseService<Company, Long> {
 		
 	
 }
-	public Optional<Company> findByUserId(Long userId) {
+	public Company findByUserId(Long userId) {
 		Optional<Company> company = companyRepository.findByUserId(userId);
 		if (company.isEmpty()) {
-			throw new RecordNotFoundException("you do not have a company");
+			//throw new RecordNotFoundException("you do not have a company");
+			return null;
 		}
-		return company;
+		return company.get();
 	}
 
 	public ResponseEntity<CompanyDto> getCompanyById(Long id) {

@@ -21,12 +21,14 @@ import com.example.meta.store.werehouse.Dtos.InvetationClientProviderDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Entities.Worker;
 import com.example.meta.store.werehouse.Enums.Status;
 import com.example.meta.store.werehouse.Services.ClientService;
 import com.example.meta.store.werehouse.Services.CompanyService;
 import com.example.meta.store.werehouse.Services.InvetationService;
 import com.example.meta.store.werehouse.Services.ProviderService;
 import com.example.meta.store.werehouse.Services.WorkerService;
+import com.fasterxml.jackson.databind.introspect.TypeResolutionContext.Empty;
 
 import lombok.RequiredArgsConstructor;
 
@@ -54,10 +56,13 @@ public class InvetationController {
 	
 	@GetMapping("get_invetation")
 	public List<InvetationClientProviderDto> getInvetation(){
-		Optional<Client> client = getClient();
-		Optional<Provider> provider = getProvider();
+		Client client = getClient();
+		Provider provider = getProvider();
 		Optional<Company> company = getCompany();
-		return invetationService.getInvetation(client.get(),provider.get(),company.get());
+		logger.warn("just after get company function");
+		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		logger.warn("just before get invetation function");
+		return invetationService.getInvetation(client,provider,company.get(), userId);
 	}
 	
 	@GetMapping("response/{status}/{id}")
@@ -65,46 +70,53 @@ public class InvetationController {
 		
 		logger.warn("invetation controller in  the second line of request response function ");
 		invetationService.requestResponse(id,status);
-	}
+	} 
 	
 	@GetMapping("cancel/{id}")
 	public void cancelRequestOrDeleteFriend(@PathVariable Long id) {
-		Client client = getClient().get();
-		Provider provider = getProvider().get();
+		Client client = getClient();
+		Provider provider = getProvider();
 		invetationService.cancelRequestOrDeleteFriend(client, provider, id);
 	}
 	
-	private Optional<Provider> getProvider() {
+	@PostMapping("worker")
+	public void sendWorkerInvitation(@RequestBody Worker worker) {
+		Optional<Company> company = getCompany();
+		invetationService.sendWorkerInvetation(company.get(),worker);
+	}
+	
+	private Provider getProvider() {
+		logger.warn("begin of get provider function");
 		Optional<Company> company = getCompany();
 		if(company.isEmpty()) {
-			return null;
+			return new Provider();
 		}
-		Optional<Provider> provider = providerService.getMeAsProvider(company.get().getId());
+		Provider provider = providerService.getMeAsProvider(company.get().getId()).get();
 		return provider;
 	}
 	
-	private Optional<Client> getClient(){
+	private Client getClient(){
 		Optional<Company> company = getCompany();
+		logger.warn("begin of get client function ");
 		if(company.isEmpty()) {
-			return null;
+			return new Client();
 		}
-		Optional<Client> client = clientService.getMeAsClient(company.get());
+		Client client = clientService.getMeAsClient(company.get()).get();
 		return client;
 	}
 
 	
 	private Optional<Company> getCompany() {
+		logger.warn("begin of get company function");
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		logger.warn("second of get company function");
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company != null) {
-			return company;
+		logger.warn("third of get company function");	
+		if(company.isPresent()) {
+			return company;			
 		}
-		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
-		if(companyId != null) {			
-		ResponseEntity<Company> company2 = companyService.getById(companyId);
-		return Optional.of(company2.getBody());
-		}
-			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-			
+		return Optional.of(new Company());
+
+		
 	}
 }

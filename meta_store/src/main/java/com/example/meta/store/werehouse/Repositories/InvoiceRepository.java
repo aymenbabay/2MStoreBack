@@ -43,4 +43,6 @@ public interface InvoiceRepository extends BaseRepository<Invoice, Long> {
 	@Query("SELECT i FROM Invoice i WHERE (i.client.id = :clientId) OR (i.company.id = :companyId)")
 	List<Invoice> findAllByClientIdOrCompanyId(Long clientId, Long companyId);
 
+	List<Invoice> findAllByCompanyIdAndCreatedBy(Long companyId, Long createdBy);
+
 }

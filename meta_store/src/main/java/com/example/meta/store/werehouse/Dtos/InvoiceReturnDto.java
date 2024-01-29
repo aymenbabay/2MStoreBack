@@ -21,5 +21,7 @@ public class InvoiceReturnDto {
 	
 	private String email;
 	
+	private Boolean paid;
+	
 }
 

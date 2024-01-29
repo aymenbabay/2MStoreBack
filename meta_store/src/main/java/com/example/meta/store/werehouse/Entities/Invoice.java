@@ -38,6 +38,8 @@ public class Invoice extends BaseEntity<Long> implements Serializable {
 	
 	private Status status;
 	
+	private boolean paid;
+	
 
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name = "clientId")

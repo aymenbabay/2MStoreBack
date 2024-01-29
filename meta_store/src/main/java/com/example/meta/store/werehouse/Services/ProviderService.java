@@ -1,5 +1,6 @@
 package com.example.meta.store.werehouse.Services;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Controllers.ArticleController;
+import com.example.meta.store.werehouse.Dtos.CashDto;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
 import com.example.meta.store.werehouse.Dtos.ProviderCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
@@ -56,7 +58,9 @@ public class ProviderService extends BaseService<Provider, Long> {
 	private final ProviderMapper providerMapper;
 	
 	private final ProviderCompanyMapper providerCompanyMapper;
-	
+
+    DecimalFormat df = new DecimalFormat("#.###");
+    
 	private final Logger logger = LoggerFactory.getLogger(ProviderService.class);
 
 	public List<ProviderDto> getAllMyVirtaul(Company company){
@@ -293,7 +297,8 @@ public class ProviderService extends BaseService<Provider, Long> {
 	public Optional<Provider> getMeAsProvider(Long companyId) {
 		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(companyId,false);
 		if(provider.isEmpty()) {
-			throw new RecordNotFoundException("you are not a provider ");
+			//throw new RecordNotFoundException("you are not a provider ");
+			return Optional.of(new Provider());
 		}
 		return provider;
 	}
@@ -322,20 +327,21 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 
-
-
-
-//	public Provider getMeProvider(Long id) {
-//		Optional<Provider> provider = providerRepository.findByCompanyIdAndIsVirtual(id,false);
-//		return provider.get();
-//	}
-
-
-
-
-	
-
-
+	public void paymentInpact(Long providerCompanyId, Long myCompanyId, Double amount) {
+		Provider providr = getMeAsProvider(providerCompanyId).get();
+		ProviderCompany provider = providerCompanyRepository.findByProviderIdAndCompanyId(providr.getId(), myCompanyId).get();
+		if(provider.getCredit() > amount) {
+			String deff = df.format(provider.getCredit()-amount);
+			deff = deff.replace(",", ".");
+		provider.setCredit(Double.parseDouble(deff));
+		}
+		else {
+			String deff = df.format(amount-provider.getCredit());
+			deff = deff.replace(",", ".");
+			provider.setAdvance(Double.parseDouble(deff));
+			provider.setCredit((double)0);
+		}
+	}
 
 
 	

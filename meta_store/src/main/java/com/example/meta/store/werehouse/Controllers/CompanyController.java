@@ -1,20 +1,19 @@
 package com.example.meta.store.werehouse.Controllers;
 
 import java.util.List;
-import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.UserService;
@@ -37,6 +36,8 @@ public class CompanyController {
 	private final UserService userService;
 	
 	private final WorkerService workerService;
+
+	private final Logger logger = LoggerFactory.getLogger(CompanyController.class);
 	
 	@GetMapping("/all")
 	public List<CompanyDto> getAll(){
@@ -56,7 +57,7 @@ public class CompanyController {
 			@RequestParam("company") String companyDto,
 			@RequestParam(value ="file", required = false) MultipartFile file
 			) throws Exception{
-		Optional<Company> company = getCompany();
+		Company company = getCompany();
 		return companyService.upDateCompany(companyDto, file,company);
 	}
 	
@@ -67,14 +68,16 @@ public class CompanyController {
 	
 	@GetMapping("/mycompany")
 	public CompanyDto getMe() {
-		Optional<Company> company = getCompany();
-		return companyService.getMe(company.get());
+		logger.warn("begin of get me function ");
+		Company company = getCompany();
+		logger.warn("just afyer get company in get me function ");
+		return companyService.getMe(company);
 	}
 	
 	@GetMapping("/hascompany")
 	public boolean hasCompany() {
-		Optional<Company> company = getCompany();
-		if(company.isEmpty()) {
+		Company company = getCompany();
+		if(company== null) {
 			Long companyId = workerService.getByName(authenticationFilter.userName);
 			if(companyId != null) {
 				return true;
@@ -91,11 +94,20 @@ public class CompanyController {
 	
 	@GetMapping("get_my_company_id")
 	public Long getMyCompanyId() {
-		return getCompany().get().getId();
+		return getCompany().getId();
 	}
-	private Optional<Company> getCompany() {
+	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		Optional<Company> company = companyService.findByUserId(userId);
+		Company company = new Company();
+			company = companyService.findByUserId(userId);
+			logger.warn("befor if condition "+ company);
+				if(company== null) {
+					logger.warn("inside if condition ");
+					Long companyId = workerService.findCompanyIdByUserId(userId);
+					logger.warn("just after long companyId "+ companyId);
+					company = companyService.getById(companyId).getBody();
+					
+				}
 		return company;
 	}
 }

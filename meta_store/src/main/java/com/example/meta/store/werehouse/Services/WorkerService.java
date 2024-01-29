@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.UserService;
 import com.example.meta.store.Base.Service.BaseService;
+import com.example.meta.store.werehouse.Controllers.ArticleController;
 import com.example.meta.store.werehouse.Dtos.VacationDto;
 import com.example.meta.store.werehouse.Dtos.WorkerDto;
 import com.example.meta.store.werehouse.Entities.Company;
@@ -44,6 +47,8 @@ public class WorkerService extends BaseService<Worker, Long> {
 
 	private final UserService userService;
 
+
+	private final Logger logger = LoggerFactory.getLogger(WorkerService.class);
 	
 	public ResponseEntity<WorkerDto> upDateWorker( WorkerDto workerDto, Company company) {
 		Optional<Worker> worker = workerRepository.findByIdAndCompanyId(workerDto.getId(),company.getId());
@@ -92,12 +97,17 @@ public class WorkerService extends BaseService<Worker, Long> {
 	}
 
 	public ResponseEntity<List<WorkerDto>> getWorkerByCompany(Company company) {
+		logger.warn("get worker by company 1");
 		List<Worker> workers = getAllByCompanyId(company.getId());
+		logger.warn("get worker by company 2");
 		if(workers.isEmpty()) {
+			logger.warn("get worker by company 3");
 			throw new RecordNotFoundException("there is no worker");
 		}
+		logger.warn("get worker by company 4");
 		List<WorkerDto> workersDto = new ArrayList<>();
 		for(Worker i : workers) {
+			logger.warn("get worker by company 5");
 			WorkerDto workerDto = workerMapper.mapToDto(i);
 			workersDto.add(workerDto);
 		}
@@ -119,12 +129,17 @@ public class WorkerService extends BaseService<Worker, Long> {
 		if(worker1 !=null)  {
 			throw new RecordIsAlreadyExist("is already exist");
 		}
+
+		Worker worker = new Worker();
 		
-		User user = userService.findByUserName(workerDto.getName());
-		Worker worker = workerMapper.mapToEntity(workerDto);
-		worker.setName(workerDto.getName());
-		worker.setUser(user);
+		worker = workerMapper.mapToEntity(workerDto);
 		worker.setCompany(company);
+		if(workerDto.getUser() != null) {
+			User user = userService.findByUserName(workerDto.getName());
+			worker.setUser(user);
+			
+		}
+		logger.warn(""+worker.getUser().getUsername());
 		super.insert(worker);
 		return new ResponseEntity<WorkerDto>(HttpStatus.ACCEPTED);
 		
@@ -166,6 +181,27 @@ public class WorkerService extends BaseService<Worker, Long> {
 	        calendar.setTime(date);
 	        return calendar.get(Calendar.YEAR);
 	    }
+
+	public List<WorkerDto> getMyWorkerByName(String name, Company company) {
+		List<Worker> workers = workerRepository.findByCompanyIdAndNameContaining(name, company.getId());
+		if(workers.isEmpty()) {
+			throw new RecordNotFoundException(" there is no worker with name : "+name);
+		}
+		
+		List<WorkerDto> workersDto = new ArrayList<>();
+		for(Worker i : workers ) {
+			WorkerDto workerDto = workerMapper.mapToDto(i);
+			workersDto.add(workerDto);
+		}
+		return workersDto;
+	}
+
+	public Long findCompanyIdByUserId(Long userId) {
+		logger.warn("begin of get company id bu user id ");
+		Long companyId = workerRepository.findCompanyIdByUserId(userId);
+		logger.warn("just after of get company id bu user id from repository ");
+		return companyId;
+	}
 	
 
 }

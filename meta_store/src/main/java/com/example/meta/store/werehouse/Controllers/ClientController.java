@@ -107,6 +107,7 @@ public class ClientController {
 	
 	private Client getClient() {
 		Optional<Company> company = getCompany();
+		logger.warn("company id in get client "+ company.get().getId());
 		return clientService.getMeAsClient(company.get()).get();
 	}
 	
@@ -116,8 +117,9 @@ public class ClientController {
 	}
 	private Optional<Company> getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		logger.warn("user id "+ userId);
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company != null) {
+		if(company.isPresent()) {
 			return company;
 		}
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);

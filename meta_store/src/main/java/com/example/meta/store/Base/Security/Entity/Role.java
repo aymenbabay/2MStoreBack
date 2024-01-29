@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.Base.Security.Enums.RoleEnum;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.ManyToMany;
@@ -28,7 +29,7 @@ public class Role extends BaseEntity<Long> implements Serializable{
 
     private static final long serialVersionUID = 123456789L;
 
-	private String name;
+	private RoleEnum name;
 	
 	
    

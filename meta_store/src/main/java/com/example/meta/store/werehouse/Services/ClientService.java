@@ -1,5 +1,6 @@
 package com.example.meta.store.werehouse.Services;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -19,13 +20,17 @@ import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Controllers.InvoiceController;
+import com.example.meta.store.werehouse.Dtos.CashDto;
 import com.example.meta.store.werehouse.Dtos.ClientCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
+import com.example.meta.store.werehouse.Dtos.InvoiceDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
+import com.example.meta.store.werehouse.Entities.Cash;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.InvetationClientProvider;
+import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Entities.PassingClient;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.ProviderCompany;
@@ -66,8 +71,12 @@ public class ClientService extends BaseService<Client, Long>{
 	
 	private final ClientCompanyRepository clientCompanyRepository;
 	
-	private final ProviderCompanyRepository providerCompanyRepository;
+	private final ProviderCompanyRepository providerCompanyRepository;	
 	
+	private final InvoiceRepository invoiceRepository;
+
+    DecimalFormat df = new DecimalFormat("#.###");
+    
 	private final Logger logger = LoggerFactory.getLogger(ClientService.class);
 	
 	public Client addMeAsClient(Company company) {
@@ -229,9 +238,6 @@ public class ClientService extends BaseService<Client, Long>{
 //maybe unuse
 	public Optional<Client> getMeAsClient(Company company) {
 		Optional<Client> client = clientRepository.getByCompanyIdAndIsVirtualFalse(company.getId());
-		if(client.isEmpty()) {
-			throw new RecordNotFoundException("you are not a client ");
-		}
 		return client;
 	}
 
@@ -326,6 +332,23 @@ public class ClientService extends BaseService<Client, Long>{
 			client.setNature(Nature.INDIVIDUAL);
 			passingClientRepository.save(client);
 			return Optional.of(client);
+		}
+
+		public void paymentInpact(Long clientId, Long companyId, Double amount, Invoice invoice) {
+			ClientCompany client = clientCompanyRepository.findByClientIdAndCompanyId(clientId, companyId).get();
+			if(client.getCredit() > amount) {				
+			client.setCredit(client.getCredit()-amount);
+			}
+			else {
+				logger.warn(" client credit =>"+client.getCredit()+" ,amount=> "+amount);
+				String deff = df.format(client.getAdvance() + amount-client.getCredit());
+				deff = deff.replace(",", ".");
+				client.setAdvance( Double.parseDouble(deff));
+				client.setCredit((double)0);
+				Invoice invoicee = invoiceRepository.findById(invoice.getId()).get();
+				invoicee.setPaid(true);
+				invoiceRepository.save(invoicee);
+			}
 		}
 
 	

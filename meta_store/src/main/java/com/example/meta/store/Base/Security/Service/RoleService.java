@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.example.meta.store.Base.Security.Entity.Role;
+import com.example.meta.store.Base.Security.Enums.RoleEnum;
 import com.example.meta.store.Base.Security.Repository.RoleRepository;
 import com.example.meta.store.Base.Service.BaseService;
 
@@ -28,7 +29,7 @@ public class RoleService  extends BaseService<Role, Long> {
 		return super.getById(id);
 	}
 	
-	public Role findByName(String name) {
+	public Role findByName(RoleEnum name) {
 		return roleRepository.findByName(name).orElse(null);
 	}
 	

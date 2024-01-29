@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public class User extends BaseEntity<Long> implements UserDetails, Serializable 
 			@Override
 			public Collection<? extends GrantedAuthority> getAuthorities() {
 			    return roles.stream()
-			            .map(role -> new SimpleGrantedAuthority(role.getName()))
+			            .map(role -> new SimpleGrantedAuthority(role.getName().toString()))
 			            .collect(Collectors.toList());
 			}
 			
@@ -116,6 +117,8 @@ public class User extends BaseEntity<Long> implements UserDetails, Serializable 
 				this.email = email;
 				this.password = password;
 			}
+
+			
 
 
 }

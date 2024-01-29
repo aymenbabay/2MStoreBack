@@ -36,6 +36,8 @@ public class ClientCompany extends BaseEntity<Long> implements Serializable{
 	private Double credit;
 	
 	private boolean isDeleted;
+
+	private Double advance;
 	
 	
 }
