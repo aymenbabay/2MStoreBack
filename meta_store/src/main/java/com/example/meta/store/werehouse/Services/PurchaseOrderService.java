@@ -1,14 +1,18 @@
 package com.example.meta.store.werehouse.Services;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Controllers.PurchaseOrderController;
@@ -31,7 +35,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class PurchaseOrderService extends BaseService<PurchaseOrderLine, Long> {
+public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 
 	private final PurchaseOrderLineRepository purchaseOrderLineRepository;
 	
@@ -43,36 +47,58 @@ public class PurchaseOrderService extends BaseService<PurchaseOrderLine, Long> {
 
 	private final Logger logger = LoggerFactory.getLogger(PurchaseOrderService.class);
 
+	
 	public void addPurchaseOrder(List<PurchaseOrderLineDto> purchaseOrderDto, Client client, PassingClient pClient) {
-		logger.warn(purchaseOrderDto.size()+ " size");
-		Company company = null;
-		Set<PurchaseOrderLine> purchaseOrderLines = new HashSet<>();
-		for(PurchaseOrderLineDto i : purchaseOrderDto) {
-			PurchaseOrderLine purchaseOrderLine = purchaseOrderLineMapper.mapToEntity(i);
-			logger.warn(i.getQuantity()+" quantity ");
-			if(company == null || company != purchaseOrderLine.getArticle().getCompany()) {	
-				PurchaseOrder purchaseOrder = new PurchaseOrder();
-				if(client == null) {
-					purchaseOrder.setPclient(pClient);
-				}else {
-					purchaseOrder.setClient(client);
-				}
-				purchaseOrderLines = new HashSet<>();
-				purchaseOrder.setLines(purchaseOrderLines);
-				purchaseOrder.setStatus(Status.INWAITING);
-				purchaseOrder.setOrderNumber("O01");
-				purchaseOrder.setCompany(purchaseOrderLine.getArticle().getCompany());
-				purchaseOrderRepository.save(purchaseOrder);
-			}
-			 company = purchaseOrderLine.getArticle().getCompany();
-			 purchaseOrderLines.add(purchaseOrderLine);
-			purchaseOrderLineRepository.save(purchaseOrderLine);
-		}
+	    Company company = new Company();
+	    PurchaseOrder purchaseOrder = null;
+	    Long id = null;
+      //Sort purchaseOrderDto based on company ID
+    Collections.sort(purchaseOrderDto, Comparator.comparing(dto -> dto.getArticle().getCompany().getId()));
+	    for (PurchaseOrderLineDto i : purchaseOrderDto) {
+	        PurchaseOrderLine purchaseOrderLine = purchaseOrderLineMapper.mapToEntity(i);
+	        // Check if a purchase order already exists for the current company
+	        if (company.getId() != null && company.getId() == purchaseOrderLine.getArticle().getCompany().getId()) {
+	            // Fetch existing purchase order for the company
+	            purchaseOrder = purchaseOrderRepository.findById(id).get();
+	        } else {
+	        	Long orderNumber = (long) 001;
+	            // If company is null or different, create a new purchase order
+	            purchaseOrder = new PurchaseOrder();
+	            if (client.getId() == null) {
+	            	logger.warn("client is null");
+	                purchaseOrder.setPclient(pClient);
+	            } else {
+	            	logger.warn("client is not null");
+	                purchaseOrder.setClient(client);
+	            }
+	            Long orderN = purchaseOrderRepository.getLastOrderNumber(client.getId(),pClient.getId());
+	            if(orderN != null) {
+	            	orderNumber = orderN+1;
+	            }
+	            purchaseOrder.setOrderNumber(orderNumber);
+	            purchaseOrder.setCompany(purchaseOrderLine.getArticle().getCompany());
+	            purchaseOrder.setLines(new HashSet<>());
+	            company = purchaseOrderLine.getArticle().getCompany();
+	        }
 
+	        // Add the purchaseOrderLine to the purchaseOrder
+	        purchaseOrder.getLines().add(purchaseOrderLine);
+	        purchaseOrderLine.setStatus(Status.INWAITING);
+	        purchaseOrderLineRepository.save(purchaseOrderLine);
+	        purchaseOrderRepository.save(purchaseOrder);
+	        id = purchaseOrder.getId();
+	    }
 	}
 
-	public List<PurchaseOrderDto> getAllMyPurchaseOrder(Company company) {
-		List<PurchaseOrder> purchaseOrder = purchaseOrderRepository.findAllByCompanyId(company.getId());
+
+
+	public List<PurchaseOrderDto> getAllMyPurchaseOrder(Client client, PassingClient pClient) {
+		List<PurchaseOrder> purchaseOrder;
+		if(client.getCompany() == null) {			
+			 purchaseOrder = purchaseOrderRepository.findAllByCompanyIdOrClientIdOrPclientId(null,client.getId(), pClient.getId());
+		}else {			
+			purchaseOrder = purchaseOrderRepository.findAllByCompanyIdOrClientIdOrPclientId(client.getCompany().getId(),client.getId(), pClient.getId());
+		}
 		if(purchaseOrder.isEmpty()) {
 			throw new RecordNotFoundException("there is no order");
 		}
@@ -83,6 +109,56 @@ public class PurchaseOrderService extends BaseService<PurchaseOrderLine, Long> {
 		}
 		return purchaseOrdersDto;
 	}
+
 	
+	public PurchaseOrderDto getOrderById(Long id, Optional<Client> client, Optional<PassingClient> pClient) {
+	    PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(id)
+	            .orElseThrow(() -> new RecordNotFoundException("There is no order with id: " + id));
+
+	    if (pClient.isPresent() && pClient.get().equals(purchaseOrder.getPclient())) {
+	        return purchaseOrderMapper.mapToDto(purchaseOrder);
+	    }
+
+	    if (client.isPresent() && (client.get().equals(purchaseOrder.getClient()) || client.get().getCompany().equals(purchaseOrder.getCompany()))) {
+	        return purchaseOrderMapper.mapToDto(purchaseOrder);
+	    }
+
+	    throw new RecordNotFoundException("There is no order with id: " + id);
+	}
+
+
+
+	public void OrderResponse(Long id, Status status, Company company) {
+		logger.warn("status 1 "+status);
+	    PurchaseOrderLine purchaseOrderLine = purchaseOrderLineRepository.findById(id)
+	            .orElseThrow(() -> new RecordNotFoundException("There is no order with id: " + id));
+	    logger.warn("status 2 "+status);
+	    purchaseOrderLine.setStatus(status);
+	    logger.warn("status 3 "+status);
+		
+	}
+
+	public void cancelOrder(Client client, PassingClient pClient, Long id) {
+	    PurchaseOrderLine purchaseOrderLine = purchaseOrderLineRepository.findByIdAndClientIdOrPassingClientId(id,client.getId(),pClient.getId())
+	    		.orElseThrow(() -> new RecordNotFoundException("there is no order with id: "+id));
+		
+		
+		purchaseOrderLine.setStatus(Status.CANCELLED);
+	}
+
+
+
+	public void UpdatePurchaseOrderLine(PurchaseOrderLineDto purchaseOrderLineDto, Client client,
+			PassingClient passingClient) {
+		PurchaseOrderLine purchaseOrderLine = purchaseOrderLineRepository.findByIdAndClientIdOrPassingClientId(purchaseOrderLineDto.getId(), client.getId(), passingClient.getId())
+				.orElseThrow(() -> new RecordNotFoundException("there is no order with id: "+purchaseOrderLineDto.getId()));
+		if(purchaseOrderLine.getStatus() == Status.INWAITING) {	
+			purchaseOrderLine = purchaseOrderLineMapper.mapToEntity(purchaseOrderLineDto);
+			logger.warn("status is : "+purchaseOrderLine.getStatus());
+		purchaseOrderLineRepository.save(purchaseOrderLine);
+		}else {
+			throw new RecordIsAlreadyExist("you can not do that because the order is already "+purchaseOrderLine.getStatus());
+		}
+	}
 	
 }

@@ -38,7 +38,5 @@ public class PurchaseOrder extends BaseEntity<Long> implements Serializable {
 	@ManyToOne
 	private PassingClient pclient;
 	
-	private Status status;
-	
-	private String orderNumber;
+	private Long orderNumber;
 }

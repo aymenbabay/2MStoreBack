@@ -6,5 +6,7 @@ public enum Status {
 	
 	REFUSED,
 	
-	INWAITING
+	INWAITING,
+	
+	CANCELLED
 }

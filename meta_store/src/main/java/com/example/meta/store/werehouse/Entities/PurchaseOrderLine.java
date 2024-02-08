@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.werehouse.Enums.Status;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -40,4 +41,8 @@ public class PurchaseOrderLine extends BaseEntity<Long> implements Serializable 
 	private Double quantity;
 	
 	private String comment;
+	
+	private Status status;
+	
+	
 }

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.PassingClient;
+import com.example.meta.store.werehouse.Enums.Status;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,4 +20,6 @@ public class PurchaseOrderLineDto extends BaseDto<Long> implements Serializable 
 	private Double quantity;
 	
 	private String comment;
+	
+	private Status status;
 }

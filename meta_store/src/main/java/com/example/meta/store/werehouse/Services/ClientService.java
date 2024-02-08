@@ -318,14 +318,19 @@ public class ClientService extends BaseService<Client, Long>{
 			return clientsDto;
 		}
 
-		public PassingClient findPassingClientBUser(User user) {
+		public Optional<PassingClient> findPassingClientBUser(User user) {
 			Optional<PassingClient> client = passingClientRepository.findByUserId(user.getId());
 			if(client.isEmpty()) {
-				client = addMeAsClientByUser(user);
+				client =  Optional.of(new PassingClient());
 			}
-			return client.get();
+			return client;
 		}
 
+		public Optional<PassingClient> CreatePassingClient(User user){
+				return addMeAsClientByUser(user);			
+		}
+		
+		
 		public Optional<PassingClient> addMeAsClientByUser(User user) {
 			PassingClient client = new PassingClient();
 			client.setUser(user);

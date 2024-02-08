@@ -24,7 +24,5 @@ public class PurchaseOrderDto extends BaseDto<Long> implements Serializable{
 	
 	private PassingClientDto pclient;
 	
-	private Status status;
-
 	private String orderNumber;
 }

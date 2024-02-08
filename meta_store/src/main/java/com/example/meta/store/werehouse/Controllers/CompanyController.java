@@ -77,7 +77,7 @@ public class CompanyController {
 	@GetMapping("/hascompany")
 	public boolean hasCompany() {
 		Company company = getCompany();
-		if(company== null) {
+		if(company.getId() == null) {
 			Long companyId = workerService.getByName(authenticationFilter.userName);
 			if(companyId != null) {
 				return true;
@@ -105,7 +105,9 @@ public class CompanyController {
 					logger.warn("inside if condition ");
 					Long companyId = workerService.findCompanyIdByUserId(userId);
 					logger.warn("just after long companyId "+ companyId);
-					company = companyService.getById(companyId).getBody();
+					if(companyId != null) {
+						company = companyService.getById(companyId).getBody();						
+					}
 					
 				}
 		return company;
