@@ -1,6 +1,7 @@
 package com.example.meta.store.werehouse.Dtos;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.Base.Security.Dto.UserDto;
@@ -54,8 +55,10 @@ public class CompanyDto extends BaseDto<Long> implements Serializable {
 	private PrivacySetting isVisible;
 	
 	private UserDto user;
-	
 
+	private Set<CompanyDto> branshes;
+
+	private CompanyDto parentCompany;
 		
 	
 }

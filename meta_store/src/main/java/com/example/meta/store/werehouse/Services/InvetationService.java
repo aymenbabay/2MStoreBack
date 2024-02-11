@@ -20,16 +20,16 @@ import com.example.meta.store.Base.Security.Repository.UserRepository;
 import com.example.meta.store.Base.Security.Service.RoleService;
 import com.example.meta.store.Base.Security.Service.UserService;
 import com.example.meta.store.Base.Service.BaseService;
-import com.example.meta.store.werehouse.Dtos.InvetationClientProviderDto;
+import com.example.meta.store.werehouse.Dtos.InvetationDto;
 import com.example.meta.store.werehouse.Dtos.WorkerDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.InvetationClientProvider;
+import com.example.meta.store.werehouse.Entities.Invetation;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.Worker;
 import com.example.meta.store.werehouse.Enums.Status;
 import com.example.meta.store.werehouse.Mappers.InvetationClientProviderMapper;
-import com.example.meta.store.werehouse.Repositories.InvetationClientProviderRepository;
+import com.example.meta.store.werehouse.Repositories.InvetationRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,9 +37,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class InvetationService extends BaseService<InvetationClientProvider, Long> {
+public class InvetationService extends BaseService<Invetation, Long> {
 	
-	private final InvetationClientProviderRepository invetationClientProviderRepository;
+	private final InvetationRepository invetationClientProviderRepository;
 	
 	private final InvetationClientProviderMapper invetationClientProviderMapper;
 	
@@ -53,15 +53,15 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 
 	private final Logger logger = LoggerFactory.getLogger(InvetationService.class);
 	
-	public List<InvetationClientProviderDto> getInvetation(Client client, Provider provider, Company company, Long userId) {
+	public List<InvetationDto> getInvetation(Client client, Provider provider, Company company, Long userId) {
 		logger.warn("invetation service get invetation function 1");
-		List<InvetationClientProvider> invetations =	invetationClientProviderRepository.findAllByClientIdOrProviderIdOrCompanyIdOrUserId(client.getId(),provider.getId(),company.getId(), userId);
+		List<Invetation> invetations =	invetationClientProviderRepository.findAllByClientIdOrProviderIdOrCompanyIdOrUserId(client.getId(),provider.getId(),company.getId(), userId);
 		logger.warn("invetation service get invetation function 2");
-		List<InvetationClientProviderDto> invetationsDto = new ArrayList<>();
+		List<InvetationDto> invetationsDto = new ArrayList<>();
 		logger.warn("invetation service get invetation function 3");
-		for(InvetationClientProvider i : invetations) {
+		for(Invetation i : invetations) {
 			logger.warn("invetation service get invetation function 4");
-			InvetationClientProviderDto dto =  invetationClientProviderMapper.mapToDto(i);
+			InvetationDto dto =  invetationClientProviderMapper.mapToDto(i);
 			invetationsDto.add(dto);
 			logger.warn("invetation service get invetation function 4"+dto.getId());
 		}
@@ -70,13 +70,9 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 
 	public void requestResponse(Long id, Status status) {
 		logger.warn("invetation service in the first line of request response function");
-		Optional<InvetationClientProvider> invi = invetationClientProviderRepository.findById(id);
+		Invetation invetation = invetationClientProviderRepository.findById(id).orElseThrow(() -> new RecordNotFoundException("there is no request with id "+id));
 		logger.warn("invetation service in the second line of request response function");
-		if(invi.isEmpty()) {
-			logger.warn("invetation service in the therd line of request response function");
-			throw new RecordNotFoundException("there is no request with id "+id);
-		}
-		InvetationClientProvider invetation = invi.get();
+		
 			if(status == Status.ACCEPTED) {
 				if(invetation.getUser() != null) {
 					WorkerDto workerDto = invetationClientProviderMapper.mapInvetationToWorker(invetation);
@@ -86,7 +82,7 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 
 					invetation.getUser().setRoles(role);
 					userService.save(invetation.getUser());
-					workerService.insertWorker(workerDto, invetation.getCompany());
+					workerService.insertWorker(workerDto, invetation.getCompanySender());
 				}else {
 					clientService.acceptedInvetation(invetation);					
 				}
@@ -100,12 +96,12 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 	}
 
 	public void cancelRequestOrDeleteFriend(Client client, Provider provider, Long id) {
-		InvetationClientProvider invetation = super.getById(id).getBody();
+		Invetation invetation = super.getById(id).getBody();
 		Company company = client.getCompany();
 		if(invetation == null) {
 			throw new RecordNotFoundException("there is no invetation ");
 		}
-		if(invetation.getCompany() != company && invetation.getClient() != client && invetation.getProvider() != provider) {
+		if(invetation.getCompanySender() != company && invetation.getClient() != client && invetation.getProvider() != provider) {
 			throw new NotPermissonException("you dont have permission to do that ");
 		}
 		if(invetation.getStatus() == Status.INWAITING) {
@@ -117,12 +113,12 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 	}
 
 	public void sendWorkerInvetation(Company company, Worker worker) {
-		InvetationClientProvider invet = invetationClientProviderRepository.findByWorkerId(worker.getId());
+		Invetation invet = invetationClientProviderRepository.findByWorkerId(worker.getId());
 		if(invet != null) {
 			throw new RecordNotFoundException("this user is already worker");
 		}
-		InvetationClientProvider invetation = new InvetationClientProvider();
-		invetation.setCompany(company);
+		Invetation invetation = new Invetation();
+		invetation.setCompanySender(company);
 		invetation.setUser(worker.getUser());
 		invetation.setDepartment(worker.getDepartment());
 		invetation.setSalary(worker.getSalary());
@@ -132,6 +128,14 @@ public class InvetationService extends BaseService<InvetationClientProvider, Lon
 		invetation.setStatus(Status.INWAITING);
 		invetationClientProviderRepository.save(invetation);
 		
+	}
+
+	public void sendParentInvetation(Company company, Company reciver) {
+		Invetation invetation = new Invetation();
+		invetation.setCompanySender(company);
+		invetation.setCompanyReciver(reciver);
+		invetation.setStatus(Status.INWAITING);
+		invetationClientProviderRepository.save(invetation);
 	}
 
 	

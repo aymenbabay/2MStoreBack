@@ -163,8 +163,14 @@ public class CompanyService extends BaseService<Company, Long> {
 		return ResponseEntity.ok(companyDto);
 	}
 
-	public CompanyDto getMe(Company company) {
-		CompanyDto companyDto = companyMapper.mapToDto(company);
+	public CompanyDto getMe(Company company, Long id) {
+		Company companyReturnd = company;
+		if(!company.getId().equals(id)) {
+			Company branshe = companyRepository.findById(id)
+					.orElseThrow(() -> new RecordNotFoundException("there is no company with id: "+id));
+			companyReturnd = branshe;
+		}
+		CompanyDto companyDto = companyMapper.mapToDto(companyReturnd);
 		return companyDto;
 	}
 
@@ -195,6 +201,19 @@ public class CompanyService extends BaseService<Company, Long> {
 	public Optional<Company> findCompanyIdByUserId(Long userId) {
 		Optional<Company> company = companyRepository.findByUserId(userId);
 		return company;
+	}
+
+	public List<CompanyDto> getCompanyContaining(String branshe) {
+		List<Company> companies = companyRepository.findByNameContaining(branshe);
+		if(companies.isEmpty()) {
+			throw new RecordNotFoundException("there is no company with name containing: "+branshe);
+		}
+		List<CompanyDto> companiesDto = new ArrayList<>();
+		for(Company i : companies) {
+			CompanyDto companyDto = companyMapper.mapToDto(i);
+			companiesDto.add(companyDto);
+		}
+		return companiesDto;
 	}
 
 

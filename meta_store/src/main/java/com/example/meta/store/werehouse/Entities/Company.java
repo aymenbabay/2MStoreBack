@@ -12,6 +12,8 @@ import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
@@ -70,6 +72,13 @@ public class Company extends BaseEntity<Long> implements Serializable{
 	@JoinColumn(name = "userId")
 	private User user;
 	
+	@OneToMany(mappedBy = "parentCompany")
+	private Set<Company> branches;
+	    
+	@ManyToOne
+	@JoinColumn(name = "parent_company_id")
+	private Company parentCompany;
+	    
 	
 
 	

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.UserService;
@@ -66,12 +67,19 @@ public class CompanyController {
 		return companyService.getCompanyById(id);		
 	}
 	
-	@GetMapping("/mycompany")
-	public CompanyDto getMe() {
+	@GetMapping("/mycompany/{id}")
+	public CompanyDto getMe(@PathVariable Long id) {
 		logger.warn("begin of get me function ");
 		Company company = getCompany();
 		logger.warn("just afyer get company in get me function ");
-		return companyService.getMe(company);
+		if(!company.getId().equals(id)) {
+			   boolean exists = company.getBranches().stream()
+                       .anyMatch(branch -> branch.getId().equals(id));
+			   if(!exists) {
+				   throw new RecordNotFoundException("you don't have a company");
+			   }
+		}
+		return companyService.getMe(company,id);
 	}
 	
 	@GetMapping("/hascompany")
@@ -96,6 +104,12 @@ public class CompanyController {
 	public Long getMyCompanyId() {
 		return getCompany().getId();
 	}
+	
+	@GetMapping("search/{branshe}")
+	public List<CompanyDto> searchCompanyContaining(@PathVariable String branshe){
+		return companyService.getCompanyContaining(branshe);
+	}
+	
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Company company = new Company();

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Service.UserService;
-import com.example.meta.store.werehouse.Dtos.InvetationClientProviderDto;
+import com.example.meta.store.werehouse.Dtos.InvetationDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
@@ -46,8 +46,6 @@ public class InvetationController {
 	
 	private final CompanyService companyService;
 	
-	private final WorkerService workerService;
-	
 	private final ProviderService providerService;
 
 	private final ClientService clientService;
@@ -55,7 +53,7 @@ public class InvetationController {
 	private final Logger logger = LoggerFactory.getLogger(InvetationController.class);
 	
 	@GetMapping("get_invetation")
-	public List<InvetationClientProviderDto> getInvetation(){
+	public List<InvetationDto> getInvetation(){
 		Client client = getClient();
 		Provider provider = getProvider();
 		Optional<Company> company = getCompany();
@@ -77,6 +75,13 @@ public class InvetationController {
 		Client client = getClient();
 		Provider provider = getProvider();
 		invetationService.cancelRequestOrDeleteFriend(client, provider, id);
+	}
+	
+	@GetMapping("parent/{id}")
+	public void sendParentInvetation(@PathVariable Long id ) {
+		Optional<Company> company = getCompany();
+		Company reciver  = companyService.getById(id).getBody();
+		invetationService.sendParentInvetation(company.get(), reciver);
 	}
 	
 	@PostMapping("worker")

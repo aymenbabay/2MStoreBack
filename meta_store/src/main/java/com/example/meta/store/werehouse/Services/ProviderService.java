@@ -24,7 +24,7 @@ import com.example.meta.store.werehouse.Dtos.ProviderDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.InvetationClientProvider;
+import com.example.meta.store.werehouse.Entities.Invetation;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
@@ -33,7 +33,7 @@ import com.example.meta.store.werehouse.Mappers.ProviderCompanyMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
 import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ClientRepository;
-import com.example.meta.store.werehouse.Repositories.InvetationClientProviderRepository;
+import com.example.meta.store.werehouse.Repositories.InvetationRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderRepository;
 
@@ -51,7 +51,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 	
 	private final ClientCompanyRepository clientCompanyRepository;
 		
-	private final InvetationClientProviderRepository invetationClientProviderRepository;
+	private final InvetationRepository invetationClientProviderRepository;
 
 	private final ProviderCompanyRepository providerCompanyRepository;
 	
@@ -128,10 +128,10 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 
 	public void addExistProvider(Long id, Company company) {
-		InvetationClientProvider invetationClientProvider = new InvetationClientProvider();
+		Invetation invetationClientProvider = new Invetation();
 		ResponseEntity<Provider> provider = super.getById(id);
 		logger.warn("add exist provider in provider service ");
-		invetationClientProvider.setCompany(company);
+		invetationClientProvider.setCompanySender(company);
 		invetationClientProvider.setProvider(provider.getBody());
 		invetationClientProvider.setStatus(Status.INWAITING);
 		invetationClientProviderRepository.save(invetationClientProvider);
@@ -209,7 +209,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 			return;
 		}
 		providerCompanyRepository.deleteByProviderIdAndCompanyId(id,myCompany.getId());
-		invetationClientProviderRepository.deleteByProviderIdAndCompanyId(id, myCompany.getId());
+		invetationClientProviderRepository.deleteByProviderIdAndCompanySenderId(id, myCompany.getId());
 				
 	}
 	

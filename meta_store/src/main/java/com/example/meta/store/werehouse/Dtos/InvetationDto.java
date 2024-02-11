@@ -2,6 +2,7 @@ package com.example.meta.store.werehouse.Dtos;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.Base.Security.Dto.UserDto;
+import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Enums.Status;
 
 import lombok.Getter;
@@ -9,13 +10,15 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class InvetationClientProviderDto extends BaseDto<Long>{
+public class InvetationDto extends BaseDto<Long>{
 
 	private InvoiceReturnDto client;
 	
 	private InvoiceReturnDto provider;
 		
-	private InvoiceReturnDto company;
+	private InvoiceReturnDto companySender;
+
+	private Company companyReciver;
 	
 	private UserDto user;
 	

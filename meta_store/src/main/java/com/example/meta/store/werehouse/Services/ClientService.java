@@ -29,7 +29,7 @@ import com.example.meta.store.werehouse.Entities.Cash;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.Company;
-import com.example.meta.store.werehouse.Entities.InvetationClientProvider;
+import com.example.meta.store.werehouse.Entities.Invetation;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Entities.PassingClient;
 import com.example.meta.store.werehouse.Entities.Provider;
@@ -42,7 +42,7 @@ import com.example.meta.store.werehouse.Mappers.ClientMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
 import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ClientRepository;
-import com.example.meta.store.werehouse.Repositories.InvetationClientProviderRepository;
+import com.example.meta.store.werehouse.Repositories.InvetationRepository;
 import com.example.meta.store.werehouse.Repositories.InvoiceRepository;
 import com.example.meta.store.werehouse.Repositories.PassingClientRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
@@ -61,7 +61,7 @@ public class ClientService extends BaseService<Client, Long>{
 			
 	private final PassingClientRepository passingClientRepository;
 	
-	private final InvetationClientProviderRepository invetationClientProviderRepository;
+	private final InvetationRepository invetationClientProviderRepository;
 	
 	private final ProviderService providerService;
 		
@@ -142,9 +142,9 @@ public class ClientService extends BaseService<Client, Long>{
 			clientCompany.get().setDeleted(false);
 			return;
 		}
-		InvetationClientProvider invetationClientCompany = new InvetationClientProvider();
+		Invetation invetationClientCompany = new Invetation();
 		invetationClientCompany.setClient(client.getBody());
-		invetationClientCompany.setCompany(company);
+		invetationClientCompany.setCompanySender(company);
 		invetationClientCompany.setStatus(Status.INWAITING);
 		invetationClientProviderRepository.save(invetationClientCompany);
 	}
@@ -214,7 +214,7 @@ public class ClientService extends BaseService<Client, Long>{
         		return;
         	}
 	        clientCompanyRepository.deleteByClientIdAndCompanyId(id, company.getId());
-	        invetationClientProviderRepository.deleteByClientIdAndCompanyId(id, company.getId());
+	        invetationClientProviderRepository.deleteByClientIdAndCompanySenderId(id, company.getId());
 	       
 		
 	}
@@ -266,15 +266,15 @@ public class ClientService extends BaseService<Client, Long>{
 	}
 
 	
-		public void acceptedInvetation(InvetationClientProvider invetation) {
+		public void acceptedInvetation(Invetation invetation) {
 			ClientCompany clientCompany = new ClientCompany();
 			ProviderCompany providerCompany = new ProviderCompany();
 			boolean existClient = false;
 			boolean existProvider = false;
 			if(invetation.getClient() != null) {	
-				clientCompany.setCompany(invetation.getCompany());
+				clientCompany.setCompany(invetation.getCompanySender());
 				clientCompany.setClient(invetation.getClient());
-				Optional<Provider> provider = providerService.getMeAsProvider(invetation.getCompany().getId());
+				Optional<Provider> provider = providerService.getMeAsProvider(invetation.getCompanySender().getId());
 				existProvider = providerCompanyRepository.existsByProviderIdAndCompanyId(provider.get().getId(), invetation.getClient().getCompany().getId());
 				if(!existProvider) {
 					providerCompany.setCompany(invetation.getClient().getCompany());
@@ -283,8 +283,8 @@ public class ClientService extends BaseService<Client, Long>{
 			}
 			else {
 					providerCompany.setProvider(invetation.getProvider());
-					providerCompany.setCompany(invetation.getCompany());
-					Optional<Client> client = getMeAsClient(invetation.getCompany());
+					providerCompany.setCompany(invetation.getCompanySender());
+					Optional<Client> client = getMeAsClient(invetation.getCompanySender());
 					existClient = clientCompanyRepository.existsByClientIdAndCompanyId(client.get().getId(), invetation.getProvider().getCompany().getId());
 					if(!existClient) {						
 						clientCompany.setCompany(invetation.getProvider().getCompany());
