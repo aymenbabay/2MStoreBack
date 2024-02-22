@@ -47,10 +47,14 @@ public class CategoryController {
 
 	private final Logger logger = LoggerFactory.getLogger(CategoryController.class);
 
-	@GetMapping("/getbycompany/{id}")
-	public List<CategoryDto> getCategoryByCompany(@PathVariable Long id){
-		Company company = getCompany();
-		return categoryService.getCategoryByCompany(company,id);
+	@GetMapping("/getbycompany/{companyId}/{id}")
+	public List<CategoryDto> getCategoryByCompany(@PathVariable Long companyId, @PathVariable Long id){
+		Company company; 
+		company = getCompany();
+		if(company.getId() != companyId && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(companyId))) {
+			company = companyService.getById(companyId).getBody();
+		}
+		return categoryService.getCategoryByCompany(company, id);
 	}
 	
 	@GetMapping("/l/{name}")

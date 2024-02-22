@@ -8,6 +8,8 @@ import java.util.Set;
 import com.example.meta.store.Base.Entity.BaseEntity;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
+import com.example.meta.store.werehouse.Enums.Type;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -73,6 +75,7 @@ public class Company extends BaseEntity<Long> implements Serializable{
 	private User user;
 	
 	@OneToMany(mappedBy = "parentCompany")
+	@JsonIgnore
 	private Set<Company> branches;
 	    
 	@ManyToOne

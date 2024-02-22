@@ -14,6 +14,8 @@ import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Enums.RoleEnum;
 import com.example.meta.store.Base.Security.Service.RoleService;
 import com.example.meta.store.Base.Security.Service.UserService;
+import com.example.meta.store.werehouse.Entities.Delivery;
+import com.example.meta.store.werehouse.Services.DeliveryService;
 
 
 @Component
@@ -24,6 +26,9 @@ public class StartUpApp implements CommandLineRunner {
 	
 	@Autowired
 	private UserService appUserService;
+	
+	@Autowired
+	private DeliveryService deliveryService;
 	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -39,7 +44,7 @@ public class StartUpApp implements CommandLineRunner {
 		adminRole.add(roleService.findByName(RoleEnum.ADMIN));
 		adminRole.add(roleService.findByName(RoleEnum.USER));
 		insertUser(adminRole);
-		
+		insertDelivery();
 		}
 	}
 	
@@ -55,5 +60,12 @@ public class StartUpApp implements CommandLineRunner {
 		User user = new User("97396321","user","aymen1@gmail.com",passwordEncoder.encode("password"),roles);
 		
 		return appUserService.insert(user);
+	}
+	
+	public void insertDelivery() {
+		User user = appUserService.findById((long)1).get();
+		Delivery aymen = new Delivery(user, null, null);
+		deliveryService.insert(aymen);
+		
 	}
 }

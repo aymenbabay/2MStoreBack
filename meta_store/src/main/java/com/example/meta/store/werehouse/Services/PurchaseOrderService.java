@@ -20,6 +20,8 @@ import com.example.meta.store.werehouse.Dtos.PurchaseOrderDto;
 import com.example.meta.store.werehouse.Dtos.PurchaseOrderLineDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Entities.Delivery;
+import com.example.meta.store.werehouse.Entities.OrderDelivery;
 import com.example.meta.store.werehouse.Entities.PassingClient;
 import com.example.meta.store.werehouse.Entities.PurchaseOrder;
 import com.example.meta.store.werehouse.Entities.PurchaseOrderLine;
@@ -44,6 +46,10 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 	private final PurchaseOrderLineMapper purchaseOrderLineMapper;
 
 	private final PurchaseOrderMapper purchaseOrderMapper;
+	
+	private final DeliveryService deliveryService;
+
+	private final OrderDeliveryService orderDeliveryService;
 
 	private final Logger logger = LoggerFactory.getLogger(PurchaseOrderService.class);
 
@@ -77,12 +83,12 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 	            }
 	            purchaseOrder.setOrderNumber(orderNumber);
 	            purchaseOrder.setCompany(purchaseOrderLine.getArticle().getCompany());
-	            purchaseOrder.setLines(new HashSet<>());
+	           // a supp purchaseOrder.setLines(new HashSet<>());
 	            company = purchaseOrderLine.getArticle().getCompany();
 	        }
-
+	        purchaseOrderLine.setPurchaseorder(purchaseOrder);
 	        // Add the purchaseOrderLine to the purchaseOrder
-	        purchaseOrder.getLines().add(purchaseOrderLine);
+	       // a supp purchaseOrder.getLines().add(purchaseOrderLine);
 	        purchaseOrderLine.setStatus(Status.INWAITING);
 	        purchaseOrderLineRepository.save(purchaseOrderLine);
 	        purchaseOrderRepository.save(purchaseOrder);
@@ -93,19 +99,22 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 
 
 	public List<PurchaseOrderDto> getAllMyPurchaseOrder(Client client, PassingClient pClient) {
-		List<PurchaseOrder> purchaseOrder;
-		if(client.getCompany() == null) {			
-			 purchaseOrder = purchaseOrderRepository.findAllByCompanyIdOrClientIdOrPclientId(null,client.getId(), pClient.getId());
+		List<PurchaseOrder> purchaseOrderLine;
+		if(client.getCompany() == null) {	
+			if(pClient.getId() == null) {
+				throw new RecordNotFoundException("there is no Order");
+			}
+			 purchaseOrderLine = purchaseOrderRepository.findAllByCompanyIdOrClientIdOrPclientId(null,client.getId(), pClient.getId());
 		}else {			
-			purchaseOrder = purchaseOrderRepository.findAllByCompanyIdOrClientIdOrPclientId(client.getCompany().getId(),client.getId(), pClient.getId());
+			purchaseOrderLine = purchaseOrderRepository.findAllByCompanyIdOrClientIdOrPclientId(client.getCompany().getId(),client.getId(), pClient.getId());
 		}
-		if(purchaseOrder.isEmpty()) {
+		if(purchaseOrderLine.isEmpty()) {
 			throw new RecordNotFoundException("there is no order");
 		}
 		List<PurchaseOrderDto> purchaseOrdersDto = new ArrayList<>();
-		for(PurchaseOrder i : purchaseOrder) {
-			PurchaseOrderDto purchaseOrderDto = purchaseOrderMapper.mapToDto(i);
-			purchaseOrdersDto.add(purchaseOrderDto);
+		for(PurchaseOrder i : purchaseOrderLine) {
+			PurchaseOrderDto purchaseOrderLineDto = purchaseOrderMapper.mapToDto(i);
+			purchaseOrdersDto.add(purchaseOrderLineDto);
 		}
 		return purchaseOrdersDto;
 	}
@@ -135,6 +144,13 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 	    logger.warn("status 2 "+status);
 	    purchaseOrderLine.setStatus(status);
 	    logger.warn("status 3 "+status);
+	    if(status == Status.ACCEPTED && purchaseOrderLine.getDelivery()) {
+	    	Delivery deliver = deliveryService.getById((long)1).getBody();
+	    	OrderDelivery orderDelivery = new OrderDelivery();
+	    	orderDelivery.setOrder(purchaseOrderLine);
+	    	orderDelivery.setDelivery(deliver);
+	    	orderDeliveryService.insert(orderDelivery);
+	    }
 		
 	}
 
@@ -159,6 +175,21 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 		}else {
 			throw new RecordIsAlreadyExist("you can not do that because the order is already "+purchaseOrderLine.getStatus());
 		}
+	}
+
+
+
+	public List<PurchaseOrderLineDto> getAllPurchaseOrderLinesByPurchaseOrderId(Long id) {
+		List<PurchaseOrderLine> purchaseOrderLines = purchaseOrderLineRepository.findAllByPurchaseorderId(id);
+		if(purchaseOrderLines.isEmpty()) {
+			throw new RecordNotFoundException("there is no order");
+		}
+		List<PurchaseOrderLineDto> purchaseOrderLinesDto = new ArrayList<>();
+		for(PurchaseOrderLine i : purchaseOrderLines) {
+			PurchaseOrderLineDto purchaseOrderLineDto = purchaseOrderLineMapper.mapToDto(i);
+			purchaseOrderLinesDto.add(purchaseOrderLineDto);
+		}
+		return purchaseOrderLinesDto;
 	}
 	
 }

@@ -28,6 +28,7 @@ import com.example.meta.store.werehouse.Entities.Invetation;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.Worker;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.example.meta.store.werehouse.Enums.Type;
 import com.example.meta.store.werehouse.Mappers.InvetationClientProviderMapper;
 import com.example.meta.store.werehouse.Repositories.InvetationRepository;
 
@@ -50,6 +51,8 @@ public class InvetationService extends BaseService<Invetation, Long> {
 	private final ClientService clientService;
 	
 	private final WorkerService workerService;
+
+	private final CompanyService companyService;
 
 	private final Logger logger = LoggerFactory.getLogger(InvetationService.class);
 	
@@ -74,7 +77,8 @@ public class InvetationService extends BaseService<Invetation, Long> {
 		logger.warn("invetation service in the second line of request response function");
 		
 			if(status == Status.ACCEPTED) {
-				if(invetation.getUser() != null) {
+				switch (invetation.getType()){ 
+				case WORKER:	
 					WorkerDto workerDto = invetationClientProviderMapper.mapInvetationToWorker(invetation);
 					Set<Role> role = new HashSet<>();
 					ResponseEntity<Role> role2 = roleService.getById((long) 3);
@@ -83,16 +87,24 @@ public class InvetationService extends BaseService<Invetation, Long> {
 					invetation.getUser().setRoles(role);
 					userService.save(invetation.getUser());
 					workerService.insertWorker(workerDto, invetation.getCompanySender());
-				}else {
+				break;
+				case PARENT:
+					companyService.acceptedInvetation(invetation.getCompanySender(),invetation.getCompanyReciver());
+				break;
+				case PROVIDER:
 					clientService.acceptedInvetation(invetation);					
+				break;
+				case CLIENT:
+					clientService.acceptedInvetation(invetation);					
+				break;
+				default:
+					throw new IllegalArgumentException("Unexpected value: " + invetation.getType());
 				}
 				invetation.setStatus(Status.ACCEPTED);				
 			}else {
 				invetation.setStatus(Status.REFUSED);								
 			}
-			invetationClientProviderRepository.save(invetation);
-		
-		
+			invetationClientProviderRepository.save(invetation);		
 	}
 
 	public void cancelRequestOrDeleteFriend(Client client, Provider provider, Long id) {
@@ -126,6 +138,7 @@ public class InvetationService extends BaseService<Invetation, Long> {
 		invetation.setTotdayvacation(worker.getTotdayvacation());
 		invetation.setStatusvacation(worker.isStatusvacation());
 		invetation.setStatus(Status.INWAITING);
+		invetation.setType(Type.WORKER);
 		invetationClientProviderRepository.save(invetation);
 		
 	}
@@ -134,6 +147,7 @@ public class InvetationService extends BaseService<Invetation, Long> {
 		Invetation invetation = new Invetation();
 		invetation.setCompanySender(company);
 		invetation.setCompanyReciver(reciver);
+		invetation.setType(Type.PARENT);
 		invetation.setStatus(Status.INWAITING);
 		invetationClientProviderRepository.save(invetation);
 	}

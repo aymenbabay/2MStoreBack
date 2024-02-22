@@ -25,8 +25,8 @@ public interface CompanyRepository extends BaseRepository<Company, Long> {
 
 	boolean existsByBankaccountnumber(String bankaccountnumber);
 
-	@Query("SELECT c FROM Company c WHERE c.name LIKE %:branshe%")
-	List<Company> findByNameContaining(String branshe);
+	@Query("SELECT c FROM Company c WHERE c.name LIKE %:branshe% AND c.id <> :id")
+	List<Company> findByNameContaining(String branshe, Long id);
 
 	//Company findByClientId(Long clientId);
 

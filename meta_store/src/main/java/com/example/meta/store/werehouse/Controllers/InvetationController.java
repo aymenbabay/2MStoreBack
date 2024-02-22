@@ -54,8 +54,11 @@ public class InvetationController {
 	
 	@GetMapping("get_invetation")
 	public List<InvetationDto> getInvetation(){
+		logger.warn("begin get invetation");
 		Client client = getClient();
+		logger.warn("begin get invetation after client");
 		Provider provider = getProvider();
+		logger.warn("begin get invetation after provider");
 		Optional<Company> company = getCompany();
 		logger.warn("just after get company function");
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
@@ -103,10 +106,10 @@ public class InvetationController {
 	private Client getClient(){
 		Optional<Company> company = getCompany();
 		logger.warn("begin of get client function ");
-		if(company.isEmpty()) {
+		if(company.get().getId() == null) {
 			return new Client();
 		}
-		Client client = clientService.getMeAsClient(company.get()).get();
+		Client client = clientService.getMeAsClient(company.get().getId()).get();
 		return client;
 	}
 

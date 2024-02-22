@@ -35,6 +35,8 @@ public class WorkerDto extends BaseDto<Long> implements Serializable {
 	
 	private long totdayvacation;
 
+	private long remainingday;
+	
 	private boolean statusvacation;
 	
 	private UserDto user;

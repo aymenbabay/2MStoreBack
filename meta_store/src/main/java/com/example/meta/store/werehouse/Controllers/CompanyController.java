@@ -86,10 +86,6 @@ public class CompanyController {
 	public boolean hasCompany() {
 		Company company = getCompany();
 		if(company.getId() == null) {
-			Long companyId = workerService.getByName(authenticationFilter.userName);
-			if(companyId != null) {
-				return true;
-			}
 			return false;
 		}
 		return true;
@@ -107,7 +103,26 @@ public class CompanyController {
 	
 	@GetMapping("search/{branshe}")
 	public List<CompanyDto> searchCompanyContaining(@PathVariable String branshe){
-		return companyService.getCompanyContaining(branshe);
+		Company company = getCompany();
+		return companyService.getCompanyContaining(branshe, company.getId());
+	}
+	
+	@GetMapping("get_my_parent/{id}")
+	public CompanyDto getMyParent(@PathVariable Long id) {
+		Company company;
+		company = getCompany();
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			company = companyService.getById(id).getBody();
+		}
+		logger.warn("id "+id);
+		logger.warn("company id"+company.getId());
+		return companyService.getMyParent(company);
+		}
+	
+	@GetMapping("get_branches")
+	public List<CompanyDto> getBranches(){
+		Company company = getCompany();
+		return companyService.getBranches(company);
 	}
 	
 	private Company getCompany() {

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.PassingClient;
+import com.example.meta.store.werehouse.Entities.PurchaseOrder;
 import com.example.meta.store.werehouse.Enums.Status;
 
 import lombok.Getter;
@@ -22,4 +23,8 @@ public class PurchaseOrderLineDto extends BaseDto<Long> implements Serializable 
 	private String comment;
 	
 	private Status status;
+	
+	private Boolean delivery;
+
+	private PurchaseOrder purchaseorder;
 }

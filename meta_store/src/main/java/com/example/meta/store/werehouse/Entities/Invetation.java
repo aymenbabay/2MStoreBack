@@ -4,6 +4,7 @@ import com.example.meta.store.Base.Entity.BaseEntity;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.example.meta.store.werehouse.Enums.Type;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -41,7 +42,6 @@ public class Invetation extends BaseEntity<Long> {
 	@JoinColumn(name="company_reciver_id")
 	private Company companyReciver;
 	
-
 	private Double salary;
 	
 	private String jobtitle;
@@ -53,4 +53,6 @@ public class Invetation extends BaseEntity<Long> {
 	private boolean statusvacation;
 	
 	private Status status;
+
+	private Type type;
 }

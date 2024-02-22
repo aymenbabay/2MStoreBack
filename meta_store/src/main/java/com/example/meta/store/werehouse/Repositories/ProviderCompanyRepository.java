@@ -23,6 +23,13 @@ public interface ProviderCompanyRepository extends BaseRepository<ProviderCompan
 
 		void deleteByProviderIdAndCompanyId(Long id, Long id2);
 
+		@Query("SELECT p FROM ProviderCompany p WHERE "
+			       + "(p.provider.company.id = :companyId)"
+			       + "AND (p.provider.name LIKE %:search% OR p.provider.code LIKE %:search%) "
+			       )
+			List<ProviderCompany> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long companyId);
 
+//		@Query("SELECT pc FROM ProviderCompany pc GROUP BY pc.provider")
+//		List<ProviderCompany> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long id);
 	
 }

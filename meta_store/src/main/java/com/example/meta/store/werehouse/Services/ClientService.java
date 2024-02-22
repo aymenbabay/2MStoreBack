@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Enums.Nature;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.example.meta.store.werehouse.Enums.Type;
 import com.example.meta.store.werehouse.Mappers.ClientCompanyMapper;
 import com.example.meta.store.werehouse.Mappers.ClientMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
@@ -146,15 +148,16 @@ public class ClientService extends BaseService<Client, Long>{
 		invetationClientCompany.setClient(client.getBody());
 		invetationClientCompany.setCompanySender(company);
 		invetationClientCompany.setStatus(Status.INWAITING);
+		invetationClientCompany.setType(Type.CLIENT);
 		invetationClientProviderRepository.save(invetationClientCompany);
 	}
 
 
 
 
-	public List<ClientCompanyDto> getAllMyClient(Client client) {
-		logger.warn("client id => "+client.getId()+" company id =>"+client.getCompany().getId());
-		List<ClientCompany> clients = clientCompanyRepository.getAllMyClients(client.getCompany().getId());
+	public List<ClientCompanyDto> getAllMyClient(Company company) {
+		
+		List<ClientCompany> clients = clientCompanyRepository.getAllMyClients(company.getId());
 		if(clients == null) {
 			throw new RecordNotFoundException("There Is No Client Yet");
 		}
@@ -236,13 +239,13 @@ public class ClientService extends BaseService<Client, Long>{
 	}
 
 //maybe unuse
-	public Optional<Client> getMeAsClient(Company company) {
-		Optional<Client> client = clientRepository.getByCompanyIdAndIsVirtualFalse(company.getId());
+	public Optional<Client> getMeAsClient(Long id) {
+		Optional<Client> client = clientRepository.getByCompanyIdAndIsVirtualFalse(id);
 		return client;
 	}
 
-	public List<ClientDto> getAllClientContaining(String var, Company company) {
-		List<Client> clients = new ArrayList<>();
+	public List<ClientCompanyDto> getAllClientContaining(String var, Company company) {
+		List<ClientCompany> clients = new ArrayList<>();
 		if(company == null) {
 			clients = clientRepository.findAllByIsVisibleTrueAndNameContainingOrCodeContaining(var);
 		}else {			
@@ -251,9 +254,9 @@ public class ClientService extends BaseService<Client, Long>{
 		if(clients.isEmpty()) {
 			throw new RecordNotFoundException("there is no client containing "+var +" word");
 		}
-		List<ClientDto> clientsDto = new ArrayList<>();
-		for(Client i : clients) {
-			ClientDto client = clientMapper.mapToDto(i);
+		List<ClientCompanyDto> clientsDto = new ArrayList<>();
+		for(ClientCompany i : clients) {
+			ClientCompanyDto client = clientCompanyMapper.mapToDto(i);
 			clientsDto.add(client);
 			}		
 		return clientsDto;
@@ -284,7 +287,7 @@ public class ClientService extends BaseService<Client, Long>{
 			else {
 					providerCompany.setProvider(invetation.getProvider());
 					providerCompany.setCompany(invetation.getCompanySender());
-					Optional<Client> client = getMeAsClient(invetation.getCompanySender());
+					Optional<Client> client = getMeAsClient(invetation.getCompanySender().getId());
 					existClient = clientCompanyRepository.existsByClientIdAndCompanyId(client.get().getId(), invetation.getProvider().getCompany().getId());
 					if(!existClient) {						
 						clientCompany.setCompany(invetation.getProvider().getCompany());
@@ -305,8 +308,9 @@ public class ClientService extends BaseService<Client, Long>{
 	}
 
 
-		public List<ClientDto> getAllMyContaining(String search,Client clientt) {
-			List<Client> clients = clientRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search,clientt.getCompany().getId());
+		public List<ClientDto> getAllMyContaining(String search,Company company) {
+			logger.warn("id company from service "+company.getId());
+			List<Client> clients = clientRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search,company.getId());
 			if(clients.isEmpty()) {
 				throw new RecordNotFoundException("there is no client containig "+search +" nedher name ether code");
 			}
@@ -354,6 +358,10 @@ public class ClientService extends BaseService<Client, Long>{
 				invoicee.setPaid(true);
 				invoiceRepository.save(invoicee);
 			}
+		}
+
+		public Optional<Client> findByCompanyId(Long id) {
+			return clientRepository.getByCompanyIdAndIsVirtualFalse(id);
 		}
 
 	

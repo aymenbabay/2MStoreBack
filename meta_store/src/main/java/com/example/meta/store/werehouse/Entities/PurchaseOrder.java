@@ -25,9 +25,6 @@ import lombok.Setter;
 @Table(name="purchaseOrder")
 public class PurchaseOrder extends BaseEntity<Long> implements Serializable {
 
-	@OneToMany
-	@JoinTable(name="OrderLine")
-	private Set<PurchaseOrderLine> lines;
 	
 	@ManyToOne
 	private Company company;

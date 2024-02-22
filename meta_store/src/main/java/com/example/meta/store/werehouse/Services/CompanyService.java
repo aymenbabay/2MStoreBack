@@ -203,8 +203,8 @@ public class CompanyService extends BaseService<Company, Long> {
 		return company;
 	}
 
-	public List<CompanyDto> getCompanyContaining(String branshe) {
-		List<Company> companies = companyRepository.findByNameContaining(branshe);
+	public List<CompanyDto> getCompanyContaining(String branshe, Long id) {
+		List<Company> companies = companyRepository.findByNameContaining(branshe,id);
 		if(companies.isEmpty()) {
 			throw new RecordNotFoundException("there is no company with name containing: "+branshe);
 		}
@@ -214,6 +214,31 @@ public class CompanyService extends BaseService<Company, Long> {
 			companiesDto.add(companyDto);
 		}
 		return companiesDto;
+	}
+
+	public void acceptedInvetation(Company companySender, Company companyReciver) {
+		Set<Company> companies = companyReciver.getBranches();
+		companies.add(companySender);
+		companyReciver.setBranches(companies);
+		companySender.setParentCompany(companyReciver);
+		
+	}
+
+	public List<CompanyDto> getBranches(Company company) {
+		List<CompanyDto> companiesDto = new ArrayList<>();
+		if(company.getBranches().size() >0 ) {
+			for(Company i : company.getBranches()) {
+				CompanyDto companyDto = companyMapper.mapToDto(i);
+				companiesDto.add(companyDto);
+			}
+		}
+		return companiesDto;
+	}
+
+	public CompanyDto getMyParent(Company company) {
+		CompanyDto companyDto = companyMapper.mapToDto(company.getParentCompany());
+		logger.warn("companyDto id : "+companyDto.getId());
+		return companyDto;
 	}
 
 

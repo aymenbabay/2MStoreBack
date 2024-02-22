@@ -41,9 +41,13 @@ public class WorkerController {
 	private final CompanyService companyService;
 	
 	
-	@GetMapping("/getbycompany")
-	public ResponseEntity<List<WorkerDto>> getWorkerByCompany(){
-		Company company = getCompany();
+	@GetMapping("/getbycompany/{id}")
+	public ResponseEntity<List<WorkerDto>> getWorkerByCompany(@PathVariable Long id){
+		Company company;
+		company = getCompany();
+		if(company.getId() != id ) {
+			company = companyService.getById(id).getBody();
+		}
 		return workerService.getWorkerByCompany(company);
 	}
 	
@@ -84,9 +88,13 @@ public class WorkerController {
 		workerService.addVacation(vacationDto,company);
 		}
 	
-	@GetMapping("/history/{id}")
-	public List<VacationDto> getWorkerHistory(@PathVariable Long id) {
-		Company company = getCompany();
+	@GetMapping("/history/{id}/{companyId}")
+	public List<VacationDto> getWorkerHistory(@PathVariable Long id, @PathVariable Long companyId) {
+		Company company;
+		company = getCompany();
+		if(company.getId() != companyId ) { //&& not branshes
+			company = companyService.getById(companyId).getBody();
+		}
 		return workerService.getWorkerHistory(company,id);
 	}
 	

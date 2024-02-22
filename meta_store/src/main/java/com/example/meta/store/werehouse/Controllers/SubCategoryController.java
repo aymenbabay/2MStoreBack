@@ -47,9 +47,13 @@ public class SubCategoryController {
 
 	private final Logger logger = LoggerFactory.getLogger(SubCategoryController.class);
 	
-	@GetMapping("/getbycompany")
-	public ResponseEntity<List<SubCategoryDto>> getSubCategoryByCompany(){
-		Company company = getCompany();
+	@GetMapping("/getbycompany/{id}")
+	public ResponseEntity<List<SubCategoryDto>> getSubCategoryByCompany(@PathVariable Long id){
+		Company company; 
+		company = getCompany();
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			company = companyService.getById(id).getBody();
+		}
 		return subCategoryService.getSubCategoryByCompany(company);
 	}
 	

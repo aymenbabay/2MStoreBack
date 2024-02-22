@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
@@ -43,6 +44,11 @@ public class PurchaseOrderLine extends BaseEntity<Long> implements Serializable 
 	private String comment;
 	
 	private Status status;
+
+	private Boolean delivery;
 	
+	@ManyToOne()
+	@JoinColumn(name = "purchaseOrderId")
+	private PurchaseOrder purchaseorder;
 	
 }

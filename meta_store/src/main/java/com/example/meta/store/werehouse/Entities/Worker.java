@@ -42,6 +42,8 @@ public class Worker extends BaseEntity<Long> implements Serializable {
 	private long totdayvacation;
 
 	private boolean statusvacation;
+
+	private long remainingday;
 	
 	@OneToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name = "user_id",referencedColumnName = "id")

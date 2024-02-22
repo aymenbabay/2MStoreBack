@@ -29,6 +29,7 @@ import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Enums.Status;
+import com.example.meta.store.werehouse.Enums.Type;
 import com.example.meta.store.werehouse.Mappers.ProviderCompanyMapper;
 import com.example.meta.store.werehouse.Mappers.ProviderMapper;
 import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
@@ -134,6 +135,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 		invetationClientProvider.setCompanySender(company);
 		invetationClientProvider.setProvider(provider.getBody());
 		invetationClientProvider.setStatus(Status.INWAITING);
+		invetationClientProvider.setType(Type.PROVIDER);
 		invetationClientProviderRepository.save(invetationClientProvider);
 	}
 
@@ -316,11 +318,11 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 
-	public List<ProviderDto> getAllProvidersContaining(Company company, String search) {
-		List<Provider> providers = providerRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search, company.getId());
-		List<ProviderDto> providersDto = new ArrayList<>();
-		for(Provider i : providers) {
-			ProviderDto providerDto = providerMapper.mapToDto(i);
+	public List<ProviderCompanyDto> getAllProvidersContaining(Company company, String search) {
+		List<ProviderCompany> providers = providerCompanyRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search, company.getId());
+		List<ProviderCompanyDto> providersDto = new ArrayList<>();
+		for(ProviderCompany i : providers) {
+			ProviderCompanyDto providerDto = providerCompanyMapper.mapToDto(i);
 			providersDto.add(providerDto);
 		}
 		return providersDto;

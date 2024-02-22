@@ -68,8 +68,8 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		return invoicesDto;
 	}
 	
-	public List<InvoiceDto> getInvoicesAsClient(Company company) {
-		Client client = clientService.getMeAsClient(company).get();
+	public List<InvoiceDto> getInvoicesAsClient(Long id) {
+		Client client = clientService.getMeAsClient(id).get();
 		List<Invoice> invoices = invoiceRepository.findAllByClientIdAndStatus(client.getId(),Status.ACCEPTED);
 		List<InvoiceDto> invoicesDto = new ArrayList<>();
 		for(Invoice i : invoices) {

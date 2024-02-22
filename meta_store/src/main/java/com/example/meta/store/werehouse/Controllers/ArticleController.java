@@ -76,10 +76,10 @@ public class ArticleController {
 	}
 	
 	
-	@GetMapping("getAllMyArticle")
-	public List<ArticleDto> getAllMyArticle() {
-		Optional<Provider> provider = getProvider();
-		return articleService.getAllProvidersArticleByProviderId(provider.get());
+	@GetMapping("getAllMyArticle/{id}")
+	public List<ArticleDto> getAllMyArticle(@PathVariable Long id) {
+		Company company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		return articleService.getAllProvidersArticleByProviderId(company,id);
 	}
 	 	
 
@@ -168,7 +168,7 @@ public class ArticleController {
 		if(company.isEmpty()) {
 			return Optional.empty();
 		}
-		Optional<Client> client = clientService.getMeAsClient(company.get());
+		Optional<Client> client = clientService.getMeAsClient(company.get().getId());
 		return client;
 	}
 

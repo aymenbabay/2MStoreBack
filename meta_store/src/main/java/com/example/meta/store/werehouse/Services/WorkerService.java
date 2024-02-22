@@ -127,20 +127,20 @@ public class WorkerService extends BaseService<Worker, Long> {
 	public ResponseEntity<WorkerDto> insertWorker(@Valid WorkerDto workerDto, Company company) {
 		Long worker1 = getByName(workerDto.getName());
 		if(worker1 !=null)  {
-			throw new RecordIsAlreadyExist("is already exist");
+			throw new RecordIsAlreadyExist("is already worker");
 		}
 
 		Worker worker = new Worker();
 		
 		worker = workerMapper.mapToEntity(workerDto);
 		worker.setCompany(company);
+		worker.setRemainingday(worker.getTotdayvacation());
 		if(workerDto.getUser() != null) {
 			User user = userService.findByUserName(workerDto.getName());
 			worker.setUser(user);
 			
 		}
-		logger.warn(""+worker.getUser().getUsername());
-		super.insert(worker);
+		workerRepository.save(worker);
 		return new ResponseEntity<WorkerDto>(HttpStatus.ACCEPTED);
 		
 	}
@@ -154,15 +154,22 @@ public class WorkerService extends BaseService<Worker, Long> {
 	}
 
 	public void addVacation(VacationDto vacationDto, Company company) {
-		ResponseEntity<Worker> worker = super.getById(vacationDto.getWorker().getId());
-		Vacation vacation = vacationMapper.mapToEntity(vacationDto);
-		long differenceInDays = TimeUnit.DAYS.convert(vacation.getEnddate().getTime() - vacation.getStartdate().getTime(), TimeUnit.MILLISECONDS);
-		int year = getYearFromDate(vacation.getStartdate());
-		vacation.setRemainingday(vacation.getRemainingday()-differenceInDays);  
-		vacation.setUsedday(vacation.getUsedday()+differenceInDays);
+		Vacation vacation = new Vacation();
+			vacation = vacationMapper.mapToEntity(vacationDto);
+		//Vacation vacation = vacationRepository.findById(vacationDto.getId()).orElseThrow(() -> new RecordNotFoundException("there is no worker with id : "+vacationDto.getId()));
+		long differenceInDays = TimeUnit.DAYS.convert(vacationDto.getEnddate().getTime() - vacationDto.getStartdate().getTime()+86_400_000L, TimeUnit.MILLISECONDS);
+		int year = getYearFromDate(vacationDto.getStartdate());
 		vacation.setYear(year);
-		vacation.setWorker(worker.getBody());
 		vacation.setCompany(company);
+		Worker worker = workerRepository.findById(vacation.getWorker().getId()).orElseThrow(() -> new RecordNotFoundException("this worker not found"));
+		worker.setRemainingday(worker.getRemainingday()-differenceInDays);  
+		//	vacation.setUsedday(vacation.getUsedday()+differenceInDays);
+		//vacation.setStartdate(vacationDto.getStartdate());
+		//vacation.setEnddate(vacationDto.getEnddate());
+		Date now = new Date();
+		if((vacationDto.getStartdate().before(now) || vacationDto.getStartdate().equals(now)) && vacationDto.getEnddate().after(now)) {
+			worker.setStatusvacation(true);
+		}
 		vacationRepository.save(vacation);
 	}
 

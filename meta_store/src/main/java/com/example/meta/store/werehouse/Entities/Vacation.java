@@ -7,6 +7,7 @@ import com.example.meta.store.Base.Entity.BaseEntity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -23,10 +24,6 @@ public class Vacation extends BaseEntity<Long> implements Serializable {
  
 
     private static final long serialVersionUID = 12345678115L;
-    
-	private long usedday;
-	
-	private long remainingday;
 		
 	private int year;
 	
@@ -35,11 +32,11 @@ public class Vacation extends BaseEntity<Long> implements Serializable {
 	private Date enddate;
 	
 	
-	@OneToOne()
+	@ManyToOne()
 	@JoinColumn(name = "worker_id",referencedColumnName = "id")
 	private Worker worker;
 	
-	@OneToOne()
+	@ManyToOne()
 	@JoinColumn(name = "company_id",referencedColumnName = "id")
 	private Company company;
 }

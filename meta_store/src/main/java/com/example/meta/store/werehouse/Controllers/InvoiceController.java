@@ -51,10 +51,13 @@ public class InvoiceController {
 		return invoiceService.getLastInvoice(company.getId());
 	}
 	
-	@GetMapping("getMyInvoiceAsProvider")
-	public List<InvoiceDto> getMyInvoiceAsProvider(){
+	@GetMapping("getMyInvoiceAsProvider/{id}")
+	public List<InvoiceDto> getMyInvoiceAsProvider(@PathVariable Long id){
 		Optional<Company> company = getMyCompany();
 		if(company.get().getId() != null) {
+			if(company.get().getId() != id &&  company.get().getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+				return invoiceService.getMyInvoiceAsProvider(id, null);
+			}
 			return invoiceService.getMyInvoiceAsProvider(company.get().getId(),null);
 		}
 		company = getHisCompany();
@@ -63,11 +66,14 @@ public class InvoiceController {
 		
 	}
 	
-	@GetMapping("getMyInvoiceAsClient")
-	public List<InvoiceDto> getInvoicesAsClient(){
-		Company company = getCompany();
+	@GetMapping("getMyInvoiceAsClient/{id}")
+	public List<InvoiceDto> getInvoicesAsClient(@PathVariable Long id){
+		Company company= getCompany();
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			return invoiceService.getInvoicesAsClient(id);			
+		}
 		logger.warn("company id "+company.getId());
-		return invoiceService.getInvoicesAsClient(company);
+		return invoiceService.getInvoicesAsClient(company.getId());
 	}
 	
 	@GetMapping("cancel_invoice/{id}")
@@ -124,7 +130,7 @@ public class InvoiceController {
 		logger.warn("begin of get me as client ");
 		Optional<Company> company = getMyCompany();
 		logger.warn("just after get company in get me as client ");
-		Client client = clientService.getMeAsClient(company.get()).get();
+		Client client = clientService.getMeAsClient(company.get().getId()).get();
 		return client;
 	}
 	

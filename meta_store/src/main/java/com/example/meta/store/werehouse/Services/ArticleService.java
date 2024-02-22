@@ -54,8 +54,6 @@ public class ArticleService extends BaseService<Article, Long>{
 	
 	private final SubCategoryService subCategoryService;
 	
-	private final CompanyService companyService;
-	
 	private final ProviderService providerService;
 	
 	private final ObjectMapper objectMapper;
@@ -66,40 +64,68 @@ public class ArticleService extends BaseService<Article, Long>{
 	
     public ResponseEntity<ArticleDto> insertArticle( MultipartFile file, String article, Provider provider)
 			throws JsonMappingException, JsonProcessingException {
+    	logger.warn("insert article service first of function ");
 		ArticleDto articleDto = objectMapper.readValue(article, ArticleDto.class);
+		logger.warn("insert article service first of function 1");
 		Article article1 = articleMapper.mapToEntity(articleDto);
+		logger.warn("insert article service first of function 2");
 		if(file != null) {
+			logger.warn("insert article service first of function 3");
 			String newFileName = imageService.insertImag(file,provider.getCompany().getUser().getUsername(), "article");
 			article1.setImage(newFileName);
 		}
 		if(article1.getProvider() == null) {
+			logger.warn("insert article service first of function 4");
 			article1.setProvider(provider);
 		}
 		if(articleDto.getCategory()==null) {
+			logger.warn("insert article service first of function 5");
 			Category category = categoryService.getDefaultCategory(provider.getCompany());
 			article1.setCategory(category);		
 		}
 		if(articleDto.getSubCategory()==null) {
+			logger.warn("insert article service first of function 6");
 			SubCategory subCategory = subCategoryService.getDefaultSubCategory(provider.getCompany());
 			article1.setSubCategory(subCategory);
 		}
+		logger.warn("insert article service first of function 7");
 		super.insert(article1);
+		logger.warn("insert article service first of function 8");
 		article1.setSharedPoint(provider.getCompany().getUser().getUsername());
+		logger.warn("insert article service first of function 9");
 		if(provider.getCompany().getIsVisible() == PrivacySetting.ONLY_ME) {			
+			logger.warn("insert article service first of function 10");
 		article1.setIsVisible(PrivacySetting.ONLY_ME);
 		}
 		if(provider.getCompany().getIsVisible() == PrivacySetting.CLIENT && articleDto.getIsVisible() == PrivacySetting.PUBLIC) {
+			logger.warn("insert article service first of function 11");
 			article1.setIsVisible(PrivacySetting.CLIENT);
 		}
+		logger.warn("insert article service first of function 12");
 		article1.setCompany(provider.getCompany());
+		logger.warn("insert article service first of function 13");
 		inventoryService.makeInventory(article1, provider.getCompany());
+		logger.warn("insert article service first of function 14");
 		return ResponseEntity.ok(articleDto);
 	}
 	
-	public List<ArticleDto> getAllProvidersArticleByProviderId(Provider provider) {
+	public List<ArticleDto> getAllProvidersArticleByProviderId(Company company, Long id) {
+		logger.warn("id from path : "+id);
+		logger.warn("id from company : "+company.getId());
 		List<ArticleDto> articlesDto = new ArrayList<ArticleDto>();
-		List<Article> articles = articleRepository.findAllMyByCompanyId(provider.getCompany().getId());
+		List<Article> articles = new ArrayList<>();
+		if(company.getId() != id) {
+			for(Company i : company.getBranches()) {
+				if(i.getId() == id) {
+					logger.warn("id from branches : "+i.getId());
+					articles = articleRepository.findAllMyByCompanyId(id);		
+				}
+			}
+		}else {			
+		 articles = articleRepository.findAllMyByCompanyId(company.getId());			
+		}
 		for(Article i : articles) {
+			logger.warn("articel id from for loop "+i.getId());
 			ArticleDto articleDto = articleMapper.mapToDto(i);
 			articlesDto.add(articleDto);
 		}

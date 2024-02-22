@@ -54,23 +54,31 @@ public class PurchaseOrderController {
 	@PostMapping()
 	public void addPurchaseOrder(@RequestBody List<PurchaseOrderLineDto> purchaseOrderDto) {
 		Optional<Client> client = getClient();
-		logger.warn(client.get().getId()+" <= client id ");
 		Optional<PassingClient> pClient = getPassingClient();
-		logger.warn(pClient.get().getId()+" <= pClient id 1 ");
-		if(client.get().getId() == null && pClient.get().getId() == null) {			
+		logger.warn("before if condition ");
+		if(client.get() == null && pClient.get().getId() == null) {		
+			logger.warn("in if condition ");
 		 pClient = CreatePassingClient();
-		 logger.warn(pClient.get().getId()+" <= pClient id 2");
 		 purchaseOrderService.addPurchaseOrder(purchaseOrderDto,null,pClient.get());
 		 return;
 		}
+		logger.warn("out of if condition ");
 		purchaseOrderService.addPurchaseOrder(purchaseOrderDto,client.get(),pClient.get());
 	}
 	
-	@GetMapping("get_order")
-	public List<PurchaseOrderDto> getAllMyPerchaseOrder(){
+	@GetMapping("get_order/{id}")
+	public List<PurchaseOrderDto> getAllMyPerchaseOrder(@PathVariable Long id){
 		Optional<Client> client = getClient();
 		Optional<PassingClient> pClient = getPassingClient();
+		if(client.get().getId() != null && client.get().getCompany().getId() != id) {
+			client = clientService.findByCompanyId(id);
+		}
 		return purchaseOrderService.getAllMyPurchaseOrder(client.get(), pClient.get());
+	}
+	
+	@GetMapping("get_lines/{id}")
+	public List<PurchaseOrderLineDto> getAllPurchaseOrderLinesByPurchaseOrderId(@PathVariable Long id){
+		return purchaseOrderService.getAllPurchaseOrderLinesByPurchaseOrderId(id);
 	}
 	
 	@GetMapping("{id}")
@@ -116,6 +124,9 @@ public class PurchaseOrderController {
 	private Optional<PassingClient> getPassingClient() {
 		User user = userService.findByUserName(authenticationFilter.userName);
 		Optional<PassingClient> client = clientService.findPassingClientBUser(user);
+		if(client.isEmpty()) {
+			return Optional.of(new PassingClient());
+		}
 	return client;
 	}
 	
@@ -124,7 +135,7 @@ public class PurchaseOrderController {
 		if(company.isEmpty()) {
 			return Optional.of(new Client());
 		}
-		Optional<Client> client = clientService.getMeAsClient(company.get());
+		Optional<Client> client = clientService.getMeAsClient(company.get().getId());
 		return client;
 	}
 	

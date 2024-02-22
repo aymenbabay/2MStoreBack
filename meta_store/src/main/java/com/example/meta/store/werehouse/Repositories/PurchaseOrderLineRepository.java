@@ -13,6 +13,11 @@ public interface PurchaseOrderLineRepository extends BaseRepository<PurchaseOrde
 	@Query("SELECT p FROM PurchaseOrderLine p JOIN PurchaseOrder po WHERE p.id = :id AND (po.client.id = :clientId OR po.pclient.id = :pClientId)")
 	Optional<PurchaseOrderLine> findByIdAndClientIdOrPassingClientId(Long id, Long clientId, Long pClientId);
 
+	@Query("SELECT p FROM PurchaseOrderLine p JOIN PurchaseOrder po WHERE po.company.id = :companyId OR po.client.id = :clientId OR po.pclient.id = :pClientId")
+	List<PurchaseOrderLine> findAllByCompanyIdOrClientIdOrPclientId(Long companyId, Long clientId, Long pClientId);
+
+	List<PurchaseOrderLine> findAllByPurchaseorderId(Long id);
+
 
 
 }

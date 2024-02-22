@@ -12,8 +12,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class PurchaseOrderDto extends BaseDto<Long> implements Serializable{
-
-	private Set<PurchaseOrderLineDto> lines;
 	
 	
 	private CompanyDto company;

@@ -52,22 +52,35 @@ public class ClientController {
 
 	private final Logger logger = LoggerFactory.getLogger(ClientController.class);
 	
-	@GetMapping("get_all_my")
-	public List<ClientCompanyDto> getAllMyClient(){
-		Client client = getClient();
-		return clientService.getAllMyClient(client);
+	@GetMapping("get_all_my/{id}")
+	public List<ClientCompanyDto> getAllMyClient(@PathVariable Long id){
+		Company company;
+		 company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			company = companyService.getById(id).getBody();
+		}
+		return clientService.getAllMyClient(company);
 	}
 	
-	@GetMapping("get_all_containing/{var}")
-	public List<ClientDto> getAllClient(@PathVariable String var){
-		Optional<Company> company = getCompany();
-		return clientService.getAllClientContaining(var,company.get());
+	@GetMapping("get_all_containing/{var}/{id}")
+	public List<ClientCompanyDto> getAllClient(@PathVariable String var, @PathVariable Long id){
+		Company company;
+		company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			company = companyService.getById(id).getBody();
+		}
+		return clientService.getAllClientContaining(var,company);
 	}
 
-	@GetMapping("get_all_my_containing/{value}")
-	public List<ClientDto> getAllMyCointaining(@PathVariable String value){
-		Client client = getClient();
-		return clientService.getAllMyContaining(value,client);
+	@GetMapping("get_all_my_containing/{value}/{id}")
+	public List<ClientDto> getAllMyCointaining(@PathVariable String value, @PathVariable Long id){
+		logger.warn("id for path "+ id);
+		Company company;
+		company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			company = companyService.getById(id).getBody();
+		}
+		return clientService.getAllMyContaining(value,company);
 	}
 
 	  
@@ -99,16 +112,20 @@ public class ClientController {
 		return getClient().getId();
 	}
 	
-	@GetMapping("checkClient/{id}")
-	public boolean checkClient(@PathVariable Long id) {
-		Optional<Company> company = getCompany();
-		return clientService.checkClient(id,company.get().getId());
+	@GetMapping("checkClient/{id}/{companyId}")
+	public boolean checkClient(@PathVariable Long id, @PathVariable Long companyId) {
+		Company company;
+		company = getCompany().orElseThrow(() -> new RecordNotFoundException(null));
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			return clientService.checkClient(id,companyId);
+		}
+		return clientService.checkClient(id,company.getId());
 	}
 	
 	private Client getClient() {
 		Optional<Company> company = getCompany();
 		logger.warn("company id in get client "+ company.get().getId());
-		return clientService.getMeAsClient(company.get()).get();
+		return clientService.getMeAsClient(company.get().getId()).get();
 	}
 	
 	private Optional<Provider> getProvider() {

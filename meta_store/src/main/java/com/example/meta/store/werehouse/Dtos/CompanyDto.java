@@ -9,6 +9,7 @@ import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
+import com.example.meta.store.werehouse.Enums.Type;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.JoinColumn;
@@ -59,6 +60,7 @@ public class CompanyDto extends BaseDto<Long> implements Serializable {
 	private Set<CompanyDto> branshes;
 
 	private CompanyDto parentCompany;
+	
 		
 	
 }

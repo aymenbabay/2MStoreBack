@@ -3,9 +3,9 @@ package com.example.meta.store.werehouse.Entities;
 import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.werehouse.Enums.DeliveryStatus;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -13,28 +13,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name="provider_company")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
-public class ProviderCompany extends BaseEntity<Long> implements Serializable {
-
+@AllArgsConstructor
+@Entity
+@Table(name="orderDelivery")
+public class OrderDelivery extends BaseEntity<Long> implements Serializable {
 
 	@ManyToOne()
-	@JoinColumn(name = "providerId")
-	private Provider provider;
+	private Delivery delivery;
 	
 	@ManyToOne()
-	@JoinColumn(name = "companyId")
-	private Company company;
+	private PurchaseOrderLine order;
 	
-	private Double mvt;
+	private DeliveryStatus status;
 	
-	private Double credit;
-
-	private boolean isDeleted;
+	private String note;
 	
-	private Double advance;
+	private Boolean deliveryCofrimed;
+	
+	
 }

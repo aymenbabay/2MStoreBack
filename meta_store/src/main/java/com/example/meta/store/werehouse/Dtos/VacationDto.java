@@ -15,15 +15,11 @@ public class VacationDto extends BaseDto<Long> implements Serializable {
 
     private static final long serialVersionUID = 12345678124L;
     
-    private long usedday;
-	
-	private long remainingday;
-		
 	private int year;
 	
 	private Date startdate;
 	
 	private Date enddate;
 		
-	private Worker worker;
+	private WorkerDto worker;
 }

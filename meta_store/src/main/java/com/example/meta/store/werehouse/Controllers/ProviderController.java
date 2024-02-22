@@ -72,9 +72,13 @@ public class ProviderController {
 		return providerService.getAllMyVirtaul(company);
 	}
 	
-	@GetMapping("/get_all_my")
-	public List<ProviderCompanyDto> getAllMy(){
-		Company company = getCompany();
+	@GetMapping("/get_all_my/{id}")
+	public List<ProviderCompanyDto> getAllMy(@PathVariable Long id){
+		Company company;
+		company = getCompany();
+		if(company.getId() != id) {
+			company = companyService.getById(id).getBody();
+		}
 		return providerService.getAllMyProvider(company);
 	}
 	
@@ -135,9 +139,12 @@ public class ProviderController {
 	return providerService.checkProviderById(id,company.getId());
 	}
 	
-	@GetMapping("get_all_provider_containing/{search}")
-	public List<ProviderDto> getAllProviderContaining(@PathVariable String search){
+	@GetMapping("get_all_provider_containing/{search}/{id}")
+	public List<ProviderCompanyDto> getAllProviderContaining(@PathVariable String search, @PathVariable Long id){
 		Company company = getCompany();
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
+			company = companyService.getById(id).getBody();
+		}
 		return providerService.getAllProvidersContaining(company, search);
 	}
 	
