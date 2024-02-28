@@ -58,7 +58,7 @@ public class User extends BaseEntity<Long> implements UserDetails, Serializable 
 			
 			private LocalDateTime datetoken;
 			
-			private double logitude;
+			private double longitude;
 			
 			private double latitude;
 			

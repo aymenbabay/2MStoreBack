@@ -99,8 +99,8 @@ public class UserService {
 				.email(request.getEmail())
 				.password(passwordEncoder.encode(request.getPassword()))
 				.roles( role)
-				.logitude(51.123)
-				.latitude(51.123)
+				.longitude(request.getLongitude())
+				.latitude(request.getLatitude())
 				.build();
 		userRepository.save(user);
 		var jwtToken = jwtService.generateToken(user);

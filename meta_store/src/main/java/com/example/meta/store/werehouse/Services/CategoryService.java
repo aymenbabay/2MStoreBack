@@ -45,17 +45,17 @@ public class CategoryService extends BaseService<Category, Long>{
 	
 	public ResponseEntity<CategoryDto> upDateCategory( String catDto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
 		CategoryDto categoryDto = objectMapper.readValue(catDto, CategoryDto.class);
-		Optional<Category> category = categoryRepository.findByIdAndCompanyId(categoryDto.getId(),company.getId());
-		if(category.isEmpty()) {
-			throw new RecordNotFoundException("Category Not Found");
-		}
+		Category category = categoryRepository.findByIdAndCompanyId(categoryDto.getId(),company.getId())
+				.orElseThrow(() -> new RecordNotFoundException("Category Not Found"));
 			Category categ = categoryMapper.mapToEntity(categoryDto);
 			if(file != null) {
 
 				String newFileName = imageService.insertImag(file,company.getUser().getUsername(), "category");
 				categ.setImage(newFileName);
+			}else {
+
+				categ.setImage(category.getImage());
 			}
-			categ.setImage(category.get().getImage());
 			categ.setCompany(company);
 			categoryRepository.save(categ);
 			return ResponseEntity.ok(categoryDto);

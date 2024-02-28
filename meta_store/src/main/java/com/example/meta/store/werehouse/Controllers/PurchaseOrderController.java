@@ -30,6 +30,7 @@ import com.example.meta.store.werehouse.Services.CompanyService;
 import com.example.meta.store.werehouse.Services.PurchaseOrderService;
 import com.example.meta.store.werehouse.Services.WorkerService;
 
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -74,6 +75,23 @@ public class PurchaseOrderController {
 			client = clientService.findByCompanyId(id);
 		}
 		return purchaseOrderService.getAllMyPurchaseOrder(client.get(), pClient.get());
+	}
+	
+	@GetMapping("get_all_my_lines/{companyId}")
+	public List<PurchaseOrderLineDto> getrAllMyPurchaseOrderLines(@PathVariable Long companyId){
+		logger.warn("companyId1: "+companyId);
+		Optional<Company> company = getCompany();
+		if(company.get().getId() != null) {
+			logger.warn("companyId2: "+companyId);
+			if(company.get().getId() != companyId &&  company.get().getBranches().stream().anyMatch(branche -> branche.getId().equals(companyId))) {
+				logger.warn("companyId3: "+companyId);
+				return purchaseOrderService.getAllMyPurchaseOrderLinesByCompanyId(companyId, null, null);
+			}
+			logger.warn("companyId4: "+companyId);
+			return purchaseOrderService.getAllMyPurchaseOrderLinesByCompanyId(company.get().getId(), null, null);
+		}
+		logger.warn("companyId5: "+companyId);
+		return null;
 	}
 	
 	@GetMapping("get_lines/{id}")

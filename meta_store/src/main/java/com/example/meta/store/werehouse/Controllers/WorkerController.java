@@ -3,6 +3,8 @@ package com.example.meta.store.werehouse.Controllers;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,7 +41,8 @@ public class WorkerController {
 	private final UserService userService;
 	
 	private final CompanyService companyService;
-	
+
+	private final Logger logger = LoggerFactory.getLogger(WorkerController.class);
 	
 	@GetMapping("/getbycompany/{id}")
 	public ResponseEntity<List<WorkerDto>> getWorkerByCompany(@PathVariable Long id){
@@ -66,6 +69,7 @@ public class WorkerController {
 	
 	@PostMapping("/add")
 	public ResponseEntity<WorkerDto> insertWorker(@RequestBody @Valid WorkerDto workerDto){
+		logger.warn("insert worker");
 		Company company = getCompany();
 		return workerService.insertWorker(workerDto,company);
 	}

@@ -28,5 +28,7 @@ public interface WorkerRepository extends BaseRepository<Worker, Long> {
 	@Query("SELECT w.company.id FROM Worker w WHERE w.user.id = :userId")
 	Long findCompanyIdByUserId(Long userId);
 
+	boolean existsByNameAndCompanyId(String name, Long companyId);
+
 
 }

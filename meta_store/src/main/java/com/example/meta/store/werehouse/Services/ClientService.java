@@ -97,8 +97,8 @@ public class ClientService extends BaseService<Client, Long>{
 		meClient.setNature("personne Moral");
 		meClient.setCompany(company);
 		meClient.setVirtual(false);
-		meClient.setEmail(company.getEmail());
-		meClient.setIsVisible(company.getIsVisible());
+		//meClient.setEmail(company.getEmail());
+		//meClient.setIsVisible(company.getIsVisible());
 		logger.warn("just before client repository save new client ");
 		clientRepository.save(meClient);
 		ClientCompany clientCompany = new ClientCompany();
@@ -172,20 +172,9 @@ public class ClientService extends BaseService<Client, Long>{
 
 
 
-//maybe there is a problem because of mapping
 	public ClientDto upDateMyClientById( ClientDto clientDto, Company company) {
-		Client client = super.getById(clientDto.getId()).getBody();
-		if(client == null) {
-			throw new RecordNotFoundException("Client Not Found");
-		}
-		
-		if( client.getCompany() != null) {
-			if(client.getCompany() != company) {
-				throw new NotPermissonException("You Have No Permission");
-			}
-		
-		}
-		if(!client.getCreatedBy().equals(company.getUser().getUsername())) {
+		Client client = clientRepository.findById(clientDto.getId()).orElseThrow(() ->new RecordNotFoundException("Client Not Found"));		
+		if(!client.getCreatedBy().equals(company.getUser().getId()) || (client.getCompany() != null && !client.getCompany().equals(company))) {
 			throw new NotPermissonException("You Have No Permission");
 		}
 			Optional<Client> client1 = clientRepository.findByCodeAndCompanyId(clientDto.getCode(),company.getId());
@@ -195,6 +184,7 @@ public class ClientService extends BaseService<Client, Long>{
 			Client client2 = clientMapper.mapToEntity(clientDto);
 			client2.setIsVisible(client.getIsVisible());
 			client2.setVirtual(client.isVirtual());
+			client2.setCompany(company);
 			clientRepository.save(client2);
 			return clientDto;
 		

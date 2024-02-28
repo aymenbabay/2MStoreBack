@@ -55,11 +55,12 @@ public class InventoryService extends BaseService<Inventory, Long> {
 	public ResponseEntity<InventoryDto> makeInventory(Article article, Company company){
 		Inventory inventory = new Inventory();
 		String articleCost = df.format((article.getCost() + article.getCost()*article.getTva()/100) *article.getQuantity());
+		String cost = articleCost.replace(',', '.');
 		inventory.setIn_quantity(article.getQuantity());
 		inventory.setCompany(company);
 		inventory.setOut_quantity((double)0);
 		inventory.setArticle(article);
-		inventory.setArticleCost(Double.parseDouble(articleCost));
+		inventory.setArticleCost(Double.parseDouble(cost));
 		inventory.setArticleSelling((double)0);
 		inventory.setDiscountIn((double)0);
 		inventory.setDiscountOut((double)0);

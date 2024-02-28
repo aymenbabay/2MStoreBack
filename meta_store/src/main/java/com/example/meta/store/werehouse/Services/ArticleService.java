@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
+import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.ArticleDto;
 import com.example.meta.store.werehouse.Entities.Article;
@@ -64,48 +65,33 @@ public class ArticleService extends BaseService<Article, Long>{
 	
     public ResponseEntity<ArticleDto> insertArticle( MultipartFile file, String article, Provider provider)
 			throws JsonMappingException, JsonProcessingException {
-    	logger.warn("insert article service first of function ");
 		ArticleDto articleDto = objectMapper.readValue(article, ArticleDto.class);
-		logger.warn("insert article service first of function 1");
 		Article article1 = articleMapper.mapToEntity(articleDto);
-		logger.warn("insert article service first of function 2");
 		if(file != null) {
-			logger.warn("insert article service first of function 3");
 			String newFileName = imageService.insertImag(file,provider.getCompany().getUser().getUsername(), "article");
 			article1.setImage(newFileName);
 		}
 		if(article1.getProvider() == null) {
-			logger.warn("insert article service first of function 4");
 			article1.setProvider(provider);
 		}
 		if(articleDto.getCategory()==null) {
-			logger.warn("insert article service first of function 5");
 			Category category = categoryService.getDefaultCategory(provider.getCompany());
 			article1.setCategory(category);		
 		}
 		if(articleDto.getSubCategory()==null) {
-			logger.warn("insert article service first of function 6");
 			SubCategory subCategory = subCategoryService.getDefaultSubCategory(provider.getCompany());
 			article1.setSubCategory(subCategory);
 		}
-		logger.warn("insert article service first of function 7");
 		super.insert(article1);
-		logger.warn("insert article service first of function 8");
 		article1.setSharedPoint(provider.getCompany().getUser().getUsername());
-		logger.warn("insert article service first of function 9");
-		if(provider.getCompany().getIsVisible() == PrivacySetting.ONLY_ME) {			
-			logger.warn("insert article service first of function 10");
+		if(provider.getCompany().getIsVisible() == PrivacySetting.ONLY_ME) {	
 		article1.setIsVisible(PrivacySetting.ONLY_ME);
 		}
 		if(provider.getCompany().getIsVisible() == PrivacySetting.CLIENT && articleDto.getIsVisible() == PrivacySetting.PUBLIC) {
-			logger.warn("insert article service first of function 11");
 			article1.setIsVisible(PrivacySetting.CLIENT);
 		}
-		logger.warn("insert article service first of function 12");
 		article1.setCompany(provider.getCompany());
-		logger.warn("insert article service first of function 13");
 		inventoryService.makeInventory(article1, provider.getCompany());
-		logger.warn("insert article service first of function 14");
 		return ResponseEntity.ok(articleDto);
 	}
 	
@@ -172,6 +158,7 @@ public class ArticleService extends BaseService<Article, Long>{
 		}else {			
 			updatedArticle.setIsVisible(article1.get().getIsVisible());
 		}
+		updatedArticle.setSharedPoint(provider.getCompany().getUser().getUsername());
 		article1 = Optional.of(articleRepository.save(updatedArticle));
 		return null;
 		}
@@ -208,14 +195,15 @@ public class ArticleService extends BaseService<Article, Long>{
 		return articlesDto;
 	}
 	
-	public List<ArticleDto> findRandomArticlesPub(Client client, Provider provider) {
+	public List<ArticleDto> findRandomArticlesPub(Client client, Provider provider, User user) {
 		logger.warn("random article in article service just before the list ");
 		List<Article> article = new ArrayList<>();
-		if(client == null) {			
-		 article = articleRepository.findRandomArticles(51.122,51.125,PrivacySetting.PUBLIC);
+		if(client == null) {
+			logger.warn("longitude "+user.getLongitude()+" latitude "+user.getLatitude());
+		 article = articleRepository.findRandomArticles(user.getLongitude(), user.getLatitude());
 		}
 		else {
-			article = articleRepository.findRandomArticlesPro(51.122,51.125,provider.getId(),client.getId());
+			article = articleRepository.findRandomArticlesPro(provider.getId(),client.getId(), client.getCompany().getUser().getLongitude(), client.getCompany().getUser().getLatitude());
 			logger.warn("random article in article service just after the list"+article.get(0).getCode());
 		}
 		

@@ -54,19 +54,16 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
 			Long clientId, Double discount, String type) {
-				
 		List<CommandLine> commandLines = new ArrayList<>();
 		Invoice invoice ;
 		if(commandLinesDto.get(0).getId() == null) {
 			 invoice = invoiceService.addInvoice(company,clientId);	
-			 
 		}else {
 			 invoice = invoiceService.getById(commandLinesDto.get(0).getInvoice().getId()).getBody();
 			 commandLineRepository.deleteAllByInvoiceId(invoice.getId());
 		}
 		invoice.setDiscount(discount);
 		for(CommandLineDto i : commandLinesDto) {
-			
 			Article article = articleService.findById(i.getArticle().getId());
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());

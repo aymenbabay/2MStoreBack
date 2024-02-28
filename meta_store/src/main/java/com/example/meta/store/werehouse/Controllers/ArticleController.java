@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.example.meta.store.Base.ErrorHandler.NotPermissonException;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
+import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.UserService;
 import com.example.meta.store.werehouse.Dtos.ArticleDto;
 import com.example.meta.store.werehouse.Entities.Client;
@@ -115,9 +116,7 @@ public class ArticleController {
 	public ResponseEntity<ArticleDto> upDateArticle(
 			 @RequestParam(value ="file", required = false) MultipartFile file,
 			 @RequestParam("article") String article) throws Exception{
-		logger.warn("update article in article controller 1");
 		Optional<Provider> provider = getProvider();
-		logger.warn("update article in article controller 2");
 		return articleService.upDateArticle(file,article, provider.get());
 	}
 	
@@ -127,10 +126,13 @@ public class ArticleController {
 		Optional<Client> client = getClient();
 		Optional<Provider> provider = getProvider();
 	//	logger.warn(" client "+client.get());
-		if(client.isEmpty()) {
-			return articleService.findRandomArticlesPub(null, null);
+		if(client.isPresent()) {
+			logger.warn("client is no empty");
+			return articleService.findRandomArticlesPub(client.get(), provider.get(), null);
 		}
-		return articleService.findRandomArticlesPub(client.get(), provider.get());
+		logger.warn("client is empty");
+		User user = userService.findByUserName(authenticationFilter.userName);
+		return articleService.findRandomArticlesPub(null, null, user);
 		
 	}
 	
@@ -144,13 +146,16 @@ public class ArticleController {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
 		if(company.isPresent()) {
+			logger.warn("company is not empty");
 			return company;
 		}
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
 		if(companyId != null) {			
+			logger.warn("company is not empty but as worker");
 		ResponseEntity<Company> company2 = companyService.getById(companyId);
 		return Optional.of(company2.getBody());
 		}
+		logger.warn("company is empty");
 			return Optional.empty();
 	}
 	
@@ -166,9 +171,12 @@ public class ArticleController {
 	private Optional<Client> getClient(){
 		Optional<Company> company = getCompany();
 		if(company.isEmpty()) {
+			logger.warn("client is empty because company is empty");
 			return Optional.empty();
 		}
+		logger.warn("client is not empty because company is not empty");
 		Optional<Client> client = clientService.getMeAsClient(company.get().getId());
+		logger.warn(client.get().getName()+" client name is");
 		return client;
 	}
 

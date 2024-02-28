@@ -191,5 +191,20 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 		}
 		return purchaseOrderLinesDto;
 	}
+
+
+
+	public List<PurchaseOrderLineDto> getAllMyPurchaseOrderLinesByCompanyId(Long companyId, Long clientId, Long pClientId) {
+		List<PurchaseOrderLine> purchaseOrderLines = purchaseOrderLineRepository.findAllByCompanyIdOrClientIdOrPclientId(companyId, clientId, pClientId);
+		if(purchaseOrderLines.isEmpty()) {
+			throw new RecordNotFoundException("there is no order yet");
+		}
+		List<PurchaseOrderLineDto> purchaseOrderLinesDto = new ArrayList<>();
+		for(PurchaseOrderLine i : purchaseOrderLines) {
+			PurchaseOrderLineDto purchaseOrderLineDto = purchaseOrderLineMapper.mapToDto(i);
+			purchaseOrderLinesDto.add(purchaseOrderLineDto);
+		}
+		return purchaseOrderLinesDto;
+	}
 	
 }

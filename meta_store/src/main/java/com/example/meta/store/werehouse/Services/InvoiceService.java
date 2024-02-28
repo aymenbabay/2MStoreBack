@@ -103,13 +103,16 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 
 	public Invoice addInvoice(Company company, Long clientId) {
 		Long invoiceCode = getLastInvoice(company.getId());
-		ResponseEntity<Client> client = clientService.getById(clientId);
-		System.out.println(client.getBody().getId()+" client id");
+		Client client = clientService.getById(clientId).getBody();
 		Invoice invoice = new Invoice();
 		invoice.setCode(invoiceCode);
-		invoice.setClient(client.getBody());
+		invoice.setClient(client);
 		invoice.setCompany(company);
-		invoice.setStatus(Status.INWAITING);
+		if(client.getCompany().equals(company) || client.isVirtual()) {
+			invoice.setStatus(Status.ACCEPTED);			
+		}else {
+			invoice.setStatus(Status.INWAITING);			
+		}
 		invoiceRepository.save(invoice);
 		return invoice;
 	}

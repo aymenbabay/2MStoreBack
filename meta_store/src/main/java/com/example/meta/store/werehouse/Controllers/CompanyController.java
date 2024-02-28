@@ -58,8 +58,7 @@ public class CompanyController {
 			@RequestParam("company") String companyDto,
 			@RequestParam(value ="file", required = false) MultipartFile file
 			) throws Exception{
-		Company company = getCompany();
-		return companyService.upDateCompany(companyDto, file,company);
+		return companyService.upDateCompany(companyDto, file);
 	}
 	
 	@GetMapping("/{id}")
@@ -82,14 +81,6 @@ public class CompanyController {
 		return companyService.getMe(company,id);
 	}
 	
-	@GetMapping("/hascompany")
-	public boolean hasCompany() {
-		Company company = getCompany();
-		if(company.getId() == null) {
-			return false;
-		}
-		return true;
-	}
 
 	@GetMapping("/rate/{id}/{rate}")
 	public void rateCompany(@PathVariable long id, @PathVariable long rate) {

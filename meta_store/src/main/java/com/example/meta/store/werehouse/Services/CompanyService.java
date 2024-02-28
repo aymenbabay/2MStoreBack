@@ -99,12 +99,10 @@ public class CompanyService extends BaseService<Company, Long> {
 	}
 
 	//contient un erreur
-	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file,Company compan)
+	public ResponseEntity<CompanyDto> upDateCompany(String companyDto, MultipartFile file)
 			throws JsonMappingException, JsonProcessingException {
-		
-		Optional<Company> cmpany = companyRepository.findById(compan.getId());
-		Company company = cmpany.get();
 		CompanyDto companyDto1 = objectMapper.readValue(companyDto, CompanyDto.class);
+		Company company = companyRepository.findById(companyDto1.getId()).orElseThrow(() -> new RecordNotFoundException("you don't have a company"));
 		if(!company.getName().equals(companyDto1.getName()))
 		{
 			boolean existName = companyRepository.existsByName(companyDto1.getName());
@@ -123,24 +121,28 @@ public class CompanyService extends BaseService<Company, Long> {
 		if(!company.getMatfisc().equals(companyDto1.getMatfisc())) {
 			boolean existMatfisc = companyRepository.existsByMatfisc(companyDto1.getMatfisc());
 			if(existMatfisc) {				
-			throw new RecordIsAlreadyExist("this matricule fiscale is already exist please choose another one");
+			throw new RecordIsAlreadyExist("this matricule fiscale is already related by another company");
 			}
 		}
 		if(!company.getBankaccountnumber().equals(companyDto1.getBankaccountnumber())) {
 			boolean existBanckAccount = companyRepository.existsByBankaccountnumber(companyDto1.getBankaccountnumber());
 			if(existBanckAccount) {
-				throw new RecordIsAlreadyExist("this banck account is already in use ");
+				throw new RecordIsAlreadyExist("this banck account is already related by another company ");
 			}
 		}
 		// Company updatedCompany = companyMapper.mapToEntity(companyDto1);
-		 Company updatedCompany = company;
+		 Company updatedCompany = companyMapper.mapToEntity(companyDto1);
+		 updatedCompany.setParentCompany(company.getParentCompany());
+		 updatedCompany.setUser(company.getUser());
 		if (file != null) {
-
 			String newFileName = imageService.insertImag(file, company.getUser().getUsername(), "company");
 			updatedCompany.setLogo(newFileName);
 		}
-		updatedCompany.setPhone("97 896 547");
-		companyRepository.save(updatedCompany);
+		else {			
+			updatedCompany.setLogo(company.getLogo());
+		}
+		company = updatedCompany;
+		companyRepository.save(company);
 		return ResponseEntity.ok(companyDto1);
 		
 	

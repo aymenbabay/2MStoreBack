@@ -6,7 +6,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.meta.store.Base.Repository.BaseRepository;
+import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.werehouse.Entities.Article;
+import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 
 public interface ArticleRepository extends BaseRepository<Article, Long>{
@@ -16,21 +18,21 @@ public interface ArticleRepository extends BaseRepository<Article, Long>{
 
 	
 	@Query(value = "SELECT a FROM Article a WHERE "
-			+ " (a.isVisible = :publi"
-			+ " AND ABS(a.provider.company.user.logitude - :longitude) <5000 "
-			+ " AND ABS(a.provider.company.user.latitude - :latitude) <5000)"
+			+ " ((a.isVisible = 2 AND a.company.isVisible = 2)"
+			+ " AND (a.provider.company.user.longitude BETWEEN :longitude - 5.0 AND :longitude + 5.0) "
+		    + " AND (a.provider.company.user.latitude BETWEEN :latitude - 5.0 AND :latitude + 5.0)) "
 			+ " ORDER BY random() LIMIT 10 "
 			)
-    List<Article> findRandomArticles(double longitude, double latitude, PrivacySetting publi );
+    List<Article> findRandomArticles( Double longitude, Double latitude );
 
 	@Query(value = "SELECT a FROM Article a WHERE"
 			+ " (a.provider.id = :providerId) "
 			+ " OR (((a.isVisible = 2)"
-			+ " OR (a.isVisible = 1 AND EXISTS (SELECT 1 FROM ClientCompany cc WHERE cc.client.id = :myClientId AND cc.company.id = a.company.id))))"
-			+ " AND ABS(a.provider.company.user.logitude - :longitude) < 5000 "
-			+ " AND ABS(a.provider.company.user.latitude - :latitude) < 5000 "
-			+ " ORDER BY random() LIMIT 10 ")
-		List<Article> findRandomArticlesPro(double longitude, double latitude, Long providerId, Long myClientId);
+			+ " OR (a.isVisible = 1 AND EXISTS (SELECT 1 FROM ClientCompany cc WHERE cc.client.id = :clientId AND cc.company.id = a.company.id))))"
+			+ " AND (a.provider.company.user.longitude BETWEEN :longitude - 5.0 AND :longitude + 5.0) "
+		    + " AND (a.provider.company.user.latitude BETWEEN :latitude - 5.0 AND :latitude + 5.0) "
+		   	+ " ORDER BY random() LIMIT 10 ")
+		List<Article> findRandomArticlesPro( Long providerId, Long clientId, Double longitude, Double latitude);
 
 	@Query("SELECT a FROM Article a WHERE ((a.isVisible = 2) "
 			+ " OR (a.isVisible = 1 AND ((EXISTS (SELECT 1 FROM ClientCompany cc WHERE cc.client.id = :clientId AND cc.company.id = :companyId))"

@@ -51,16 +51,20 @@ public class WorkerService extends BaseService<Worker, Long> {
 	private final Logger logger = LoggerFactory.getLogger(WorkerService.class);
 	
 	public ResponseEntity<WorkerDto> upDateWorker( WorkerDto workerDto, Company company) {
-		Optional<Worker> worker = workerRepository.findByIdAndCompanyId(workerDto.getId(),company.getId());
-		if(worker.isPresent()) {
-			Worker categ = workerMapper.mapToEntity(workerDto);
-			categ.setCompany(company);
-			workerRepository.save(categ);
+		Worker worker = workerRepository.findByIdAndCompanyId(workerDto.getId(),company.getId()).orElseThrow(() -> new RecordNotFoundException("Worker Not Found") );
+		Worker workr = workerMapper.mapToEntity(workerDto);
+		if(!worker.getName().equals(workerDto.getName())) {			
+			boolean exist = workerRepository.existsByNameAndCompanyId(workerDto.getName(), company.getId());
+			if(exist) {
+				logger.warn("worker name: "+worker.getName()+" workr name : "+workerDto.getName());
+				throw new RecordIsAlreadyExist("worker name is already exist");
+			}
+		}
+			workr.setCompany(company);
+			workerRepository.save(workr);
 			return ResponseEntity.ok(workerDto);
 			
-		}else {
-			throw new RecordNotFoundException("Worker Not Found");
-		}
+		
 	}
 
 	public Optional<Worker> getByName(String libelle, Long companyId) {
@@ -84,9 +88,7 @@ public class WorkerService extends BaseService<Worker, Long> {
 		return workerRepository.findByIdAndCompanyId(id, companyId);
 	}
 
-	public Long getByName(String name) {
-		return workerRepository.findByName(name);
-	}
+
 
 	public Long getCompanyIdByUserName(String userName) {
 		Long companyId = workerRepository.findByName(userName);
@@ -125,8 +127,8 @@ public class WorkerService extends BaseService<Worker, Long> {
 	}
 
 	public ResponseEntity<WorkerDto> insertWorker(@Valid WorkerDto workerDto, Company company) {
-		Long worker1 = getByName(workerDto.getName());
-		if(worker1 !=null)  {
+		Optional<Worker> worker1 = workerRepository.findByNameAndCompanyId(workerDto.getName(),company.getId());
+		if(worker1.isPresent())  {
 			throw new RecordIsAlreadyExist("is already worker");
 		}
 
@@ -150,22 +152,30 @@ public class WorkerService extends BaseService<Worker, Long> {
 		if(worker.isEmpty()) {
 			throw new RecordNotFoundException("This Worker Does Not Exist");
 		}
+		if(worker.get().getUser() != null) {
+			
+		}
 	 super.deleteById(id);
 	}
 
 	public void addVacation(VacationDto vacationDto, Company company) {
+		if(vacationDto.getEnddate().before(vacationDto.getStartdate())) {
+			Date date = vacationDto.getEnddate();
+			vacationDto.setEnddate(vacationDto.getStartdate());
+			vacationDto.setStartdate(date);
+		}
 		Vacation vacation = new Vacation();
 			vacation = vacationMapper.mapToEntity(vacationDto);
-		//Vacation vacation = vacationRepository.findById(vacationDto.getId()).orElseThrow(() -> new RecordNotFoundException("there is no worker with id : "+vacationDto.getId()));
 		long differenceInDays = TimeUnit.DAYS.convert(vacationDto.getEnddate().getTime() - vacationDto.getStartdate().getTime()+86_400_000L, TimeUnit.MILLISECONDS);
 		int year = getYearFromDate(vacationDto.getStartdate());
 		vacation.setYear(year);
 		vacation.setCompany(company);
 		Worker worker = workerRepository.findById(vacation.getWorker().getId()).orElseThrow(() -> new RecordNotFoundException("this worker not found"));
-		worker.setRemainingday(worker.getRemainingday()-differenceInDays);  
-		//	vacation.setUsedday(vacation.getUsedday()+differenceInDays);
-		//vacation.setStartdate(vacationDto.getStartdate());
-		//vacation.setEnddate(vacationDto.getEnddate());
+		logger.warn("difference date: "+differenceInDays);
+		logger.warn("remaining date: "+worker.getRemainingday());
+		Long deff = worker.getRemainingday()-differenceInDays;
+		logger.warn("difference between : "+deff);
+		worker.setRemainingday(worker.getRemainingday()-differenceInDays);
 		Date now = new Date();
 		if((vacationDto.getStartdate().before(now) || vacationDto.getStartdate().equals(now)) && vacationDto.getEnddate().after(now)) {
 			worker.setStatusvacation(true);

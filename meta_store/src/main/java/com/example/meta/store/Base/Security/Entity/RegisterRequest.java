@@ -32,4 +32,8 @@ public class RegisterRequest extends BaseEntity<Long> {
 		@NotBlank(message = "Password Field Must Not Be Empty")
 		private String password;
 		
+		private Double longitude;
+		
+		private Double latitude;
+		
 }
