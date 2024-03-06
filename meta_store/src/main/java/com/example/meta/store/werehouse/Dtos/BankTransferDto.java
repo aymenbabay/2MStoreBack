@@ -19,5 +19,5 @@ public class BankTransferDto extends BaseDto<Long> implements Serializable{
 	
 	private InvoiceDto invoice;
 
-	private String bankaccount;
+	private String bankAccount;
 }

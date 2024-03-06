@@ -68,7 +68,6 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 			if(article.getQuantity()-i.getQuantity()<0) {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
 			}
-			logger.warn("article quantity "+article.getQuantity()+" command line quantity "+i.getQuantity());
 			article.setQuantity(article.getQuantity() - i.getQuantity());
 		CommandLine commandLine = commandLineMapper.mapToEntity(i);
 		commandLine.setInvoice(invoice);
@@ -90,10 +89,15 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 			 totTva += i.getTotTva();
 			 totTtc += totHt+totTva;
 		}
-		logger.warn("total ttc "+totTtc);
-		invoice.setPrix_article_tot(totHt);
-		invoice.setTot_tva_invoice(totTva);
-		invoice.setPrix_invoice_tot(totTtc);
+		String prixArticleTot = df.format(totHt);
+		String TotTvaInvoice = df.format(totTva);
+		String prixInvoiceTot = df.format(totTtc);
+		prixArticleTot = prixArticleTot.replace(",", ".");
+		TotTvaInvoice = TotTvaInvoice.replace(",", ".");
+		prixInvoiceTot = prixInvoiceTot.replace(",", ".");
+		invoice.setPrix_article_tot(Double.parseDouble(prixArticleTot));
+		invoice.setTot_tva_invoice(Double.parseDouble(TotTvaInvoice));
+		invoice.setPrix_invoice_tot(Double.parseDouble(prixInvoiceTot));
 		invoiceService.insert(invoice);
 		inventoryService.impacteInvoice(company,commandLines);
 		ClientCompany clientCompany = clientCompanyRepository.findByClientIdAndCompanyId(clientId, company.getId()).get();
@@ -104,8 +108,8 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		mvt = mvt.replace(",", ".");
 		clientCompany.setCredit(Double.parseDouble(credit));
 		clientCompany.setMvt(Double.parseDouble(mvt));
-		providerCompany.setCredit(Double.parseDouble(credit));
-		providerCompany.setMvt(Double.parseDouble(mvt));
+//		providerCompany.setCredit(Double.parseDouble(credit));
+//		providerCompany.setMvt(Double.parseDouble(mvt));
 		if (type.equals("pdf-save-client") ) {	
 			return invoiceService.export(company,commandLines);
 		}

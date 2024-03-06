@@ -21,7 +21,7 @@ public class CheckDto extends BaseDto<Long> implements Serializable{
 	
 	private Date delay;
 
-	private String bankaccount;
+	private String bankAccount;
 	
 	private InvoiceDto invoice;
 }

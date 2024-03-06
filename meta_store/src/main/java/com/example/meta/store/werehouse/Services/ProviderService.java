@@ -88,8 +88,8 @@ public class ProviderService extends BaseService<Provider, Long> {
 				ProviderCompany providerCompany = new ProviderCompany();
 				providerCompany.setCompany(company);
 				providerCompany.setProvider(provider);
-				providerCompany.setMvt((double)0);
-				providerCompany.setCredit((double)0);
+				providerCompany.setMvt(0.0);
+				providerCompany.setCredit(0.0);
 				providerCompanyRepository.save(providerCompany);
 				return new ResponseEntity<ProviderDto>(HttpStatus.ACCEPTED);
 		}
@@ -164,9 +164,10 @@ public class ProviderService extends BaseService<Provider, Long> {
 		ProviderCompany providerCompany = new ProviderCompany();
 		providerCompany.setCompany(company);
 		providerCompany.setProvider(provider1);
-		providerCompany.setCredit((double)0);
+		providerCompany.setCredit(0.0);
+		providerCompany.setAdvance(0.0);
 		logger.warn("just after adding provider1 provider company "+provider1.getId());
-		providerCompany.setMvt((double)0);
+		providerCompany.setMvt(0.0);
 		logger.warn("just after adding mvt company ");
 		providerCompanyRepository.save(providerCompany);
 		return null;
@@ -196,47 +197,19 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 	public void deleteProviderById(Long id, Company myCompany) {
-		Optional<ProviderCompany> providercompany = providerCompanyRepository.findByProviderIdAndCompanyId(id, myCompany.getId());
-		if(providercompany.isEmpty()) {
-			throw new RecordNotFoundException("this provider is not yours");
-		}
-		ProviderCompany providerCompany = providercompany.get();
+		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(id, myCompany.getId()).orElseThrow(() -> new RecordNotFoundException("this provider is already not yours"));
 		if(providerCompany.getMvt() !=0) {
 			providerCompany.setDeleted(true);
 			return;
 		}
 		if(providerCompany.getProvider().isVirtual()) {
-			super.deleteById(id);
-			providerCompanyRepository.deleteByProviderId(id);
+			deleteVirtualProviderById(id, myCompany);
 			return;
 		}
 		providerCompanyRepository.deleteByProviderIdAndCompanyId(id,myCompany.getId());
 		invetationClientProviderRepository.deleteByProviderIdAndCompanySenderId(id, myCompany.getId());
 				
 	}
-	
-	
-	
-   
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 
@@ -330,20 +303,25 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 
 	public void paymentInpact(Long providerCompanyId, Long myCompanyId, Double amount) {
-		Provider providr = getMeAsProvider(providerCompanyId).get();
-		ProviderCompany provider = providerCompanyRepository.findByProviderIdAndCompanyId(providr.getId(), myCompanyId).get();
-		if(provider.getCredit() > amount) {
-			String deff = df.format(provider.getCredit()-amount);
-			deff = deff.replace(",", ".");
-		provider.setCredit(Double.parseDouble(deff));
-		}
-		else {
-			String deff = df.format(amount-provider.getCredit());
-			deff = deff.replace(",", ".");
-			provider.setAdvance(Double.parseDouble(deff));
-			provider.setCredit((double)0);
-		}
+	    Provider provider = getMeAsProvider(providerCompanyId).orElseThrow(() -> new RecordNotFoundException("Provider not found"));
+	    ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(provider.getId(), myCompanyId).orElseThrow(() -> new RecordNotFoundException("You are not their provider"));
+
+	    double credit = providerCompany.getCredit();
+	    double advance = providerCompany.getAdvance();
+
+	    if (credit >= (amount + advance)) {
+	        providerCompany.setCredit(round(credit - amount - advance));
+	        providerCompany.setAdvance(0.0);
+	    } else {
+	        providerCompany.setAdvance(round(amount - credit + advance));
+	        providerCompany.setCredit(0.0);
+	    }
 	}
+
+	private double round(double value) {
+	    return Math.round(value * 100.0) / 100.0; // Round to two decimal places
+	}
+
 
 
 	

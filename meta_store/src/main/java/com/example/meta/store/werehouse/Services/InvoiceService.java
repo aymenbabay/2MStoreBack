@@ -24,6 +24,7 @@ import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Invoice;
+import com.example.meta.store.werehouse.Enums.PaymentStatus;
 import com.example.meta.store.werehouse.Enums.Status;
 import com.example.meta.store.werehouse.Mappers.InvoiceMapper;
 import com.example.meta.store.werehouse.Repositories.CommandLineRepository;
@@ -108,6 +109,8 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		invoice.setCode(invoiceCode);
 		invoice.setClient(client);
 		invoice.setCompany(company);
+		invoice.setPaid(PaymentStatus.NOT_PAID);
+		invoice.setRest((double)0);
 		if(client.getCompany().equals(company) || client.isVirtual()) {
 			invoice.setStatus(Status.ACCEPTED);			
 		}else {
@@ -175,6 +178,14 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		}
 		invoiceRepository.delete(invoice);
 		
+	}
+
+	public void paymenInpact(Invoice invoice, Double amount) {
+		Invoice invoic = invoiceRepository.findById(invoice.getId()).orElseThrow(() -> new RecordNotFoundException("invoice is not found"));
+		if(invoic.getPrix_invoice_tot() > amount) {
+			return;
+		}
+		invoic.setPaid(PaymentStatus.PAID);
 	}
 	
 

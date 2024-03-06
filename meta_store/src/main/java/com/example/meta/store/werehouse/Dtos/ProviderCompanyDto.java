@@ -19,4 +19,6 @@ public class ProviderCompanyDto extends BaseDto<Long> implements Serializable {
 	private Double mvt;
 	
 	private Double credit;
+	
+	private Double advance;
 }

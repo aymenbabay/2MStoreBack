@@ -19,6 +19,8 @@ public class BillDto extends BaseDto<Long> implements Serializable{
 	
 	private String agency;
 	
+	private String bankAccount;
+	
 	private Date delay;
 	
 	private InvoiceDto invoice;

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Enums.PaymentStatus;
 import com.example.meta.store.werehouse.Enums.Status;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -41,7 +42,9 @@ public class InvoiceDto extends BaseDto<Long> implements Serializable {
 	private ClientDto client;
 	
 	private CompanyDto company;
+
+	private PaymentStatus paid;
 	
-	private Boolean paid;
+	private Double rest;
 	
 }

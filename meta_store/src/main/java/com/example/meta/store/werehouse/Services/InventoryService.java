@@ -108,7 +108,7 @@ public class InventoryService extends BaseService<Inventory, Long> {
 					
 				}
 			String articleCost = df.format((i.getArticle().getCost() + i.getArticle().getCost() * i.getArticle().getTva() * i.getArticle().getMargin()/100) * i.getQuantity());
-			articleCost = articleCost.replace(",", ".");
+				articleCost = articleCost.replace(",", ".");
 				providerInventory.setArticleSelling(providerInventory.getArticleSelling() + Double.parseDouble(articleCost));
 			
 		inventoryRepository.save(providerInventory);

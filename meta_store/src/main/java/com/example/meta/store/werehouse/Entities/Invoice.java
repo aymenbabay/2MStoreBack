@@ -3,6 +3,7 @@ package com.example.meta.store.werehouse.Entities;
 import java.io.Serializable;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
+import com.example.meta.store.werehouse.Enums.PaymentStatus;
 import com.example.meta.store.werehouse.Enums.Status;
 
 import jakarta.persistence.Entity;
@@ -38,7 +39,9 @@ public class Invoice extends BaseEntity<Long> implements Serializable {
 	
 	private Status status;
 	
-	private boolean paid;
+	private PaymentStatus paid;
+	
+	private Double rest;
 	
 
 	@ManyToOne(fetch=FetchType.LAZY)

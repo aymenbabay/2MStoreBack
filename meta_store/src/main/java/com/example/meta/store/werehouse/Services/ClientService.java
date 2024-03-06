@@ -2,15 +2,11 @@ package com.example.meta.store.werehouse.Services;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -20,13 +16,8 @@ import com.example.meta.store.Base.ErrorHandler.RecordIsAlreadyExist;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Service.BaseService;
-import com.example.meta.store.werehouse.Controllers.InvoiceController;
-import com.example.meta.store.werehouse.Dtos.CashDto;
 import com.example.meta.store.werehouse.Dtos.ClientCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ClientDto;
-import com.example.meta.store.werehouse.Dtos.InvoiceDto;
-import com.example.meta.store.werehouse.Dtos.ProviderDto;
-import com.example.meta.store.werehouse.Entities.Cash;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.ClientCompany;
 import com.example.meta.store.werehouse.Entities.Company;
@@ -36,12 +27,12 @@ import com.example.meta.store.werehouse.Entities.PassingClient;
 import com.example.meta.store.werehouse.Entities.Provider;
 import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Enums.Nature;
+import com.example.meta.store.werehouse.Enums.PaymentStatus;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
 import com.example.meta.store.werehouse.Enums.Status;
 import com.example.meta.store.werehouse.Enums.Type;
 import com.example.meta.store.werehouse.Mappers.ClientCompanyMapper;
 import com.example.meta.store.werehouse.Mappers.ClientMapper;
-import com.example.meta.store.werehouse.Mappers.ProviderMapper;
 import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.ClientRepository;
 import com.example.meta.store.werehouse.Repositories.InvetationRepository;
@@ -50,7 +41,6 @@ import com.example.meta.store.werehouse.Repositories.PassingClientRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
 
 import jakarta.transaction.Transactional;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
@@ -107,6 +97,7 @@ public class ClientService extends BaseService<Client, Long>{
 		logger.warn("just before setting client ");
 		clientCompany.setMvt((double)0);
 		clientCompany.setCredit((double)0);
+		clientCompany.setAdvance((double)0);
 		clientCompany.setCompany(company);
 		logger.warn("just after clientCompany repository save new clientCompany id company "+company.getId());
 		clientCompanyRepository.save(clientCompany);
@@ -130,6 +121,7 @@ public class ClientService extends BaseService<Client, Long>{
 				clientCompany.setCompany(company);
 				clientCompany.setMvt((double)0);
 				clientCompany.setCredit((double)0);
+				clientCompany.setAdvance((double)0);
 				clientCompanyRepository.save(clientCompany);
 				return new ResponseEntity<ClientDto>(HttpStatus.ACCEPTED);
 	}
@@ -287,11 +279,13 @@ public class ClientService extends BaseService<Client, Long>{
 			if(!existClient) {
 			clientCompany.setMvt((double)0);
 			clientCompany.setCredit((double)0);
+			clientCompany.setAdvance((double)0);
 			clientCompanyRepository.save(clientCompany);
 			}
 			if(!existProvider) {				
 			providerCompany.setMvt((double)0);
 			providerCompany.setCredit((double)0);
+			providerCompany.setAdvance((double)0);
 			providerCompanyRepository.save(providerCompany);
 			}
 			invetation.setStatus(Status.ACCEPTED);
@@ -334,25 +328,52 @@ public class ClientService extends BaseService<Client, Long>{
 		}
 
 		public void paymentInpact(Long clientId, Long companyId, Double amount, Invoice invoice) {
-			ClientCompany client = clientCompanyRepository.findByClientIdAndCompanyId(clientId, companyId).get();
-			if(client.getCredit() > amount) {				
-			client.setCredit(client.getCredit()-amount);
+			ClientCompany client = clientCompanyRepository.findByClientIdAndCompanyId(clientId, companyId).orElseThrow(() -> new RecordNotFoundException("you are not his client"));
+			Double rest;
+			if(invoice.getRest() == 0) {
+				 rest = round(invoice.getPrix_invoice_tot()-amount-client.getAdvance());
+			}else {
+				rest = round(invoice.getRest()-amount);
 			}
-			else {
-				logger.warn(" client credit =>"+client.getCredit()+" ,amount=> "+amount);
-				String deff = df.format(client.getAdvance() + amount-client.getCredit());
-				deff = deff.replace(",", ".");
-				client.setAdvance( Double.parseDouble(deff));
-				client.setCredit((double)0);
-				Invoice invoicee = invoiceRepository.findById(invoice.getId()).get();
-				invoicee.setPaid(true);
-				invoiceRepository.save(invoicee);
-			}
+			//	rest = rest.replace(",", ".");
+			//	Double restDouble = Double.parseDouble(rest);
+				if(rest > 0) {
+					invoice.setRest(rest);
+					String credit = df.format(client.getCredit() - amount -client.getAdvance());
+					credit = credit.replace(",", ".");
+					client.setCredit(round(client.getCredit() - amount -client.getAdvance()));
+					client.setAdvance(0.0);
+					invoice.setPaid(PaymentStatus.INCOMPLETE);
+					logger.warn("rest is more than 0"+ invoice.getPaid());
+				}
+				else {
+					invoice.setRest(0.0);
+					logger.warn("rest is mines than 0");
+					invoice.setPaid(PaymentStatus.PAID);
+					logger.warn("rest is mines than 0 just after setting paid "+ invoice.getPaid());
+					String advance = df.format(client.getAdvance() - rest);
+					advance = advance.replace(",", ".");
+					client.setAdvance(round(client.getAdvance() - rest));
+					client.setCredit(0.0);
+				}
+				invoiceRepository.save(invoice);
+			
+			
+			
 		}
 
 		public Optional<Client> findByCompanyId(Long id) {
 			return clientRepository.getByCompanyIdAndIsVirtualFalse(id);
 		}
+		
+		
+
+		private double round(double value) {
+		    return Math.round(value * 100.0) / 100.0; // Round to two decimal places
+		}
+
+		
+		
 
 	
 
