@@ -10,12 +10,12 @@ import com.example.meta.store.werehouse.Entities.Inventory;
 
 public interface InventoryRepository extends BaseRepository<Inventory, Long>{
 
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	List<Inventory> findByCompanyId(Long companyId);
-
-	@Query("SELECT I FROM Inventory I WHERE I.article.id = :companyArticle AND I.company.id = :id")
+	
+	@Query("SELECT i FROM Inventory i WHERE i.article.id = :companyArticle AND i.company.id = :id")
 	Optional<Inventory> findByArticleIdAndCompanyId(Long companyArticle, Long id);
 
 	
-	//void deleteByCompanyarticleid(Long companyarticleId);
 
 }

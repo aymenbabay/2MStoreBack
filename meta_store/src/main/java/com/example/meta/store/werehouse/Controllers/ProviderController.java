@@ -46,98 +46,22 @@ public class ProviderController {
 	private final WorkerService workerService;
 
 	private final Logger logger = LoggerFactory.getLogger(ProviderController.class);
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	
-	
-	@PostMapping("/add")
-	public ResponseEntity<ProviderDto> insertProvider(@RequestBody  ProviderDto providerDto){
-		Company company = getCompany();
-		return providerService.insertProvider(providerDto, company);
-	}
-	
-	@GetMapping("/add_as_provider/{id}")
-	public void addExistProvider(@PathVariable Long id){
-		Company company = getCompany();
-		logger.warn("add as provider provider controller "+id);
-		 providerService.addExistProvider(id,company);
-	}
-	
-	@GetMapping("/get_all")
-	public List<ProviderDto> getAll(){
-		return providerService.getAllProviders();
-	}
-	
-	@GetMapping("/get_all_my_virtual")
-	public List<ProviderDto> getAllMyVirtual() {
-		Company company = getCompany();
-		return providerService.getAllMyVirtaul(company);
-	}
-	
+
 	@GetMapping("/get_all_my/{id}")
 	public List<ProviderCompanyDto> getAllMy(@PathVariable Long id){
 		Company company;
 		company = getCompany();
-		if(company.getId() != id) {
+		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			company = companyService.getById(id).getBody();
 		}
 		return providerService.getAllMyProvider(company);
 	}
 	
-	@GetMapping("/get_my_by_code/{code}")
-	public ProviderDto getMyByCode(@PathVariable @Valid String code) {
-		Company company = getCompany();
-		return providerService.getMyByCodeAndCompanyId(code,company);
-	}
-
-	@GetMapping("/get_my_by_name/{name}")
-	public List<ProviderDto> getMyByName(@PathVariable @Valid String name) {
-
-		return null;
-}
-
-	@GetMapping("/get_all_by_code/{code}")
-	public ProviderDto getAllByCode(@PathVariable String code) {
-		return providerService.getProviderByCode(code);
-				
-	}
 	
-	@GetMapping("/get_all_by_name/{name}")
-	public List<ProviderDto> getAllByName(@PathVariable String name) {
-		return null;
-				
-	}
 	
-	@PutMapping("/update")
-	public ProviderDto upDateMyProviderById( @RequestBody @Valid ProviderDto providerDto) {
-		System.out.println("haw fi update provider"+providerDto.getId());
-		Company company = getCompany();
-		return providerService.upDateMyVirtualProviderById(providerDto,company);
-	}
-//	
-//	@DeleteMapping("/delete_my/{id}")
-//	public void deleteMyProvider(@PathVariable Long id) {
-//		Company company = getCompany();
-//		providerService.deleteVirtualProviderById(id,company);
-//		
-//	}
 	
-	@DeleteMapping("/delete/{id}")
-	public void deleteProvider(@PathVariable Long id) {
-		Company company = getCompany();
-		providerService.deleteProviderById(id,company);
-	}
-	
-	@GetMapping("/get_my_provider_id")
-	public Long getMyProviderId() {
-		Company company = getCompany();
-		return providerService.getMeProviderId(company.getId());
-	}
-	
-	@GetMapping("check_provider/{id}")
-	public boolean checkProviderById(@PathVariable Long id) {
-		logger.warn("check provider in provider controller");
-	Company company = getCompany();
-	return providerService.checkProviderById(id,company.getId());
-	}
 	
 	@GetMapping("get_all_provider_containing/{search}/{id}")
 	public List<ProviderCompanyDto> getAllProviderContaining(@PathVariable String search, @PathVariable Long id){
@@ -148,6 +72,68 @@ public class ProviderController {
 		return providerService.getAllProvidersContaining(company, search);
 	}
 	
+	@GetMapping("/get_all_my_virtual")
+	public List<ProviderDto> getAllMyVirtual() {
+		Company company = getCompany();
+		return providerService.getAllMyVirtaul(company);
+	}
+	
+	
+	@PostMapping("/add")
+	public ResponseEntity<ProviderDto> insertProvider(@RequestBody  ProviderDto providerDto){
+		Company company = getCompany();
+		return providerService.insertProvider(providerDto, company);
+	}
+	
+	@PutMapping("/update")
+	public ProviderDto upDateMyProviderById( @RequestBody @Valid ProviderDto providerDto) {
+		Company company = getCompany();
+		return providerService.upDateMyVirtualProviderById(providerDto,company);
+	}
+	
+	@GetMapping("/add_as_provider/{id}")
+	public void addExistProvider(@PathVariable Long id){
+		Company company = getCompany();
+		providerService.addExistProvider(id,company);
+	}
+	
+	@GetMapping("/get_my_by_code/{code}")
+	public ProviderDto getMyByCode(@PathVariable @Valid String code) {
+		Company company = getCompany();
+		return providerService.getMyByCodeAndCompanyId(code,company);
+	}
+	
+	@GetMapping("/get_all_by_code/{code}")
+	public ProviderDto getAllByCode(@PathVariable String code) {
+		return providerService.getProviderByCode(code);
+		
+	}
+	
+	@GetMapping("/get_all")
+	public List<ProviderDto> getAll(){
+		return providerService.getAllProviders();
+	}
+	
+	
+	
+	@GetMapping("/get_my_provider_id")
+	public Long getMyProviderId() {
+		Company company = getCompany();
+		return providerService.getMeProviderId(company.getId());
+	}
+	
+	@GetMapping("check_provider/{id}")
+	public boolean checkProviderById(@PathVariable Long id) {
+		Company company = getCompany();
+		return providerService.checkProviderById(id,company.getId());
+	}
+
+	@DeleteMapping("/delete/{id}")
+	public void deleteProvider(@PathVariable Long id) {
+		Company company = getCompany();
+		providerService.deleteProviderById(id,company);
+	}
+	
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
@@ -156,11 +142,11 @@ public class ProviderController {
 		}
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
 		if(companyId != null) {			
-		ResponseEntity<Company> company2 = companyService.getById(companyId);
-		return (company2.getBody());
+			ResponseEntity<Company> company2 = companyService.getById(companyId);
+			return (company2.getBody());
 		}
-			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-			
+		throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
+		
 	}
 
 }

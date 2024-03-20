@@ -46,6 +46,7 @@ public class SubCategoryController {
 	private final CompanyService companyService;
 
 	private final Logger logger = LoggerFactory.getLogger(SubCategoryController.class);
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	
 	@GetMapping("/getbycompany/{id}")
 	public ResponseEntity<List<SubCategoryDto>> getSubCategoryByCompany(@PathVariable Long id){
@@ -57,18 +58,12 @@ public class SubCategoryController {
 		return subCategoryService.getSubCategoryByCompany(company);
 	}
 	
-	@GetMapping("/l/{name}")
-	public ResponseEntity<SubCategoryDto> getSubCategoryById(@PathVariable String name){
+	@PutMapping("/update")
+	public ResponseEntity<SubCategoryDto> upDateSubCategory(
+			@RequestParam("sousCategory") String sousCategoryDto,
+			@RequestParam(value="file",required=false) MultipartFile file) throws JsonMappingException, JsonProcessingException{
 		Company company = getCompany();
-		return subCategoryService.getSubCategoryById(name,company);
-		
-	}
-	
-	@GetMapping("/{categoryId}/{companyId}")
-	public List<SubCategoryDto> getAllSubCategoriesByCompanyIdAndCategoryId(@PathVariable Long categoryId, @PathVariable Long companyId){
-		Company company = getCompany();
-		logger.warn(categoryId+" category id ");
-		return subCategoryService.getAllSubCategoryByCompanyIdAndCategoryId(categoryId, company, companyId);
+		return subCategoryService.upDateSubCategory(sousCategoryDto,company,file);
 	}
 	
 	@PostMapping("/add")
@@ -78,27 +73,31 @@ public class SubCategoryController {
 		return subCategoryService.insertSubCategory(sousCategoryDto,company,file);
 	}
 	
-	@PutMapping("/update")
-	public ResponseEntity<SubCategoryDto> upDateSubCategory(
-			@RequestParam("sousCategory") String sousCategoryDto,
-			@RequestParam(value="file",required=false) MultipartFile file) throws JsonMappingException, JsonProcessingException{
+	@GetMapping("/l/{name}")
+	public ResponseEntity<SubCategoryDto> getSubCategoryById(@PathVariable String name){
 		Company company = getCompany();
-		return subCategoryService.upDateSubCategory(sousCategoryDto,company,file);
+		return subCategoryService.getSubCategoryById(name,company);
+		
 	}
 	
 	@DeleteMapping("/delete/{id}")
 	public void deleteSubCategoryById(@PathVariable Long id){
 		Company  company = getCompany();
-		 subCategoryService.deleteSubCategoryById(id,company);
+		subCategoryService.deleteSubCategoryById(id,company);
 	}
 	
+	@GetMapping("/{categoryId}/{companyId}")
+	public List<SubCategoryDto> getAllSubCategoriesByCompanyIdAndCategoryId(@PathVariable Long categoryId, @PathVariable Long companyId){
+		Company company = getCompany();
+		return subCategoryService.getAllSubCategoryByCompanyIdAndCategoryId(categoryId, company, companyId);
+	}
+
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
 		if(company.isPresent()) {
 			return company.get();
 		}
-			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-			
+			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");		
 	}
 }

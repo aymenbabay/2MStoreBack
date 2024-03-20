@@ -13,14 +13,11 @@ import com.example.meta.store.werehouse.Entities.Provider;
 
 public interface ClientRepository extends BaseRepository<Client, Long>{
 
-	
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	Optional<Client> findByCodeAndCompanyId(String code, Long companyId);
-	
+
 	Optional<Client> getByCompanyIdAndIsVirtualFalse( Long companyId);
-
-	@Query("SELECT c FROM ClientCompany c WHERE c.client.isVisible = 2 AND (c.client.name LIKE %:search% OR c.client.code LIKE %:search%)")
-	List<ClientCompany> findAllByIsVisibleTrueAndNameContainingOrCodeContaining(String search);
-
+	
 	@Query("SELECT c FROM ClientCompany c WHERE"
 			+ " (c.client.company.id = :companyId OR"
 			+ " (c.client.isVisible = 2 OR (c.client.isVisible = 1 AND c.company.id = :companyId ))) "
@@ -30,10 +27,15 @@ public interface ClientRepository extends BaseRepository<Client, Long>{
 	@Query("SELECT p.client FROM ClientCompany p WHERE (( p.company.id = :companyId ) AND (p.client.name LIKE %:search% OR p.client.code LIKE %:search%))")
 	List<Client> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long companyId);
 	
-	///////////////// CE BON /////////////////////////
+	
+	
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
+	@Query("SELECT c FROM ClientCompany c WHERE c.client.isVisible = 2 AND (c.client.name LIKE %:search% OR c.client.code LIKE %:search%)")
+	List<ClientCompany> findAllByIsVisibleTrueAndNameContainingOrCodeContaining(String search);
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	@Query("SELECT c FROM Client c WHERE c.company.id IS NOT NULL")
-	List<Client> findAllHasCompanyId();
+
 
 	
 

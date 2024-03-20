@@ -232,7 +232,6 @@ public class ExportInvoicePdf {
 		}
 		return  new ByteArrayInputStream(out.toByteArray());
 	}
-	
-	
+
 	
 }

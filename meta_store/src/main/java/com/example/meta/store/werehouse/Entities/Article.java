@@ -5,19 +5,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
-import com.example.meta.store.werehouse.Dtos.CategoryDto;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -83,6 +83,11 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	
 	private String image;
 
+	@OneToMany()
+	@JoinTable(name = "sub_article",
+			joinColumns = @JoinColumn(name = "parentArticle_id"),
+			inverseJoinColumns = @JoinColumn(name = "childArticle_id"))
+	private Set<SubArticle> subArticle;
 
 
 	

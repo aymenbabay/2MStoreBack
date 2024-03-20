@@ -51,7 +51,13 @@ public class InvetationController {
 	private final ClientService clientService;
 	
 	private final Logger logger = LoggerFactory.getLogger(InvetationController.class);
-	
+
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
+	@GetMapping("response/{status}/{id}")
+	public void requestResponse(@PathVariable Long id, @PathVariable Status status) {
+		invetationService.requestResponse(id,status);
+	} 
+
 	@GetMapping("get_invetation")
 	public List<InvetationDto> getInvetation(){
 		logger.warn("begin get invetation");
@@ -66,12 +72,11 @@ public class InvetationController {
 		return invetationService.getInvetation(client,provider,company.get(), userId);
 	}
 	
-	@GetMapping("response/{status}/{id}")
-	public void requestResponse(@PathVariable Long id, @PathVariable Status status) {
-		
-		logger.warn("invetation controller in  the second line of request response function ");
-		invetationService.requestResponse(id,status);
-	} 
+	@PostMapping("worker")
+	public void sendWorkerInvitation(@RequestBody Worker worker) {
+		Optional<Company> company = getCompany();
+		invetationService.sendWorkerInvetation(company.get(),worker);
+	}
 	
 	@GetMapping("cancel/{id}")
 	public void cancelRequestOrDeleteFriend(@PathVariable Long id) {
@@ -87,14 +92,7 @@ public class InvetationController {
 		invetationService.sendParentInvetation(company.get(), reciver);
 	}
 	
-	@PostMapping("worker")
-	public void sendWorkerInvitation(@RequestBody Worker worker) {
-		Optional<Company> company = getCompany();
-		invetationService.sendWorkerInvetation(company.get(),worker);
-	}
-	
 	private Provider getProvider() {
-		logger.warn("begin of get provider function");
 		Optional<Company> company = getCompany();
 		if(company.isEmpty()) {
 			return new Provider();
@@ -105,7 +103,6 @@ public class InvetationController {
 	
 	private Client getClient(){
 		Optional<Company> company = getCompany();
-		logger.warn("begin of get client function ");
 		if(company.get().getId() == null) {
 			return new Client();
 		}
@@ -113,18 +110,12 @@ public class InvetationController {
 		return client;
 	}
 
-	
 	private Optional<Company> getCompany() {
-		logger.warn("begin of get company function");
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		logger.warn("second of get company function");
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		logger.warn("third of get company function");	
 		if(company.isPresent()) {
 			return company;			
 		}
 		return Optional.of(new Company());
-
-		
 	}
 }

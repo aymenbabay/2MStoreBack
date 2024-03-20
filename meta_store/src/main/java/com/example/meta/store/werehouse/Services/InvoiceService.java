@@ -53,10 +53,39 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 	
 	private final Logger logger = LoggerFactory.getLogger(InvoiceService.class);
 	
+	///////////////////////////////////////////////////////////////////////// real work ////////////////////////////////////////////////////////
+	public void accepted(Long code, Client client) {
+		Invoice invoice = getInvoice(code,client.getId());
+		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoice.getId());
+		articleService.impactInvoice(commandLines, client);
+		invoice.setStatus(Status.ACCEPTED);
+		invoiceRepository.save(invoice);
+	}
+	
+	public Long getLastInvoice(Long companyId) {
+		Optional<Invoice> invoice = invoiceRepository.lastInvoice(companyId);
+		if(invoice.isEmpty()) {
+			return  (long) 20230001;
+		}
+		return (long) (invoice.get().getCode()+1);
+	}
+	
+	public void refused(Long code, Long clientId) {
+		Invoice invoice = getInvoice(code,clientId);
+		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoice.getId());
+		inventoryService.rejectInvoice(commandLines, invoice.getCompany().getId());
+		invoice.setStatus(Status.REFUSED);
+		invoiceRepository.save(invoice);
+	}
+	
+	private Invoice getInvoice(Long code, Long clientId) {
+		Optional<Invoice> invoice = invoiceRepository.findByCodeAndClientId(code,clientId);
+		return invoice.get();
+	}
 	public List<InvoiceDto> getMyInvoiceAsProvider(Long companyId, Long userId) {
 		List<Invoice> invoices = new ArrayList<Invoice>();
 		if(userId == null) {
-			 invoices =  invoiceRepository.findAllByCompanyId(companyId);
+			invoices =  invoiceRepository.findAllByCompanyId(companyId);
 		}
 		else {
 			invoices = invoiceRepository.findAllByCompanyIdAndCreatedBy(companyId,userId);
@@ -79,56 +108,12 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		}
 		return invoicesDto;
 	}
-
-	public Long getLastInvoice(Long companyId) {
-		Optional<Invoice> invoice = invoiceRepository.lastInvoice(companyId);
-		if(invoice.isEmpty()) {
-			return  (long) 20230001;
-		}
-		return (long) (invoice.get().getCode()+1);
-	}
-
-
-	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines) {
-		
-
-		ByteArrayInputStream bais = ExportInvoicePdf.invoicePdf(commandLines,company);
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Content-Disposition", "inline; filename=invoice.pdf");
-		 ResponseEntity<InputStreamResource> response = ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(bais));
-
-
-		    return response;
-	}
-
-
-	public Invoice addInvoice(Company company, Long clientId) {
-		Long invoiceCode = getLastInvoice(company.getId());
-		Client client = clientService.getById(clientId).getBody();
-		Invoice invoice = new Invoice();
-		invoice.setCode(invoiceCode);
-		invoice.setClient(client);
-		invoice.setCompany(company);
-		invoice.setPaid(PaymentStatus.NOT_PAID);
-		invoice.setRest((double)0);
-		if(client.getCompany().equals(company) || client.isVirtual()) {
-			invoice.setStatus(Status.ACCEPTED);			
-		}else {
-			invoice.setStatus(Status.INWAITING);			
-		}
-		invoiceRepository.save(invoice);
-		return invoice;
-	}
-
-////////////////////////// client service method ////
-
+	
 	public List<InvoiceDto> getInvoiceNotifications(Client client, Optional<Company> company,Long userId) {
 		List<Invoice> invoices = new ArrayList<>();
 		if(company != null) {
-			logger.warn("company is not null "+ company.get().getId()+" ==> user id = "+userId);
 			invoices = invoiceRepository.findAllByCompanyIdAndCreatedBy(company.get().getId(), userId);
 		}else {			
-			logger.warn("company is null ");
 			invoices = invoiceRepository.findAllByClientIdOrCompanyId(client.getId(), client.getCompany().getId());
 		}
 		if(invoices.isEmpty()) {
@@ -141,29 +126,33 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		}
 		return invoicesDto;
 	}
+
+	public ResponseEntity<InputStreamResource> export(Company company, List<CommandLine> commandLines) {
+		ByteArrayInputStream bais = ExportInvoicePdf.invoicePdf(commandLines,company);
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Content-Disposition", "inline; filename=invoice.pdf");
+		ResponseEntity<InputStreamResource> response = ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(bais));
+		return response;
+	}
+
+	public Invoice addInvoice(Company company, Long clientId) {
+		Long invoiceCode = getLastInvoice(company.getId());
+		Client client = clientService.getById(clientId).getBody();
+		Invoice invoice = new Invoice();
+		invoice.setCode(invoiceCode);
+		invoice.setClient(client);
+		invoice.setCompany(company);
+		invoice.setPaid(PaymentStatus.NOT_PAID);
+		invoice.setRest(0.0);
+		if(client.getCompany().equals(company) || client.isVirtual()) {
+			invoice.setStatus(Status.ACCEPTED);			
+		}else {
+			invoice.setStatus(Status.INWAITING);			
+		}
+		invoiceRepository.save(invoice);
+		return invoice;
+	}
 	
-
-	public void accepted(Long code, Client client) {
-		Invoice invoice = getInvoice(code,client.getId());
-		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoice.getId());
-		articleService.impactInvoice(commandLines, client);
-		invoice.setStatus(Status.ACCEPTED);
-		invoiceRepository.save(invoice);
-	}
-
-	public void refused(Long code, Long clientId) {
-		Invoice invoice = getInvoice(code,clientId);
-		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoice.getId());
-		inventoryService.rejectInvoice(commandLines, invoice.getCompany().getId());
-		invoice.setStatus(Status.REFUSED);
-		invoiceRepository.save(invoice);
-	}
-
-	private Invoice getInvoice(Long code, Long clientId) {
-		Optional<Invoice> invoice = invoiceRepository.findByCodeAndClientId(code,clientId);
-	return invoice.get();
-	}
-
 	public void cancelInvoice(Company company, Long id) {
 		Invoice invoice = super.getById(id).getBody();
 		if(company.getId() != invoice.getCompany().getId()) {
@@ -187,10 +176,6 @@ public class InvoiceService extends BaseService<Invoice, Long>{
 		}
 		invoic.setPaid(PaymentStatus.PAID);
 	}
-	
-
-
-
 	
 
 }

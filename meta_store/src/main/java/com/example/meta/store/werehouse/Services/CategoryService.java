@@ -43,70 +43,9 @@ public class CategoryService extends BaseService<Category, Long>{
 
 	private final Logger logger = LoggerFactory.getLogger(CategoryService.class);
 	
-	public ResponseEntity<CategoryDto> upDateCategory( String catDto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
-		CategoryDto categoryDto = objectMapper.readValue(catDto, CategoryDto.class);
-		Category category = categoryRepository.findByIdAndCompanyId(categoryDto.getId(),company.getId())
-				.orElseThrow(() -> new RecordNotFoundException("Category Not Found"));
-			Category categ = categoryMapper.mapToEntity(categoryDto);
-			if(file != null) {
-
-				String newFileName = imageService.insertImag(file,company.getUser().getUsername(), "category");
-				categ.setImage(newFileName);
-			}else {
-
-				categ.setImage(category.getImage());
-			}
-			categ.setCompany(company);
-			categoryRepository.save(categ);
-			return ResponseEntity.ok(categoryDto);
-			
-	}
-
-	public Optional<Category> getByLibelle(String libelle, Long companyId) {
-		return categoryRepository.findByLibelleAndCompanyId(libelle, companyId);
-	}
-
-	public List<Category> getAllByCompanyId(Long companyId) {
-		return categoryRepository.findAllByCompanyId(companyId);
-	}
-
-
 	
-	public Optional<Category> getByIdAndCompanyId(Long id , Long companyId) {
-		return categoryRepository.findByIdAndCompanyId(id, companyId);
-	}
 	
-
-	
-
-	public List<CategoryDto> getCategoryByCompany(Company company, Long id) {
-		logger.warn(id+" <== id ");
-		List<Category> categorys;
-		if(id == 0) {			
-			categorys = getAllByCompanyId(company.getId());
-		}else {
-			categorys = getAllByCompanyId(id);
-		}
-		if(categorys.isEmpty()) {
-			throw new RecordNotFoundException("there is no category");
-		}
-		List<CategoryDto> categorysDto = new ArrayList<>();
-		for(Category i : categorys) {
-			CategoryDto categoryDto = categoryMapper.mapToDto(i);
-			categorysDto.add(categoryDto);
-		}
-		return categorysDto;
-	}
-
-	public CategoryDto getByLibelleAndCompanyId(Company company, String name) {
-		Optional<Category> category = categoryRepository.findByLibelleAndCompanyId(name,company.getId());
-		if(category.isEmpty()) {
-			throw new RecordNotFoundException("There Is No Category With Libelle : "+name);
-		}
-		CategoryDto dto = categoryMapper.mapToDto(category.get());
-		return dto;
-	}
-
+	///////////////////////////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////////////////
 	public ResponseEntity<CategoryDto> insertCategory( String catDto, Company company, MultipartFile file)
 			throws JsonMappingException, JsonProcessingException {
 
@@ -126,6 +65,58 @@ public class CategoryService extends BaseService<Category, Long>{
 		super.insert(category);
 		return new ResponseEntity<CategoryDto>(HttpStatus.ACCEPTED);
 	}
+	
+	public CategoryDto getByLibelleAndCompanyId(Company company, String name) {
+		Optional<Category> category = categoryRepository.findByLibelleAndCompanyId(name,company.getId());
+		if(category.isEmpty()) {
+			throw new RecordNotFoundException("There Is No Category With Libelle : "+name);
+		}
+		CategoryDto dto = categoryMapper.mapToDto(category.get());
+		return dto;
+	}
+
+	public Category getDefaultCategory(Company company) {
+		Optional<Category> category = categoryRepository.findByLibelleAndCompanyId("category", company.getId());
+		return category.get();
+	}
+	
+	public ResponseEntity<CategoryDto> upDateCategory( String catDto, Company company, MultipartFile file) throws JsonMappingException, JsonProcessingException {
+		CategoryDto categoryDto = objectMapper.readValue(catDto, CategoryDto.class);
+		Category category = categoryRepository.findByIdAndCompanyId(categoryDto.getId(),company.getId())
+				.orElseThrow(() -> new RecordNotFoundException("Category Not Found"));
+			Category categ = categoryMapper.mapToEntity(categoryDto);
+			if(file != null) {
+
+				String newFileName = imageService.insertImag(file,company.getUser().getUsername(), "category");
+				categ.setImage(newFileName);
+			}else {
+
+				categ.setImage(category.getImage());
+			}
+			categ.setCompany(company);
+			categoryRepository.save(categ);
+			return ResponseEntity.ok(categoryDto);
+			
+	}
+	
+	public List<CategoryDto> getCategoryByCompany(Company company, Long id) {
+		logger.warn(id+" <== id ");
+		List<Category> categorys;
+		if(id == 0) {			
+			categorys = getAllByCompanyId(company.getId());
+		}else {
+			categorys = getAllByCompanyId(id);
+		}
+		if(categorys.isEmpty()) {
+			throw new RecordNotFoundException("there is no category");
+		}
+		List<CategoryDto> categorysDto = new ArrayList<>();
+		for(Category i : categorys) {
+			CategoryDto categoryDto = categoryMapper.mapToDto(i);
+			categorysDto.add(categoryDto);
+		}
+		return categorysDto;
+	}
 
 	public void deleteCategoryById(Long id, Company company) {
 		Optional<Category> category = getByIdAndCompanyId(id,company.getId());
@@ -134,7 +125,18 @@ public class CategoryService extends BaseService<Category, Long>{
 		}
 		super.deleteById(id);		
 	}
+	
+	private List<Category> getAllByCompanyId(Long companyId) {
+		return categoryRepository.findAllByCompanyId(companyId);
+	}
+	
+	
+	private Optional<Category> getByIdAndCompanyId(Long id , Long companyId) {
+		return categoryRepository.findByIdAndCompanyId(id, companyId);
+	}
 
+	
+	
 	public Category addDefaultCategory(Company company1) {
 		Category category = new Category();
 		category.setCode("cat");
@@ -144,9 +146,8 @@ public class CategoryService extends BaseService<Category, Long>{
 		return category;
 		
 	}
+	
+	
 
-	public Category getDefaultCategory(Company company) {
-		Optional<Category> category = categoryRepository.findByLibelleAndCompanyId("category", company.getId());
-		return category.get();
-	}
+
 }

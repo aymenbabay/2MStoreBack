@@ -52,99 +52,88 @@ public class ClientController {
 
 	private final Logger logger = LoggerFactory.getLogger(ClientController.class);
 	
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
+	@DeleteMapping("delete/{id}")
+	public void deleteById(@PathVariable Long id) {
+		Company company = getCompany();
+		clientService.deleteClientByIdAndCompanyId(id, company);
+	}
+	
 	@GetMapping("get_all_my/{id}")
 	public List<ClientCompanyDto> getAllMyClient(@PathVariable Long id){
-		Company company;
-		 company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		Company company = getCompany();
 		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			company = companyService.getById(id).getBody();
 		}
 		return clientService.getAllMyClient(company);
 	}
+
+	@PostMapping("add")
+	public void insertClient(@RequestBody ClientDto clientDto) {
+		Company company = getCompany();
+		clientService.insertClient(clientDto, company);
+	}
+	
+	@PutMapping("/update")
+	public void updateClient(@RequestBody ClientDto clientDto) {
+		Company company = getCompany();
+		clientService.upDateMyClientById( clientDto, company);
+	}
+		
+	private Client getClient() {
+		Company company = getCompany();
+		return clientService.getMeAsClient(company.getId()).get();
+	}
 	
 	@GetMapping("get_all_containing/{var}/{id}")
 	public List<ClientCompanyDto> getAllClient(@PathVariable String var, @PathVariable Long id){
-		Company company;
-		company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		Company company = getCompany();
 		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			company = companyService.getById(id).getBody();
 		}
 		return clientService.getAllClientContaining(var,company);
 	}
-
+	
 	@GetMapping("get_all_my_containing/{value}/{id}")
 	public List<ClientDto> getAllMyCointaining(@PathVariable String value, @PathVariable Long id){
-		logger.warn("id for path "+ id);
-		Company company;
-		company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		Company company = getCompany();
 		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			company = companyService.getById(id).getBody();
 		}
 		return clientService.getAllMyContaining(value,company);
 	}
 
-	  
 	@GetMapping("add_as_client/{id}")
 	public void addExistClient(@PathVariable Long id) {
-		clientService.addExistClient(id, getCompany().get());
+		clientService.addExistClient(id, getCompany());
 	}
-	
-	@PostMapping("add")
-	public void insertClient(@RequestBody ClientDto clientDto) {
-		Optional<Company> company = getCompany();
-		clientService.insertClient(clientDto, company.get());
-	}
-	
-	@PutMapping("/update")
-	public void updateClient(@RequestBody ClientDto clientDto) {
-		Optional<Company> company = getCompany();
-		clientService.upDateMyClientById( clientDto, company.get());
-	}
-	
-	@DeleteMapping("delete/{id}")
-	public void deleteById(@PathVariable Long id) {
-		Company company = getCompany().get();
-		clientService.deleteClientById(id, company);
-	}
-	
+
 	@GetMapping("get_my_client_id")
 	public Long getMyClientId() {
 		return getClient().getId();
 	}
-	
+
+	private Company getCompany() {
+		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
+		if(company.isPresent()) {
+			return company.get();
+		}
+		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
+		if(companyId != null) {			
+			ResponseEntity<Company> company2 = companyService.getById(companyId);
+			return (company2.getBody());
+		}
+		throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
+		
+	}
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
 	@GetMapping("checkClient/{id}/{companyId}")
 	public boolean checkClient(@PathVariable Long id, @PathVariable Long companyId) {
-		Company company;
-		company = getCompany().orElseThrow(() -> new RecordNotFoundException(null));
+		Company company = getCompany();
 		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			return clientService.checkClient(id,companyId);
 		}
 		return clientService.checkClient(id,company.getId());
-	}
-	
-	private Client getClient() {
-		Optional<Company> company = getCompany();
-		logger.warn("company id in get client "+ company.get().getId());
-		return clientService.getMeAsClient(company.get().getId()).get();
-	}
-	
-	private Optional<Provider> getProvider() {
-		Optional<Company> company = getCompany();
-		return providerService.getMeAsProvider(company.get().getId());
-	}
-	private Optional<Company> getCompany() {
-		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		logger.warn("user id "+ userId);
-		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		if(company.isPresent()) {
-			return company;
-		}
-		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
-		if(companyId != null) {			
-		ResponseEntity<Company> company2 = companyService.getById(companyId);
-		return Optional.ofNullable(company2.getBody());
-		}
-			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-		
 	}
 }

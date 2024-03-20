@@ -50,17 +50,17 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	
 	private final Logger logger = LoggerFactory.getLogger(CommandLineService.class);
 
-    DecimalFormat df = new DecimalFormat("#.###");
 
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	public ResponseEntity<InputStreamResource> insertLine(List<CommandLineDto> commandLinesDto, Company company, 
 			Long clientId, Double discount, String type) {
 		List<CommandLine> commandLines = new ArrayList<>();
 		Invoice invoice ;
 		if(commandLinesDto.get(0).getId() == null) {
-			 invoice = invoiceService.addInvoice(company,clientId);	
+			invoice = invoiceService.addInvoice(company,clientId);	
 		}else {
-			 invoice = invoiceService.getById(commandLinesDto.get(0).getInvoice().getId()).getBody();
-			 commandLineRepository.deleteAllByInvoiceId(invoice.getId());
+			invoice = invoiceService.getById(commandLinesDto.get(0).getInvoice().getId()).getBody();
+			commandLineRepository.deleteAllByInvoiceId(invoice.getId());
 		}
 		invoice.setDiscount(discount);
 		for(CommandLineDto i : commandLinesDto) {
@@ -69,15 +69,13 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 				throw new RecordNotFoundException("There Is No More "+article.getLibelle());
 			}
 			article.setQuantity(article.getQuantity() - i.getQuantity());
-		CommandLine commandLine = commandLineMapper.mapToEntity(i);
-		commandLine.setInvoice(invoice);
-		String prix_article_tot = df.format(i.getQuantity()*(article.getCost()+ article.getCost()*article.getMargin()/100));
-		prix_article_tot = prix_article_tot.replace(",", ".");
-		commandLine.setPrixArticleTot(Double.parseDouble(prix_article_tot));
-		String tot_tva = df.format(article.getTva()*Double.parseDouble(prix_article_tot)/100);
-		tot_tva = tot_tva.replace(",", "."); 
-		commandLine.setTotTva(Double.parseDouble(tot_tva));
-		commandLines.add(commandLine);
+			CommandLine commandLine = commandLineMapper.mapToEntity(i);
+			commandLine.setInvoice(invoice);
+			double prix_article_tot = round(i.getQuantity()*(article.getCost()+ article.getCost()*article.getMargin()/100));
+			commandLine.setPrixArticleTot(prix_article_tot);
+			double tot_tva = round(article.getTva()*prix_article_tot/100);
+			commandLine.setTotTva(tot_tva);
+			commandLines.add(commandLine);
 		}
 		super.insertAll(commandLines);
 		List<CommandLine> commandLine = commandLineRepository.findAllByInvoiceId(invoice.getId());
@@ -85,37 +83,31 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		double totTva= 0;
 		double totTtc= 0;
 		for(CommandLine i : commandLine) {
-			 totHt += i.getPrixArticleTot();
-			 totTva += i.getTotTva();
-			 totTtc += totHt+totTva;
+			totHt += i.getPrixArticleTot();
+			totTva += i.getTotTva();
+			totTtc += totHt+totTva;
 		}
-		String prixArticleTot = df.format(totHt);
-		String TotTvaInvoice = df.format(totTva);
-		String prixInvoiceTot = df.format(totTtc);
-		prixArticleTot = prixArticleTot.replace(",", ".");
-		TotTvaInvoice = TotTvaInvoice.replace(",", ".");
-		prixInvoiceTot = prixInvoiceTot.replace(",", ".");
-		invoice.setPrix_article_tot(Double.parseDouble(prixArticleTot));
-		invoice.setTot_tva_invoice(Double.parseDouble(TotTvaInvoice));
-		invoice.setPrix_invoice_tot(Double.parseDouble(prixInvoiceTot));
+		Double prixArticleTot = round(totHt);
+		Double TotTvaInvoice = round(totTva);
+		Double prixInvoiceTot = round(totTtc);
+		invoice.setPrix_article_tot(prixArticleTot);
+		invoice.setTot_tva_invoice(TotTvaInvoice);
+		invoice.setPrix_invoice_tot(prixInvoiceTot);
 		invoiceService.insert(invoice);
 		inventoryService.impacteInvoice(company,commandLines);
 		ClientCompany clientCompany = clientCompanyRepository.findByClientIdAndCompanyId(clientId, company.getId()).get();
-		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(commandLinesDto.get(0).getArticle().getProvider().getId(), clientCompany.getClient().getCompany().getId()).get();
-		String credit = df.format(clientCompany.getCredit()+invoice.getPrix_invoice_tot());
-		credit = credit.replace(",", ".");
-		String mvt = df.format(clientCompany.getMvt()+ invoice.getPrix_invoice_tot());
-		mvt = mvt.replace(",", ".");
-		clientCompany.setCredit(Double.parseDouble(credit));
-		clientCompany.setMvt(Double.parseDouble(mvt));
-//		providerCompany.setCredit(Double.parseDouble(credit));
-//		providerCompany.setMvt(Double.parseDouble(mvt));
+		//	ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(commandLinesDto.get(0).getArticle().getProvider().getId(), clientCompany.getClient().getCompany().getId()).get();
+		Double credit = round(clientCompany.getCredit()+invoice.getPrix_invoice_tot());
+		Double mvt = round(clientCompany.getMvt()+ invoice.getPrix_invoice_tot());
+		clientCompany.setCredit(credit);
+		clientCompany.setMvt(mvt);
 		if (type.equals("pdf-save-client") ) {	
 			return invoiceService.export(company,commandLines);
 		}
 		return null;
 	}
-
+	
+	
 	public List<CommandLineDto> getCommandLines(Long invoiceId) {
 		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoiceId);
 		List<CommandLineDto> commandLinesDto = new ArrayList<>();
@@ -125,7 +117,11 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		}
 		return commandLinesDto;
 	}
-
+	
+	private double round(double value) {
+		return Math.round(value * 100.0) / 100.0; 
+	}
+	
 
 
 

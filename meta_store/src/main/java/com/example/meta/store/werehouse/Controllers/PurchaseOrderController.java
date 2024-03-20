@@ -51,7 +51,30 @@ public class PurchaseOrderController {
 	private final WorkerService workerService;
 	
 	private final Logger logger = LoggerFactory.getLogger(PurchaseOrderController.class);
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
+	@GetMapping("get_order/{id}")
+	public List<PurchaseOrderDto> getAllMyPerchaseOrder(@PathVariable Long id){
+		Optional<Client> client = getClient();
+		Optional<PassingClient> pClient = getPassingClient();
+		if(client.get().getId() != null && client.get().getCompany().getId() != id) {
+			client = clientService.findByCompanyId(id);
+		}
+		return purchaseOrderService.getAllMyPurchaseOrder(client.get(), pClient.get());
+	}
 	
+	private Optional<PassingClient> getPassingClient() {
+		User user = userService.findByUserName(authenticationFilter.userName);
+		Optional<PassingClient> client = clientService.findPassingClientByUser(user);
+		if(client.isEmpty()) {
+			return Optional.of(new PassingClient());
+		}
+		return client;
+	}
+	
+	/////////////////////////////////////////////////////// future work ///////////////////////////////////////////////////
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
+
 	@PostMapping()
 	public void addPurchaseOrder(@RequestBody List<PurchaseOrderLineDto> purchaseOrderDto) {
 		Optional<Client> client = getClient();
@@ -67,15 +90,6 @@ public class PurchaseOrderController {
 		purchaseOrderService.addPurchaseOrder(purchaseOrderDto,client.get(),pClient.get());
 	}
 	
-	@GetMapping("get_order/{id}")
-	public List<PurchaseOrderDto> getAllMyPerchaseOrder(@PathVariable Long id){
-		Optional<Client> client = getClient();
-		Optional<PassingClient> pClient = getPassingClient();
-		if(client.get().getId() != null && client.get().getCompany().getId() != id) {
-			client = clientService.findByCompanyId(id);
-		}
-		return purchaseOrderService.getAllMyPurchaseOrder(client.get(), pClient.get());
-	}
 	
 	@GetMapping("get_all_my_lines/{companyId}")
 	public List<PurchaseOrderLineDto> getrAllMyPurchaseOrderLines(@PathVariable Long companyId){
@@ -139,14 +153,6 @@ public class PurchaseOrderController {
 	return client;
 	}
 	
-	private Optional<PassingClient> getPassingClient() {
-		User user = userService.findByUserName(authenticationFilter.userName);
-		Optional<PassingClient> client = clientService.findPassingClientBUser(user);
-		if(client.isEmpty()) {
-			return Optional.of(new PassingClient());
-		}
-	return client;
-	}
 	
 	private Optional<Client> getClient(){
 		Optional<Company> company = getCompany();

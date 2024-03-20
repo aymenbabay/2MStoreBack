@@ -10,26 +10,26 @@ import com.example.meta.store.werehouse.Entities.ProviderCompany;
 
 public interface ProviderCompanyRepository extends BaseRepository<ProviderCompany, Long> {
 
-	void deleteByCompanyIdAndProviderId(Long id, Long id2);
-
-		@Query("SELECT p FROM ProviderCompany p WHERE p.company.id = :companyId")
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
+	
+	@Query("SELECT p FROM ProviderCompany p WHERE p.company.id = :companyId")
 	List<ProviderCompany> findAllMyProvider(Long companyId);
 
-		boolean existsByProviderIdAndCompanyId(Long id, Long id2);
-
-		Optional<ProviderCompany> findByProviderIdAndCompanyId(Long id, Long id2);
-
-		void deleteByProviderId(Long id);
-
-		void deleteByProviderIdAndCompanyId(Long id, Long id2);
-
-		@Query("SELECT p FROM ProviderCompany p WHERE "
-			       + "(p.provider.company.id = :companyId)"
-			       + "AND (p.provider.name LIKE %:search% OR p.provider.code LIKE %:search%) "
-			       )
-			List<ProviderCompany> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long companyId);
-
-//		@Query("SELECT pc FROM ProviderCompany pc GROUP BY pc.provider")
-//		List<ProviderCompany> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long id);
+	boolean existsByProviderIdAndCompanyId(Long id, Long id2);
 	
+	Optional<ProviderCompany> findByProviderIdAndCompanyId(Long id, Long id2);
+	
+	void deleteByProviderIdAndCompanyId(Long id, Long id2);
+	
+	@Query("SELECT p FROM ProviderCompany p WHERE "
+			+ "(p.provider.company.id = :companyId)"
+			+ "AND (p.provider.name LIKE %:search% OR p.provider.code LIKE %:search%) "
+			)
+	List<ProviderCompany> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long companyId);
+
+	
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
+
+	void deleteByCompanyIdAndProviderId(Long id, Long id2);
+	void deleteByProviderId(Long id);
 }

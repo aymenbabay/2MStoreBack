@@ -56,7 +56,6 @@ public class WorkerService extends BaseService<Worker, Long> {
 		if(!worker.getName().equals(workerDto.getName())) {			
 			boolean exist = workerRepository.existsByNameAndCompanyId(workerDto.getName(), company.getId());
 			if(exist) {
-				logger.warn("worker name: "+worker.getName()+" workr name : "+workerDto.getName());
 				throw new RecordIsAlreadyExist("worker name is already exist");
 			}
 		}
@@ -99,17 +98,12 @@ public class WorkerService extends BaseService<Worker, Long> {
 	}
 
 	public ResponseEntity<List<WorkerDto>> getWorkerByCompany(Company company) {
-		logger.warn("get worker by company 1");
 		List<Worker> workers = getAllByCompanyId(company.getId());
-		logger.warn("get worker by company 2");
 		if(workers.isEmpty()) {
-			logger.warn("get worker by company 3");
 			throw new RecordNotFoundException("there is no worker");
 		}
-		logger.warn("get worker by company 4");
 		List<WorkerDto> workersDto = new ArrayList<>();
 		for(Worker i : workers) {
-			logger.warn("get worker by company 5");
 			WorkerDto workerDto = workerMapper.mapToDto(i);
 			workersDto.add(workerDto);
 		}
@@ -171,10 +165,6 @@ public class WorkerService extends BaseService<Worker, Long> {
 		vacation.setYear(year);
 		vacation.setCompany(company);
 		Worker worker = workerRepository.findById(vacation.getWorker().getId()).orElseThrow(() -> new RecordNotFoundException("this worker not found"));
-		logger.warn("difference date: "+differenceInDays);
-		logger.warn("remaining date: "+worker.getRemainingday());
-		Long deff = worker.getRemainingday()-differenceInDays;
-		logger.warn("difference between : "+deff);
 		worker.setRemainingday(worker.getRemainingday()-differenceInDays);
 		Date now = new Date();
 		if((vacationDto.getStartdate().before(now) || vacationDto.getStartdate().equals(now)) && vacationDto.getEnddate().after(now)) {
@@ -214,9 +204,7 @@ public class WorkerService extends BaseService<Worker, Long> {
 	}
 
 	public Long findCompanyIdByUserId(Long userId) {
-		logger.warn("begin of get company id bu user id ");
 		Long companyId = workerRepository.findCompanyIdByUserId(userId);
-		logger.warn("just after of get company id bu user id from repository ");
 		return companyId;
 	}
 	

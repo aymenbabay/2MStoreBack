@@ -34,7 +34,7 @@ public class CashService {
 	private final Logger logger = LoggerFactory.getLogger(CashService.class);
 	
 	public void invoiceCashPayment(Client client, CashDto cashDto) {
-		if(cashDto.getInvoice().getClient().getId() != client.getId()) {
+		if(cashDto.getInvoice().getClient().getId() != client.getId() && cashDto.getInvoice().getCompany().getId() != client.getCompany().getId()) {
 			throw new PermissionDeniedDataAccessException("you don't have permission to do that", null);
 		}
 		if(cashDto.getInvoice().getPaid() != PaymentStatus.PAID && cashDto.getInvoice().getStatus() == Status.ACCEPTED) {			

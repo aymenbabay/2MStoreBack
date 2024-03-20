@@ -32,7 +32,7 @@ public class BillService{
 	private final ProviderService providerService;
 	
 	public void invoiceBillPayment(Client client, BillDto billDto) {
-		if(billDto.getInvoice().getClient().getId() != client.getId()) {
+		if(billDto.getInvoice().getClient().getId() != client.getId() && billDto.getInvoice().getCompany().getId() != client.getCompany().getId()) {
 			throw new PermissionDeniedDataAccessException("you don't have permission to do that", null);
 		}
 		if(billDto.getInvoice().getPaid() != PaymentStatus.PAID && billDto.getInvoice().getStatus() == Status.ACCEPTED) {			

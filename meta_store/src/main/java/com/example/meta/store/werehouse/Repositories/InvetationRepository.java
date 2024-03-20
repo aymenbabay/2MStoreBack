@@ -13,6 +13,7 @@ import com.example.meta.store.werehouse.Entities.Provider;
 
 public interface InvetationRepository extends BaseRepository<Invetation, Long> {
 
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	@Query("SELECT i FROM Invetation i WHERE"
 			+ " i.companySender.id = :companyId"
 			+ " OR i.companyReciver.id = :companyId"
@@ -22,16 +23,14 @@ public interface InvetationRepository extends BaseRepository<Invetation, Long> {
 			)
 	List<Invetation> findAllByClientIdOrProviderIdOrCompanyIdOrUserId(Long clientId, Long providerId, Long companyId, Long userId);
 
-	@Modifying
-	@Query("DELETE FROM Invetation i WHERE ((i.client = :hisClient OR i.client = :myClient) OR (i.provider = :hisProvider OR i.provider = :myProvider)) AND (i.companySender = :hisCompany Or i.companySender = :myCompany)")
-	void deleteByClientOrProviderAndCompany(Client hisClient, Client myClient, Provider hisProvider, Provider myProvider, Company hisCompany, Company myCompany);
-
 	void deleteByClientIdAndCompanySenderId(Long id, Long id2);
 
 	void deleteByProviderIdAndCompanySenderId(Long id, Long id2);
-
+	
 	@Query("SELECT i FROM Invetation i WHERE i.user.id = :id")
 	Invetation findByWorkerId(Long id);
+
+
 
 }
 

@@ -24,6 +24,7 @@ import com.example.meta.store.Base.Security.Config.JwtAuthenticationFilter;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Security.Service.UserService;
 import com.example.meta.store.werehouse.Dtos.ArticleDto;
+import com.example.meta.store.werehouse.Dtos.SubArticleRelationDto;
 import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Provider;
@@ -59,35 +60,23 @@ public class ArticleController {
 
 	private final Logger logger = LoggerFactory.getLogger(ArticleController.class);
 	
-	@PostMapping("add")
-	public ResponseEntity<ArticleDto> insertArticle(
-			 @RequestParam(value ="file", required = false) MultipartFile file,
-			 @RequestParam("article") String article)
-			throws Exception{
-		logger.warn("just before get provider in insert client function ");
-		Optional<Provider> provider = getProvider();
-		logger.warn("just after get provider in insert client function " +provider.get().getCompany().getId());
-		return articleService.insertArticle(file,article,provider.get());
-	}
 	
-	@GetMapping("{id}/{quantity}")
-	public void addQuantity(@PathVariable Double quantity, @PathVariable Long id) {
-		Optional<Provider> provider = getProvider();
-		articleService.addQuantity(id,quantity,provider.get());
-	}
-	
-	
-	@GetMapping("getAllMyArticle/{id}")
-	public List<ArticleDto> getAllMyArticle(@PathVariable Long id) {
-		Company company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
-		return articleService.getAllProvidersArticleByProviderId(company,id);
-	}
-	 	
 
-	@GetMapping("get_all_articles/{id}")
-	public List<ArticleDto> getAllArticleByProviderId(@PathVariable Long id){
-		Company company = companyService.getById(id).getBody();
-
+	/////////////////////////////////////// real work ////////////////////////////////////////////////////////
+	@GetMapping("getrandom")
+	public List<ArticleDto> findRandomArticles(){
+		Optional<Client> client = getClient();
+		Optional<Provider> provider = getProvider();
+		if(client.isPresent()) {
+			return articleService.findRandomArticlesPub(client.get(), provider.get(), null);
+		}
+		User user = userService.findByUserName(authenticationFilter.userName);
+		return articleService.findRandomArticlesPub(null, null, user);
+	}
+	
+	@GetMapping("get_all_articles/{id}/{offset}/{pageSize}")
+	public List<ArticleDto> getAllArticleByProviderId(@PathVariable Long id, @PathVariable int offset, @PathVariable int pageSize){
+		logger.warn("sgssbs");
 			Optional<Client> client = getClient();
 			Long providerId=null;
 			Client client1 = null;
@@ -95,10 +84,16 @@ public class ArticleController {
 				 providerId = providerService.getMeProviderId(id);
 				 client1 = client.get();
 			}
-			return articleService.getAllArticleByCompanyId(id,client1,providerId);
-			
-		
+			return articleService.getAllArticleByCompanyId(id,client1,providerId,offset, pageSize);
 	}
+	
+	@GetMapping("getAllMyArticle/{id}/{offset}/{pageSize}")
+	public List<ArticleDto> getAllMyArticle(@PathVariable Long id, @PathVariable int offset, @PathVariable int pageSize) {
+		logger.warn("id: "+id+" offset: "+offset+" page size: "+pageSize);
+		Company company = getCompany().orElseThrow(() -> new RecordNotFoundException("you dont have a company"));
+		return articleService.getAllProvidersArticleByProviderId(company,id,offset, pageSize);
+	}
+	
 	
 	@GetMapping("category/{categoryId}/{companyId}")
 	public List<ArticleDto> getAllArticelsByCategoryId(@PathVariable Long categoryId, @PathVariable Long companyId){
@@ -112,6 +107,23 @@ public class ArticleController {
 		return articleService.getAllArticleBySubCategoryIdAndCompanyId(subcategoryId, companyId,client);
 	}
 	
+	
+	@PostMapping("add")
+	public ResponseEntity<ArticleDto> insertArticle(
+			 @RequestParam(value ="file", required = false) MultipartFile file,
+			 @RequestParam("article") String article)
+			throws Exception{
+		Optional<Provider> provider = getProvider();
+		return articleService.insertArticle(file,article,provider.get());
+	}
+	
+	@GetMapping("{id}/{quantity}")
+	public void addQuantity(@PathVariable Double quantity, @PathVariable Long id) {
+		Optional<Provider> provider = getProvider();
+		articleService.addQuantity(id,quantity,provider.get());
+	}
+	
+	
 	@PutMapping("update")
 	public ResponseEntity<ArticleDto> upDateArticle(
 			 @RequestParam(value ="file", required = false) MultipartFile file,
@@ -120,42 +132,18 @@ public class ArticleController {
 		return articleService.upDateArticle(file,article, provider.get());
 	}
 	
-
-	@GetMapping("getrandom")
-	public List<ArticleDto> findRandomArticles(){
-		Optional<Client> client = getClient();
-		Optional<Provider> provider = getProvider();
-	//	logger.warn(" client "+client.get());
-		if(client.isPresent()) {
-			logger.warn("client is no empty");
-			return articleService.findRandomArticlesPub(client.get(), provider.get(), null);
-		}
-		logger.warn("client is empty");
-		User user = userService.findByUserName(authenticationFilter.userName);
-		return articleService.findRandomArticlesPub(null, null, user);
-		
-	}
-	
-	@DeleteMapping("delete/{id}")
-	public ResponseEntity<String> deleteArticleById(@PathVariable Long id){
-		Optional<Provider> provider = getProvider();
-		return articleService.deleteByCompanyArticleId(id,provider.get());
-	}
 	
 	private Optional<Company> getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
 		if(company.isPresent()) {
-			logger.warn("company is not empty");
 			return company;
 		}
 		Long companyId = workerService.getCompanyIdByUserName(authenticationFilter.userName);
 		if(companyId != null) {			
-			logger.warn("company is not empty but as worker");
 		ResponseEntity<Company> company2 = companyService.getById(companyId);
 		return Optional.of(company2.getBody());
 		}
-		logger.warn("company is empty");
 			return Optional.empty();
 	}
 	
@@ -171,21 +159,47 @@ public class ArticleController {
 	private Optional<Client> getClient(){
 		Optional<Company> company = getCompany();
 		if(company.isEmpty()) {
-			logger.warn("client is empty because company is empty");
 			return Optional.empty();
 		}
-		logger.warn("client is not empty because company is not empty");
 		Optional<Client> client = clientService.getMeAsClient(company.get().getId());
-		logger.warn(client.get().getName()+" client name is");
-		return client;
+			return client;
 	}
 
+	@DeleteMapping("delete/{id}")
+	public ResponseEntity<String> deleteArticleById(@PathVariable Long id){
+		Optional<Provider> provider = getProvider();
+		return articleService.deleteByCompanyArticleId(id,provider.get());
+	}
 	
-
-//	---------------------------------------------------------------- EXCEPTION -----------------------------------------------------------------------------
+	@PostMapping("child/{parentid}")
+	public void addChildToParentArticle(@PathVariable Long parentid, @RequestBody SubArticleRelationDto subArticle) {
+		
+			logger.warn("quantity "+ subArticle.getQuantity()+" child id "+subArticle.getChildArticle().getId());
+			
+		
+	}
+	
+	/////////////////////////////////////// future work ////////////////////////////////////////////////////////
 	@GetMapping("{articlenamecontaining}")
 	public List<ArticleDto> getByNameContaining(@PathVariable String articlenamecontaining ){
 		Optional<Provider> provider = getProvider(); 
 		return articleService.getByNameContaining(articlenamecontaining,provider.get().getId());
 	}
+	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	
+
+	
+
+
+	
+	
+
+	
+	
+	
+
+//	---------------------------------------------------------------- EXCEPTION -----------------------------------------------------------------------------
+	
 }

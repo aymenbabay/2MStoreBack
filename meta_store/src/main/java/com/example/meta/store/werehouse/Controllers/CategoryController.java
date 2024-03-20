@@ -47,21 +47,12 @@ public class CategoryController {
 
 	private final Logger logger = LoggerFactory.getLogger(CategoryController.class);
 
-	@GetMapping("/getbycompany/{companyId}/{id}")
-	public List<CategoryDto> getCategoryByCompany(@PathVariable Long companyId, @PathVariable Long id){
-		Company company; 
-		company = getCompany();
-		if(company.getId() != companyId && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(companyId))) {
-			company = companyService.getById(companyId).getBody();
-		}
-		return categoryService.getCategoryByCompany(company, id);
-	}
-	
+///////////////////////////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////////////////
+
 	@GetMapping("/l/{name}")
 	public CategoryDto getCategoryById(@PathVariable String name){
 		Company company = getCompany();
 	return categoryService.getByLibelleAndCompanyId(company, name)	;
-
 	}
 	
 	@PostMapping("/add")
@@ -73,6 +64,16 @@ public class CategoryController {
 		return categoryService.insertCategory(categoryDto,company,file);
 	}
 	
+	@GetMapping("/getbycompany/{companyId}/{id}")
+	public List<CategoryDto> getCategoryByCompany(@PathVariable Long companyId, @PathVariable Long id){
+		Company company; 
+		company = getCompany();
+		if(company.getId() != companyId && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(companyId))) {
+			company = companyService.getById(companyId).getBody();
+		}
+		return categoryService.getCategoryByCompany(company, id);
+	}
+
 	@PutMapping("/update")
 	public ResponseEntity<CategoryDto> upDateCategory(
 			@RequestParam String categoryDto,
@@ -80,21 +81,34 @@ public class CategoryController {
 		Company company = getCompany();
 		return categoryService.upDateCategory(categoryDto,company,file);
 	}
-	
-	
+
 	@DeleteMapping("/delete/{id}")
 	public void deleteCategoryById(@PathVariable Long id){
 		Company company = getCompany();
 		categoryService.deleteCategoryById(id,company);
 	}
-	
+
 	private Company getCompany() {
 		Long userId = UserService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
 		if(company != null) {
 			return company.get();
 		}
-			throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
-			
+		throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
+		
 	}
+///////////////////////////////////////////////////////////////////////////// future work ///////////////////////////////////////////////////////////////
+
+
+
+///////////////////////////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////////////////
+
+	
+
+	
+	
+	
+	
+	
+	
 }

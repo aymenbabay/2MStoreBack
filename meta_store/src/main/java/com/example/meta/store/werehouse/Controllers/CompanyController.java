@@ -39,19 +39,15 @@ public class CompanyController {
 	private final WorkerService workerService;
 
 	private final Logger logger = LoggerFactory.getLogger(CompanyController.class);
-	
-	@GetMapping("/all")
-	public List<CompanyDto> getAll(){
-		return companyService.getAllCompany();
-	}
-	
+
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	@PostMapping("/add")
 	public ResponseEntity<CompanyDto> insertCompany( 
 			@RequestParam("company") String company,
 			@RequestParam(value ="file", required = false) MultipartFile file)throws Exception{
 		User user = userService.findByUserName(authenticationFilter.userName);
 		return companyService.insertCompany(company, file, user);
-		}
+	}
 	
 	@PutMapping("/update")
 	public ResponseEntity<CompanyDto> upDateCompany(
@@ -61,6 +57,29 @@ public class CompanyController {
 		return companyService.upDateCompany(companyDto, file);
 	}
 	
+	private Company getCompany() {
+		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		Company company = new Company();
+		company = companyService.findByUserId(userId);
+		logger.warn("befor if condition "+ company);
+		if(company== null) {
+			logger.warn("inside if condition ");
+			Long companyId = workerService.findCompanyIdByUserId(userId);
+			logger.warn("just after long companyId "+ companyId);
+			if(companyId != null) {
+				company = companyService.getById(companyId).getBody();						
+			}
+			
+		}
+		return company;
+	}
+	
+	@GetMapping("search/{branshe}")
+	public List<CompanyDto> searchCompanyContaining(@PathVariable String branshe){
+		Company company = getCompany();
+		return companyService.getCompanyContaining(branshe, company.getId());
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<CompanyDto> getCompanyById(@PathVariable Long id){
 		return companyService.getCompanyById(id);		
@@ -72,30 +91,28 @@ public class CompanyController {
 		Company company = getCompany();
 		logger.warn("just afyer get company in get me function ");
 		if(!company.getId().equals(id)) {
-			   boolean exists = company.getBranches().stream()
-                       .anyMatch(branch -> branch.getId().equals(id));
-			   if(!exists) {
-				   throw new RecordNotFoundException("you don't have a company");
-			   }
+			boolean exists = company.getBranches().stream()
+					.anyMatch(branch -> branch.getId().equals(id));
+			if(!exists) {
+				throw new RecordNotFoundException("you don't have a company");
+			}
 		}
 		return companyService.getMe(company,id);
 	}
 	
-
 	@GetMapping("/rate/{id}/{rate}")
-	public void rateCompany(@PathVariable long id, @PathVariable long rate) {
+	public void rateCompany(@PathVariable long id, @PathVariable double rate) {
 		companyService.rateCompany(id,rate);
+	}
+
+	@GetMapping("/all")
+	public List<CompanyDto> getAll(){
+		return companyService.getAllCompany();
 	}
 	
 	@GetMapping("get_my_company_id")
 	public Long getMyCompanyId() {
 		return getCompany().getId();
-	}
-	
-	@GetMapping("search/{branshe}")
-	public List<CompanyDto> searchCompanyContaining(@PathVariable String branshe){
-		Company company = getCompany();
-		return companyService.getCompanyContaining(branshe, company.getId());
 	}
 	
 	@GetMapping("get_my_parent/{id}")
@@ -105,8 +122,6 @@ public class CompanyController {
 		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			company = companyService.getById(id).getBody();
 		}
-		logger.warn("id "+id);
-		logger.warn("company id"+company.getId());
 		return companyService.getMyParent(company);
 		}
 	
@@ -116,20 +131,4 @@ public class CompanyController {
 		return companyService.getBranches(company);
 	}
 	
-	private Company getCompany() {
-		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		Company company = new Company();
-			company = companyService.findByUserId(userId);
-			logger.warn("befor if condition "+ company);
-				if(company== null) {
-					logger.warn("inside if condition ");
-					Long companyId = workerService.findCompanyIdByUserId(userId);
-					logger.warn("just after long companyId "+ companyId);
-					if(companyId != null) {
-						company = companyService.getById(companyId).getBody();						
-					}
-					
-				}
-		return company;
-	}
 }

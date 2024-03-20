@@ -11,9 +11,8 @@ import com.example.meta.store.werehouse.Entities.ClientCompany;
 
 public interface ClientCompanyRepository extends BaseRepository<ClientCompany, Long> {
 
-	void deleteByClientId(Long id);
-
-	void deleteByClientIdAndCompanyId(Long id, Long id2);
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
+	void deleteByClientIdAndCompanyId(Long clientId, Long companyId);
 
 	boolean existsByClientIdAndCompanyId(Long clientId, Long companyId);
 	
@@ -21,8 +20,14 @@ public interface ClientCompanyRepository extends BaseRepository<ClientCompany, L
 
 	@Query("SELECT c FROM ClientCompany c WHERE c.company.id = :companyId AND c.isDeleted = false")
 	List<ClientCompany> getAllMyClients(Long companyId);
-
+	
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
 	boolean existsByClientIdAndCompanyIdAndIsDeletedFalse(Long clientId, Long companyId);
+
+
+	
+
+
 
 	
 }

@@ -71,11 +71,9 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 	            // If company is null or different, create a new purchase order
 	            purchaseOrder = new PurchaseOrder();
 	            if (client.getId() == null) {
-	            	logger.warn("client is null");
-	                purchaseOrder.setPclient(pClient);
+	               purchaseOrder.setPclient(pClient);
 	            } else {
-	            	logger.warn("client is not null");
-	                purchaseOrder.setClient(client);
+	              purchaseOrder.setClient(client);
 	            }
 	            Long orderN = purchaseOrderRepository.getLastOrderNumber(client.getId(),pClient.getId());
 	            if(orderN != null) {
@@ -138,13 +136,10 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 
 
 	public void OrderResponse(Long id, Status status, Company company) {
-		logger.warn("status 1 "+status);
-	    PurchaseOrderLine purchaseOrderLine = purchaseOrderLineRepository.findById(id)
+		  PurchaseOrderLine purchaseOrderLine = purchaseOrderLineRepository.findById(id)
 	            .orElseThrow(() -> new RecordNotFoundException("There is no order with id: " + id));
-	    logger.warn("status 2 "+status);
 	    purchaseOrderLine.setStatus(status);
-	    logger.warn("status 3 "+status);
-	    if(status == Status.ACCEPTED && purchaseOrderLine.getDelivery()) {
+	   if(status == Status.ACCEPTED && purchaseOrderLine.getDelivery()) {
 	    	Delivery deliver = deliveryService.getById((long)1).getBody();
 	    	OrderDelivery orderDelivery = new OrderDelivery();
 	    	orderDelivery.setOrder(purchaseOrderLine);
@@ -170,8 +165,7 @@ public class PurchaseOrderService extends BaseService<PurchaseOrder, Long> {
 				.orElseThrow(() -> new RecordNotFoundException("there is no order with id: "+purchaseOrderLineDto.getId()));
 		if(purchaseOrderLine.getStatus() == Status.INWAITING) {	
 			purchaseOrderLine = purchaseOrderLineMapper.mapToEntity(purchaseOrderLineDto);
-			logger.warn("status is : "+purchaseOrderLine.getStatus());
-		purchaseOrderLineRepository.save(purchaseOrderLine);
+			purchaseOrderLineRepository.save(purchaseOrderLine);
 		}else {
 			throw new RecordIsAlreadyExist("you can not do that because the order is already "+purchaseOrderLine.getStatus());
 		}

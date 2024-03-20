@@ -90,7 +90,20 @@ public class PaymentController {
 	@GetMapping("get_all_my")
 	public List<PaymentDto> getAllMy(){
 		Client client = getClient();
-		return paymentService.getAllMy(client);
+		return paymentService.getAllMy(client.getId(), client.getCompany().getId());
+	}
+	
+	@GetMapping("get_all_my_as_company")
+	public List<PaymentDto> getAllMyAsCompany(){
+		Company company = getCompany().orElseThrow(() -> new RecordNotFoundException("you don't have a company"));
+		return paymentService.getAllMy(null,company.getId());
+	}
+	
+	@GetMapping("get_all_my_as_client")
+	public List<PaymentDto> getAllMyAsClient(){
+		Client client = getClient();
+		return paymentService.getAllMy(client.getId(), null);
+		
 	}
 	
 	@GetMapping("{id}")

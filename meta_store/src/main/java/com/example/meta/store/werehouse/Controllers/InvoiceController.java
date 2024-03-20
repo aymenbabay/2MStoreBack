@@ -44,7 +44,8 @@ public class InvoiceController {
 	private final ClientService clientService;
 
 	private final Logger logger = LoggerFactory.getLogger(InvoiceController.class);
-	
+
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	@GetMapping("getlastinvoice")
 	public Long getLastInvoiceCode() {
 		Company company = getCompany();
@@ -72,8 +73,15 @@ public class InvoiceController {
 		if(company.getId() != id && company.getBranches().stream().anyMatch(branche -> branche.getId().equals(id))) {
 			return invoiceService.getInvoicesAsClient(id);			
 		}
-		logger.warn("company id "+company.getId());
 		return invoiceService.getInvoicesAsClient(company.getId());
+	}
+	
+	@GetMapping("getnotaccepted")
+	public List<InvoiceDto> getInvoiceNotifications(){
+		Client client = getMeAsClient();
+		Optional<Company> company = getHisCompany();
+		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
+		return invoiceService.getInvoiceNotifications(client,company,userId);
 	}
 	
 	@GetMapping("cancel_invoice/{id}")
@@ -83,10 +91,8 @@ public class InvoiceController {
 	}
 	
 	private Optional<Company> getMyCompany(){
-		logger.warn("begin of get my company ");
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
 		Optional<Company> company = companyService.findCompanyIdByUserId(userId);
-		logger.warn("just after company in get my company ");
 		if(company.isPresent()) {			
 			return company;
 		}
@@ -117,19 +123,8 @@ public class InvoiceController {
 	}
 	
 	
-	@GetMapping("getnotaccepted")
-	public List<InvoiceDto> getInvoiceNotifications(){
-		logger.warn("begin of get not accepted ");
-		Client client = getMeAsClient();
-		Optional<Company> company = getHisCompany();
-		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		return invoiceService.getInvoiceNotifications(client,company,userId);
-	}
-	
 	private Client getMeAsClient() {
-		logger.warn("begin of get me as client ");
 		Optional<Company> company = getMyCompany();
-		logger.warn("just after get company in get me as client ");
 		Client client = clientService.getMeAsClient(company.get().getId()).get();
 		return client;
 	}

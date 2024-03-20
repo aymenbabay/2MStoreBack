@@ -30,7 +30,7 @@ public class BankTransferService{
 	private final ProviderService providerService;
 	
 	public void invoiceBankTransferPayment(Client client, BankTransferDto bankTransferDto) {
-		if(bankTransferDto.getInvoice().getClient().getId() != client.getId()) {
+		if(bankTransferDto.getInvoice().getClient().getId() != client.getId() && bankTransferDto.getInvoice().getCompany().getId() != client.getCompany().getId()) {
 			throw new PermissionDeniedDataAccessException("you don't have permission to do that", null);
 		}
 		if(bankTransferDto.getInvoice().getPaid() != PaymentStatus.PAID && bankTransferDto.getInvoice().getStatus() == Status.ACCEPTED) {

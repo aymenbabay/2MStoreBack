@@ -35,7 +35,8 @@ public class InventoryController {
 	
 	private final WorkerService workerService;
 	
-	
+
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	@GetMapping("/getbycompany/{id}")
 	public List<InventoryDto> getInventoryByCompany(@PathVariable Long id){
 		Company company;
@@ -54,8 +55,7 @@ public class InventoryController {
 					Long companyId = workerService.findCompanyIdByUserId(userId);
 					if(companyId != null) {
 						company = companyService.getById(companyId).getBody();						
-					}
-					
+					}				
 				}
 		return company;
 	}

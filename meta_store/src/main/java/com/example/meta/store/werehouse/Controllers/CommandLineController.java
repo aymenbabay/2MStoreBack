@@ -48,21 +48,24 @@ public class CommandLineController {
 	
 
 	private final Logger logger = LoggerFactory.getLogger(CommandLineController.class);
-	
+
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	@PostMapping("{type}/{invoicecode}/{clientid}/{discount}")
 	public ResponseEntity<InputStreamResource> addCommandLine(@RequestBody  List<CommandLineDto> commandLinesDto,
 			@PathVariable Long invoicecode, @PathVariable String type, @PathVariable Long clientid, @PathVariable Double discount)
-					 throws JsonProcessingException {
+					throws JsonProcessingException {
 		Company company = getCompany();
 		return commandLineService.insertLine(commandLinesDto, company,clientid,discount,type);
 		
 	}
 	
-	
 	@GetMapping("getcommandline/{invoiceId}")
 	public List<CommandLineDto> getCommandLines(@PathVariable Long invoiceId){
 		return commandLineService.getCommandLines(invoiceId);
 	}
+	
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
+	
 
 	private Company getCompany() {
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();

@@ -65,19 +65,16 @@ public class MessageService extends BaseService<Message, Long> {
 		for(Message i : messages) {
 			MessageDto dto = messageMapper.mapToDto(i);
 			messagesDto.add(dto);
-		logger.warn(dto.getContent()+" get all message");
 		}
 		return messagesDto;
 	}
 	
 	public List<ConversationDto> getAllMyConversation(User me){
-		logger.warn("haw je lil conversation");
 		List<Conversation> conversations = conversationRepository.findAllByUser1OrUser2(me);
 		List<ConversationDto> conversationsDto = new ArrayList<>();
 		for(Conversation i : conversations) {
 			ConversationDto conver = conversationMapper.mapToDto(i);
 			conversationsDto.add(conver);
-			logger.warn(i.getId()+" conversation id");
 		}
 		return conversationsDto;
 	}

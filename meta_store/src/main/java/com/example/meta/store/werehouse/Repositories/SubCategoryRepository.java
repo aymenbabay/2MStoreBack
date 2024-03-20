@@ -10,15 +10,22 @@ import com.example.meta.store.Base.Repository.BaseRepository;
 import com.example.meta.store.werehouse.Entities.SubCategory;
 
 public interface SubCategoryRepository extends BaseRepository<SubCategory, Long> {
-
-	Optional<SubCategory> findByCodeAndCompanyId(String code, Long id);
-
+	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
+	
 	@Query("SELECT a FROM SubCategory a WHERE a.company.id = :companyId")
 	List<SubCategory> findAllByCompanyId(@Param("companyId") Long companyId);
 
-	Optional<SubCategory> findByIdAndCompanyId(Long id, Long id2);
+	Optional<SubCategory> findByIdAndCompanyId(Long id, Long companyId);
 
 	Optional<SubCategory> findByLibelleAndCompanyId(String libelle, Long companyId);
 
 	List<SubCategory> findAllByCompanyIdAndCategoryId(Long id, Long categoryId);
+	/////////////////////////////////////////////////////// future work ///////////////////////////////////////////////////
+	/////////////////////////////////////////////////////// not work ///////////////////////////////////////////////////
+	Optional<SubCategory> findByCodeAndCompanyId(String code, Long id);
+	/////////////////////////////////////////////////////// ///////////////////////////////////////////////////
+
+
+
+
 }
