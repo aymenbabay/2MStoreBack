@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import com.example.meta.store.Base.Repository.BaseRepository;
 import com.example.meta.store.werehouse.Entities.Provider;
+import com.example.meta.store.werehouse.Entities.ProviderCompany;
 
 public interface ProviderRepository extends BaseRepository<Provider, Long>{
 
@@ -31,6 +32,7 @@ public interface ProviderRepository extends BaseRepository<Provider, Long>{
 	Optional<Provider> findByMatfisc(String matfisc);
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	
 
 	
 //	 @Query("SELECT p FROM Provider p WHERE p.isVirtual = false AND NOT EXISTS (SELECT 1 FROM Client c JOIN c.providers cp WHERE cp.id = p.id)")

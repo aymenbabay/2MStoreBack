@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.meta.store.Base.ErrorHandler.NotPermissonException;
 import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Security.Entity.User;
 import com.example.meta.store.Base.Service.BaseService;
@@ -167,7 +168,7 @@ public class ArticleService extends BaseService<Article, Long>{
 		}
 		Invoice invoice = commandLines.get(0).getInvoice();
 		Long providerId = providerService.getMeProviderId(invoice.getCompany().getId());
-		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(providerId,company.getId()).get();
+		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyIdAndIsDeletedFalse(providerId,company.getId()).get();
 		Double credit = round(providerCompany.getCredit()+ invoice.getPrix_invoice_tot());
 		providerCompany.setCredit(credit);
 		Double mvt = round(providerCompany.getMvt() + invoice.getPrix_invoice_tot());
@@ -378,6 +379,26 @@ public class ArticleService extends BaseService<Article, Long>{
 	return articleDto;}
 		throw new RecordNotFoundException("there is no record cointaining "+articlenamecontaining);
 
+	}
+
+	public ArticleDto getMyArticleById(Long id, Company company) {
+		Article article = getById(id).getBody();
+		ArticleDto articleDto = articleMapper.mapToDto(article);
+		return articleDto;
+	}
+
+	public void addChilToParentArticle(Company company, Long parentId, Long childId, double quantity) {
+		Article parentArticle = findById(parentId);
+		Article childArticle = findById(childId);
+		if(!parentArticle.getCompany().equals(company) || !childArticle.getCompany().equals(company)) {
+			throw new NotPermissonException("you don't have the permission to do that");
+		}
+		SubArticle subArticle = new SubArticle();
+		subArticle.setChildArticle(childArticle);
+		subArticle.setParentArticle(parentArticle);
+		subArticle.setQuantity(quantity);
+		subArticleRepository.save(subArticle);
+		
 	}
 	
 	

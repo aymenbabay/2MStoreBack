@@ -171,12 +171,17 @@ public class ArticleController {
 		return articleService.deleteByCompanyArticleId(id,provider.get());
 	}
 	
-	@PostMapping("child/{parentid}")
-	public void addChildToParentArticle(@PathVariable Long parentid, @RequestBody SubArticleRelationDto subArticle) {
+	@GetMapping("my_article/{id}")
+	public ArticleDto getMyArticleById(@PathVariable Long id) {
+		Company company = getCompany().orElseThrow(() -> new RecordNotFoundException("you don't have a company"));
+		return articleService.getMyArticleById(id, company);
 		
-			logger.warn("quantity "+ subArticle.getQuantity()+" child id "+subArticle.getChildArticle().getId());
-			
-		
+	}
+	
+	@GetMapping("child/{parentId}/{childId}/{quantity}")
+	public void addChildToParentArticle(@PathVariable Long parentId, @PathVariable Long childId, @PathVariable double quantity) {
+		Company company = getCompany().get();
+		articleService.addChilToParentArticle(company, parentId, childId, quantity);		
 	}
 	
 	/////////////////////////////////////// future work ////////////////////////////////////////////////////////

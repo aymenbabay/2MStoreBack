@@ -3,6 +3,7 @@ package com.example.meta.store.werehouse.Services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import com.example.meta.store.Base.ErrorHandler.RecordNotFoundException;
 import com.example.meta.store.Base.Service.BaseService;
 import com.example.meta.store.werehouse.Dtos.ProviderCompanyDto;
 import com.example.meta.store.werehouse.Dtos.ProviderDto;
+import com.example.meta.store.werehouse.Entities.Client;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Invetation;
 import com.example.meta.store.werehouse.Entities.Provider;
@@ -51,7 +53,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	
 	public void deleteProviderById(Long id, Company myCompany) {
-		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(id, myCompany.getId()).orElseThrow(() -> new RecordNotFoundException("this provider is already not yours"));
+		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyIdAndIsDeletedFalse(id, myCompany.getId()).orElseThrow(() -> new RecordNotFoundException("this provider is already not yours"));
 		if(providerCompany.getMvt() !=0) {
 			providerCompany.setDeleted(true);
 			return;
@@ -60,13 +62,16 @@ public class ProviderService extends BaseService<Provider, Long> {
 			deleteVirtualProviderById(id, myCompany);
 			return;
 		}
+		if(!providerCompany.getCompany().equals(myCompany)) {			
 		providerCompanyRepository.deleteByProviderIdAndCompanyId(id,myCompany.getId());
 		invetationClientProviderRepository.deleteByProviderIdAndCompanySenderId(id, myCompany.getId());
+		}
 		
-	}
+	} 
 
-	public List<ProviderCompanyDto> getAllMyProvider(Company company) {
-		List<ProviderCompany> providers = providerCompanyRepository.findAllMyProvider(company.getId());
+	public List<ProviderCompanyDto> getAllMyProvider(Long companyId) {
+
+		List<ProviderCompany> providers = providerCompanyRepository.findAllByCompanyIdAndIsDeletedFalse(companyId);
 		if(providers == null) {
 			throw new RecordNotFoundException("There Is No Provider Yet");
 		}
@@ -78,8 +83,8 @@ public class ProviderService extends BaseService<Provider, Long> {
 		return providersDto;
 	}
 	
-	public List<ProviderCompanyDto> getAllProvidersContaining(Company company, String search) {
-		List<ProviderCompany> providers = providerCompanyRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search, company.getId());
+	public List<ProviderCompanyDto> getAllProvidersContaining(Long companyId, String search) {
+		List<ProviderCompany> providers = providerCompanyRepository.findAllByNameContainingOrCodeContainingAndCompanyId(search, companyId);
 		List<ProviderCompanyDto> providersDto = new ArrayList<>();
 		for(ProviderCompany i : providers) {
 			ProviderCompanyDto providerDto = providerCompanyMapper.mapToDto(i);
@@ -114,6 +119,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 				providerCompany.setProvider(provider);
 				providerCompany.setMvt(0.0);
 				providerCompany.setCredit(0.0);
+				providerCompany.setAdvance(0.0);
 				providerCompanyRepository.save(providerCompany);
 				return new ResponseEntity<ProviderDto>(HttpStatus.ACCEPTED);
 		}
@@ -135,14 +141,22 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}
 
 	public void addExistProvider(Long id, Company company) {
+		Provider provider = super.getById(id).getBody();
+		if((provider.getCompany() != null && provider.getCompany().equals(company)) || provider.isVirtual()) {
+			ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyIdAndIsDeletedTrue(id, company.getId())
+					.orElseThrow(() -> new RecordNotFoundException("there is no provider"));
+			providerCompany.setDeleted(false);
+			return;
+		}
 		Invetation invetationClientProvider = new Invetation();
-		ResponseEntity<Provider> provider = super.getById(id);
 		invetationClientProvider.setCompanySender(company);
-		invetationClientProvider.setProvider(provider.getBody());
+		invetationClientProvider.setProvider(provider);
 		invetationClientProvider.setStatus(Status.INWAITING);
 		invetationClientProvider.setType(Type.PROVIDER);
 		invetationClientProviderRepository.save(invetationClientProvider);
 	}
+	
+
 
 	public Provider addMeAsProvider(Company company) {		
 		Optional<Provider> provide = providerRepository.findByCode(company.getCode());
@@ -174,14 +188,12 @@ public class ProviderService extends BaseService<Provider, Long> {
 	}	
 
 	private void deleteVirtualProviderById(Long id, Company company) {
-		Optional<Provider> provider = providerRepository.findById(id);
-		if(provider.isEmpty()) {
-			throw new RecordNotFoundException("there is no provider with id: "+id);
-		}
-		if(provider.get().getCompany() != company) {
+		Provider provider = providerRepository.findById(id).orElseThrow(() -> new RecordNotFoundException("there is no provider with id: "+id));
+		
+		if(provider.getCompany() != company && !provider.isVirtual()) {
 			throw new RecordNotFoundException("You do not have a permession to do that");
 		}
-		providerRepository.delete(provider.get());
+		providerRepository.delete(provider);
 	}
 	
 	public ProviderDto getMyByCodeAndCompanyId(String code, Company company) {
@@ -233,7 +245,7 @@ public class ProviderService extends BaseService<Provider, Long> {
 
 	public void paymentInpact(Long providerCompanyId, Long myCompanyId, Double amount) {
 		Provider provider = getMeAsProvider(providerCompanyId).orElseThrow(() -> new RecordNotFoundException("Provider not found"));
-		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyId(provider.getId(), myCompanyId).orElseThrow(() -> new RecordNotFoundException("You are not their provider"));
+		ProviderCompany providerCompany = providerCompanyRepository.findByProviderIdAndCompanyIdAndIsDeletedFalse(provider.getId(), myCompanyId).orElseThrow(() -> new RecordNotFoundException("You are not their provider"));
 		
 		double credit = providerCompany.getCredit();
 		double advance = providerCompany.getAdvance();

@@ -65,15 +65,15 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	
 	private PrivacySetting isVisible;
 	
-	@ManyToOne(optional = true,fetch=FetchType.LAZY)
+	@ManyToOne(optional = true)
 	@JoinColumn(name = "categoryId")
 	private Category category;
 	
-	@ManyToOne(optional = true,fetch=FetchType.LAZY)
+	@ManyToOne(optional = true)
 	@JoinColumn(name = "subCategoryId")
 	private SubCategory subCategory;
 	
-	@ManyToOne(fetch=FetchType.EAGER)
+	@ManyToOne()
 	@JoinColumn(name = "providerId")
 	private Provider provider;
 	
@@ -83,10 +83,7 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	
 	private String image;
 
-	@OneToMany()
-	@JoinTable(name = "sub_article",
-			joinColumns = @JoinColumn(name = "parentArticle_id"),
-			inverseJoinColumns = @JoinColumn(name = "childArticle_id"))
+	@OneToMany(mappedBy = "parentArticle")
 	private Set<SubArticle> subArticle;
 
 

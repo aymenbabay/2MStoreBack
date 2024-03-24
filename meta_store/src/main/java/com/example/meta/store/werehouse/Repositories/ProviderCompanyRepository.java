@@ -12,17 +12,17 @@ public interface ProviderCompanyRepository extends BaseRepository<ProviderCompan
 
 	/////////////////////////////////////////////////////// real work ///////////////////////////////////////////////////
 	
-	@Query("SELECT p FROM ProviderCompany p WHERE p.company.id = :companyId")
-	List<ProviderCompany> findAllMyProvider(Long companyId);
+	//@Query("SELECT p FROM ProviderCompany p WHERE p.company.id = :companyId AND p.isDeleted = false")
+	List<ProviderCompany> findAllByCompanyIdAndIsDeletedFalse(Long companyId);
 
 	boolean existsByProviderIdAndCompanyId(Long id, Long id2);
 	
-	Optional<ProviderCompany> findByProviderIdAndCompanyId(Long id, Long id2);
+	Optional<ProviderCompany> findByProviderIdAndCompanyIdAndIsDeletedFalse(Long providerId, Long companyId);
 	
 	void deleteByProviderIdAndCompanyId(Long id, Long id2);
 	
 	@Query("SELECT p FROM ProviderCompany p WHERE "
-			+ "(p.provider.company.id = :companyId)"
+			+ "(p.company.id = :companyId)"
 			+ "AND (p.provider.name LIKE %:search% OR p.provider.code LIKE %:search%) "
 			)
 	List<ProviderCompany> findAllByNameContainingOrCodeContainingAndCompanyId(String search, Long companyId);
@@ -32,4 +32,6 @@ public interface ProviderCompanyRepository extends BaseRepository<ProviderCompan
 
 	void deleteByCompanyIdAndProviderId(Long id, Long id2);
 	void deleteByProviderId(Long id);
+
+	Optional<ProviderCompany> findByProviderIdAndCompanyIdAndIsDeletedTrue(Long providerId, Long companyId);
 }

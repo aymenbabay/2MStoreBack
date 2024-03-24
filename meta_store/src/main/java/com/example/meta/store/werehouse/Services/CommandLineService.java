@@ -20,6 +20,7 @@ import com.example.meta.store.werehouse.Entities.CommandLine;
 import com.example.meta.store.werehouse.Entities.Company;
 import com.example.meta.store.werehouse.Entities.Invoice;
 import com.example.meta.store.werehouse.Entities.ProviderCompany;
+import com.example.meta.store.werehouse.Entities.SubArticle;
 import com.example.meta.store.werehouse.Mappers.CommandLineMapper;
 import com.example.meta.store.werehouse.Repositories.ClientCompanyRepository;
 import com.example.meta.store.werehouse.Repositories.CommandLineRepository;
@@ -58,7 +59,7 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 		Invoice invoice ;
 		if(commandLinesDto.get(0).getId() == null) {
 			invoice = invoiceService.addInvoice(company,clientId);	
-		}else {
+		}else {//a verifier
 			invoice = invoiceService.getById(commandLinesDto.get(0).getInvoice().getId()).getBody();
 			commandLineRepository.deleteAllByInvoiceId(invoice.getId());
 		}
@@ -76,6 +77,9 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 			double tot_tva = round(article.getTva()*prix_article_tot/100);
 			commandLine.setTotTva(tot_tva);
 			commandLines.add(commandLine);
+			if(article.getSubArticle() != null) {
+				impactOnSubArticle(article,i.getQuantity());
+			}
 		}
 		super.insertAll(commandLines);
 		List<CommandLine> commandLine = commandLineRepository.findAllByInvoiceId(invoice.getId());
@@ -108,6 +112,16 @@ public class CommandLineService extends BaseService<CommandLine, Long> {
 	}
 	
 	
+	private void impactOnSubArticle(Article article, Double articleQuantity) {
+		for(SubArticle i : article.getSubArticle()) {
+			Double childQuantity = round(i.getChildArticle().getQuantity()-i.getQuantity()*articleQuantity);
+			i.getChildArticle().setQuantity(childQuantity);
+			inventoryService.impactOnSubArticle(i.getChildArticle(),i.getQuantity()*articleQuantity);
+		}
+		
+	}
+
+
 	public List<CommandLineDto> getCommandLines(Long invoiceId) {
 		List<CommandLine> commandLines = commandLineRepository.findAllByInvoiceId(invoiceId);
 		List<CommandLineDto> commandLinesDto = new ArrayList<>();

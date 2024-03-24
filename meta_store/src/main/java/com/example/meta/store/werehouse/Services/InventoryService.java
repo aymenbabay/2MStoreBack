@@ -132,27 +132,21 @@ public class InventoryService extends BaseService<Inventory, Long> {
 	}
 	
 	public void impacteInvoice( Company company, List<CommandLine> commandLinesDto) {
-		
 		for(CommandLine i : commandLinesDto) {
 			Inventory providerInventory = findByArticleIdAndCompanyId(i.getArticle().getId(),company.getId());
 			providerInventory.setOut_quantity(providerInventory.getOut_quantity()+i.getQuantity());
-			
 			if(i.getDiscount() != 0) {
 				Double articleDiscount = round(providerInventory.getDiscountOut()+i.getArticle().getCost()*i.getDiscount()/100);
 				providerInventory.setDiscountOut(articleDiscount);
 			}
 			if(i.getInvoice().getDiscount() !=0) {
 				Double invoiceDiscount = round(providerInventory.getDiscountOut()+i.getArticle().getCost()*i.getInvoice().getDiscount()/100);
-				providerInventory.setDiscountOut(invoiceDiscount);
-				
+				providerInventory.setDiscountOut(invoiceDiscount);			
 			}
-			Double articleCost = round((i.getArticle().getCost() + i.getArticle().getCost() * i.getArticle().getTva() * i.getArticle().getMargin()/100+providerInventory.getArticleSelling()));
-			providerInventory.setArticleSelling(articleCost);
-			
-			inventoryRepository.save(providerInventory);
-			
+			Double articleSelling = round((i.getArticle().getCost() + i.getArticle().getCost() * (i.getArticle().getTva() + i.getArticle().getMargin())/100+providerInventory.getArticleSelling()));
+			providerInventory.setArticleSelling(articleSelling);
+			inventoryRepository.save(providerInventory);	
 		}
-		
 	}
 	
 	private double round(double value) {
@@ -166,6 +160,16 @@ public class InventoryService extends BaseService<Inventory, Long> {
 			inventory.setIn_quantity(inventory.getIn_quantity()-deference);
 		}
 		inventoryRepository.save(inventory);
+	}
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	public void impactOnSubArticle(Article childArticle, Double childQuantity) {
+		Inventory inventory = findByArticleIdAndCompanyId(childArticle.getId(), childArticle.getCompany().getId());
+		Double inventoryQuantity = round(inventory.getOut_quantity()+childQuantity);
+		inventory.setOut_quantity(inventoryQuantity);
+		Double inventorySelling = round(inventory.getArticleSelling()+ (childArticle.getCost() + childArticle.getCost()*(childArticle.getMargin() + childArticle.getTva())/100 )*childQuantity);
+		inventory.setArticleSelling(inventorySelling);
+		
 	}
 
 

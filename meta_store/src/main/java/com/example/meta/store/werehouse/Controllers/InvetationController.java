@@ -60,15 +60,10 @@ public class InvetationController {
 
 	@GetMapping("get_invetation")
 	public List<InvetationDto> getInvetation(){
-		logger.warn("begin get invetation");
 		Client client = getClient();
-		logger.warn("begin get invetation after client");
 		Provider provider = getProvider();
-		logger.warn("begin get invetation after provider");
 		Optional<Company> company = getCompany();
-		logger.warn("just after get company function");
 		Long userId = userService.findByUserName(authenticationFilter.userName).getId();
-		logger.warn("just before get invetation function");
 		return invetationService.getInvetation(client,provider,company.get(), userId);
 	}
 	

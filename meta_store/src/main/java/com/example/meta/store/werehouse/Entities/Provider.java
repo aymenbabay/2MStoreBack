@@ -55,18 +55,16 @@ public class Provider extends BaseEntity<Long> implements Serializable {
 	
 	private String indestrySector;
 
-
     @Column(unique = true)
 	private String email;
     
-    
     private String nature;
     
-    //eager because error of serialization when get all my provider
     @OneToOne(fetch=FetchType.EAGER)
     @JoinColumn(name = "companyId")
     private Company company;
   
-    
+    @OneToMany(mappedBy = "provider")
+    private Set<ProviderCompany> companies;
     
 }

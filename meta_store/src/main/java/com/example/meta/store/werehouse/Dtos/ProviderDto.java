@@ -5,6 +5,8 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Entities.Company;
+import com.example.meta.store.werehouse.Entities.ProviderCompany;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -39,4 +41,5 @@ public class ProviderDto extends BaseDto<Long> implements Serializable{
 		
 		private boolean isVirtual;
 		
+	    private ProviderCompanyDto providercompany;
 }

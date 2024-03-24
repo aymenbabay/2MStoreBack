@@ -25,6 +25,13 @@ public class SubArticleDto extends BaseDto<Long> implements Serializable{
 
 	private Double quantity;
 	
+
+	private String barcode;
+	
+	private String sharedPoint;
+	
+	private String discription;
+	
 	private Double minQuantity;
 	
 	private Double margin;
@@ -34,8 +41,10 @@ public class SubArticleDto extends BaseDto<Long> implements Serializable{
 	private PrivacySetting isVisible;
 	
 	private ProviderDto provider;
+
+	private CategoryDto category;
 	
-	private CompanyDto company;
+	private SubCategoryDto subCategory;
 	
 	private String image;
 
