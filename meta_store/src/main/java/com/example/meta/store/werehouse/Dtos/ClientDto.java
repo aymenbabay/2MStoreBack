@@ -42,6 +42,9 @@ public class ClientDto extends BaseDto<Long> implements Serializable {
 
 	  private String indestrySector;
 
-	    private boolean isVirtual;
+	  private boolean isVirtual;
+	  
+	  private ClientCompanyDto clientcompany;
+	    
 		
 }

@@ -61,10 +61,10 @@ public class ArticleController {
 	private final Logger logger = LoggerFactory.getLogger(ArticleController.class);
 	
 	
-
 	/////////////////////////////////////// real work ////////////////////////////////////////////////////////
 	@GetMapping("getrandom")
 	public List<ArticleDto> findRandomArticles(){
+		logger.warn("get random function ");
 		Optional<Client> client = getClient();
 		Optional<Provider> provider = getProvider();
 		if(client.isPresent()) {
@@ -167,6 +167,7 @@ public class ArticleController {
 
 	@DeleteMapping("delete/{id}")
 	public ResponseEntity<String> deleteArticleById(@PathVariable Long id){
+		logger.warn("delete function from android "+ id);
 		Optional<Provider> provider = getProvider();
 		return articleService.deleteByCompanyArticleId(id,provider.get());
 	}
@@ -182,6 +183,12 @@ public class ArticleController {
 	public void addChildToParentArticle(@PathVariable Long parentId, @PathVariable Long childId, @PathVariable double quantity) {
 		Company company = getCompany().get();
 		articleService.addChilToParentArticle(company, parentId, childId, quantity);		
+	}
+	
+	@GetMapping("delete_sub/{id}")
+	public void deleteSubArticle(@PathVariable Long id) {
+		Long companyId = getCompany().orElseThrow(() -> new RecordNotFoundException("you do not have a company ")).getId();
+		 articleService.deleteSubArticle(id,companyId);
 	}
 	
 	/////////////////////////////////////// future work ////////////////////////////////////////////////////////

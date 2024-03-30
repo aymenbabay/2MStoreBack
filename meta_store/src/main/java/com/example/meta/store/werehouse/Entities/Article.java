@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseEntity;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
+import com.example.meta.store.werehouse.Enums.Unit;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.CascadeType;
@@ -41,7 +42,7 @@ public class Article extends BaseEntity<Long> implements Serializable{
 	@NotBlank(message = "Code Field Must Not Be Empty")
 	private String code;
 
-	private String unit;
+	private Unit unit;
 	
 	private String discription;
 	

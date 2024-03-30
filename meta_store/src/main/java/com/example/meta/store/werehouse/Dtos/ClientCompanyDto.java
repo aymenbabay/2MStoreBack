@@ -12,7 +12,7 @@ import lombok.Setter;
 public class ClientCompanyDto extends BaseDto<Long> implements Serializable {
 
 
-	private ClientDto client;
+	private ProviderDto client;
 	
 	private CompanyDto company;
 	

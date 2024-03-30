@@ -3,6 +3,7 @@ package com.example.meta.store.werehouse.Services;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +37,7 @@ import com.example.meta.store.werehouse.Entities.ProviderCompany;
 import com.example.meta.store.werehouse.Entities.SubArticle;
 import com.example.meta.store.werehouse.Entities.SubCategory;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
+import com.example.meta.store.werehouse.Enums.Unit;
 import com.example.meta.store.werehouse.Mappers.ArticleMapper;
 import com.example.meta.store.werehouse.Repositories.ArticleRepository;
 import com.example.meta.store.werehouse.Repositories.ProviderCompanyRepository;
@@ -389,19 +391,88 @@ public class ArticleService extends BaseService<Article, Long>{
 
 	public void addChilToParentArticle(Company company, Long parentId, Long childId, double quantity) {
 		Article parentArticle = findById(parentId);
+		if(parentId == childId) {
+			throw new NotPermissonException("you can not make article"+parentArticle.getLibelle()+" child of "+ parentArticle.getLibelle());
+		}
 		Article childArticle = findById(childId);
+		if((parentArticle.getSubArticle() != null && parentArticle.getSubArticle().stream().anyMatch(branche -> branche.getChildArticle().getId().equals(childId)))||
+				( childArticle.getSubArticle() != null &&
+				childArticle.getSubArticle().stream().anyMatch(branche -> branche.getChildArticle().getId().equals(parentId)))){
+			throw new NotPermissonException("you can not do that");
+		}
 		if(!parentArticle.getCompany().equals(company) || !childArticle.getCompany().equals(company)) {
 			throw new NotPermissonException("you don't have the permission to do that");
 		}
+		
 		SubArticle subArticle = new SubArticle();
 		subArticle.setChildArticle(childArticle);
 		subArticle.setParentArticle(parentArticle);
 		subArticle.setQuantity(quantity);
 		subArticleRepository.save(subArticle);
 		
+		double minQuantity = round(calculateMinQuantity(parentArticle,(long)0,subArticle));
+		if(parentArticle.getUnit() == Unit.U) {
+			int integerPart = (int) minQuantity;
+			logger.warn("integer value " +integerPart);
+			 minQuantity = Double.valueOf(integerPart);
+			 logger.warn("double value " +minQuantity);
+		}
+		parentArticle.setQuantity(minQuantity);
+		
 	}
 	
+	private double calculateMinQuantity(Article parentArticle,Long id, SubArticle childArticle) {
+	    double minQuantity = parentArticle.getQuantity();
+	    if(!parentArticle.getSubArticle().isEmpty()) {
+	    	logger.warn("sub article not null => size "+parentArticle.getSubArticle().size());
+	    	Iterator<SubArticle> iterator = parentArticle.getSubArticle().iterator();
+	    	SubArticle subArticleWithDifferentId = null; // Initialize the variable to store the matching SubArticle
+
+	    	while (iterator.hasNext()) {
+	    	    SubArticle subArticle = iterator.next();
+	    	    if (subArticle.getId() != id) {
+	    	        subArticleWithDifferentId = subArticle; // Assign the matching SubArticle
+	    	        break; // Exit the loop once a matching SubArticle is found
+	    	    }
+	    	}
+	    	if(subArticleWithDifferentId != null) {
+	    		
+	        minQuantity = round(subArticleWithDifferentId.getChildArticle().getQuantity() / subArticleWithDifferentId.getQuantity());
+	    	}
+	    	
+	    for (SubArticle subArticle : parentArticle.getSubArticle()) {
+	    	if(subArticle.getId() != id) {	    		
+			logger.warn("sub article id from calcul min function "+subArticle.getId());
+	        double quantityRatio = subArticle.getChildArticle().getQuantity() / subArticle.getQuantity();
+	        minQuantity = Math.min(minQuantity, quantityRatio);
+	    	}
+	    }
+	    }else {
+	    	minQuantity  = childArticle.getChildArticle().getQuantity() / childArticle.getQuantity();
+	    	logger.warn(minQuantity+ " min quantity");
+	    }
+	    
+	    return minQuantity;
+	}
+
+
+
+	public void deleteSubArticle(Long id, Long companyId) {
+		SubArticle subArticle = subArticleRepository.findById(id).orElseThrow(() -> new RecordNotFoundException("there is no relation between the two articles"));
+		if(subArticle.getParentArticle().getCompany().getId() != companyId) {
+			throw new NotPermissonException("you do not have a permission to do that");
+		}
 	
+		subArticleRepository.deleteById(id);
+		logger.warn("sub article id from delete function "+subArticle.getId());
+		double minQuantity = round(calculateMinQuantity(subArticle.getParentArticle(),id,subArticle));
+		subArticle.getParentArticle().setQuantity(minQuantity);
+	}
+
+
+
+
+
 	
 
 

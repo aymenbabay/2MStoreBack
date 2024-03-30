@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -25,6 +26,7 @@ public class SecurityConfiguration {
 	
 	private final LogoutHandler logoutHandler;
 	
+	@SuppressWarnings("removal")
 	@Bean
 	protected SecurityFilterChain securityFilterChaine (HttpSecurity http) throws Exception {
 		
@@ -32,7 +34,7 @@ public class SecurityConfiguration {
 		.csrf()
 		.disable()
 		.authorizeHttpRequests()
-		.requestMatchers("/api/auth/**","/werehouse/**","/**")
+		.requestMatchers("/**") //"api/auth/**","/werehouse/**","/**"
 			.permitAll()
 		.anyRequest()
 			.authenticated()

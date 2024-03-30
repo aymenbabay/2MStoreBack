@@ -317,6 +317,17 @@ public class ClientService extends BaseService<Client, Long>{
 		boolean exists = clientCompanyRepository.existsByClientIdAndCompanyIdAndIsDeletedFalse(clientId,companyId);
 		return exists;
 	}
+
+
+	public List<ClientDto> getAllClientContaininga(String search, Long id) {
+		List<Client> clients = clientRepository.getAllClientContaining(search, id);
+		List<ClientDto> clientsDto = new ArrayList<>();
+		for(Client i : clients) {
+			ClientDto clientDto = clientMapper.mapToDto(i);
+			clientsDto.add(clientDto);
+		}
+		return clientsDto;
+	}
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

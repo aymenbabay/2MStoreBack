@@ -147,7 +147,7 @@ public class ExportInvoicePdf {
 		qteCell.setHorizontalAlignment(Element.ALIGN_CENTER);
 		table.addCell(qteCell);
 		
-		PdfPCell unitCell = new PdfPCell(new Phrase(i.getArticle().getUnit()));
+		PdfPCell unitCell = new PdfPCell(new Phrase(i.getArticle().getUnit().toString()));
 		unitCell.setPaddingLeft(1);
 		unitCell.setVerticalAlignment(Element.ALIGN_CENTER);
 		unitCell.setHorizontalAlignment(Element.ALIGN_CENTER);

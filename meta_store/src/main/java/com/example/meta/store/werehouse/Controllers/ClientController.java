@@ -136,4 +136,10 @@ public class ClientController {
 		}
 		return clientService.checkClient(id,company.getId());
 	}
+	
+	@GetMapping("{search}")
+	public List<ClientDto> getAllClientContaininga(@PathVariable String search){
+		Company company = getCompany();
+		return clientService.getAllClientContaininga(search, company.getId());
+	}
 }

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import com.example.meta.store.Base.Entity.BaseDto;
 import com.example.meta.store.werehouse.Enums.PrivacySetting;
+import com.example.meta.store.werehouse.Enums.Unit;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +21,7 @@ public class ArticleDto extends BaseDto<Long> implements Serializable {
 	
 	private String code;
 
-	private String unit;
+	private Unit unit;
 	
 	private String discription;
 	

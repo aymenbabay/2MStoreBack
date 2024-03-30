@@ -34,7 +34,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200/")
 @RequiredArgsConstructor
 @Validated
 public class UserController {
@@ -47,6 +47,12 @@ public class UserController {
 	 
 	 private static final long EXPIRE_TOKEN_AFTER_MINUTES = 30;
 
+	 @GetMapping("")
+		public String sayHi() {
+			return "hi";
+		}
+
+	 
 		private final Logger logger = LoggerFactory.getLogger(UserController.class);
 	@GetMapping("/all")
 	public ResponseEntity<?> getAll(){
@@ -68,6 +74,7 @@ public class UserController {
 	
 	@PostMapping("/authentication")
 	public ResponseEntity<AuthenticationResponse> authentication(@RequestBody AuthenticationRequest request){
+		logger.warn("it's ok "+request.getUsername()+" password "+request.getPassword());
 		return ResponseEntity.ok(userService.authenticate(request));
 	}
 	

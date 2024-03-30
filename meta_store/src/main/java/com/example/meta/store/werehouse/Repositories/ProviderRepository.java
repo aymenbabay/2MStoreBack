@@ -35,8 +35,9 @@ public interface ProviderRepository extends BaseRepository<Provider, Long>{
 	
 
 	
-//	 @Query("SELECT p FROM Provider p WHERE p.isVirtual = false AND NOT EXISTS (SELECT 1 FROM Client c JOIN c.providers cp WHERE cp.id = p.id)")
-//	   List<Provider> findAllReal();
-	
+	@Query("SELECT p FROM Provider p WHERE (p.name LIKE %:search% OR p.code LIKE %:search%) AND (p.isVisible = 2 OR"
+		//	+ " (((p.isVisible = 1 OR (p.isVisible = 0 AND p.isVirtual = true)) AND"
+			+ " EXISTS (SELECT pc FROM ProviderCompany pc WHERE (pc.provider = p AND pc.company.id = :companyId)))")
+	List<Provider> getAllProviderContainig(String search, Long companyId);
 	
 }

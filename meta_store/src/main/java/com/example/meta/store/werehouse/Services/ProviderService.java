@@ -280,6 +280,16 @@ public class ProviderService extends BaseService<Provider, Long> {
 		return true;
 	}
 
+	public List<ProviderDto> getAllProviderContaining(String search, Long id) {
+		List<Provider> providers = providerRepository.getAllProviderContainig(search, id);
+		List<ProviderDto> providersDto = new ArrayList<>();
+		for(Provider i : providers) {
+			ProviderDto providerDto = providerMapper.mapToDto(i);
+			providersDto.add(providerDto);
+		}
+		return providersDto;
+	}
+
 	//@Cacheable(value = "provider", key = "#root.methodName")
 
 	//@Cacheable(value = "provider", key = "#root.methodName")

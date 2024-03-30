@@ -35,7 +35,10 @@ public interface ClientRepository extends BaseRepository<Client, Long>{
 	
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
+	@Query("SELECT c FROM Client c WHERE (c.name LIKE %:search% OR c.code LIKE %:search%) AND (c.isVisible = 2 OR"
+			//+ " (c.isVisible = 1 AND"
+			+ " EXISTS (SELECT pc FROM ClientCompany pc WHERE (pc.client = c AND pc.company.id = :companyId)))")
+	List<Client> getAllClientContaining(String search , Long companyId);
 
 	
 

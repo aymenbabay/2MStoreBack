@@ -61,7 +61,7 @@ public class ProviderController {
 	
 	
 	
-	@GetMapping("get_all_provider_containing/{search}/{id}")
+	@GetMapping("get_all_my_provider_containing/{search}/{id}")
 	public List<ProviderCompanyDto> getAllProviderContaining(@PathVariable String search, @PathVariable Long id){
 		Company company = getCompany();
 		Long companyId = company.getId();
@@ -145,6 +145,13 @@ public class ProviderController {
 			return (company2.getBody());
 		}
 		throw new RecordNotFoundException("You Dont Have A Company Please Create One If You Need ");
+		
+	}
+	
+	@GetMapping("get_all_provider_containing/{search}")
+	public List<ProviderDto> getAllProviderContaining(@PathVariable String search){
+		Company company = getCompany();
+		return providerService.getAllProviderContaining(search, company.getId());
 		
 	}
 

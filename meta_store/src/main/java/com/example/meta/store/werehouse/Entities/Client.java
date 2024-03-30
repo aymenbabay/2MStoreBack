@@ -35,6 +35,11 @@ public class Client extends BaseEntity<Long> implements Serializable {
 
 
 	//we can delete all entitis and dtos those related by provider and client and make all in one entity and dto
+	// 1)add manytomany relation ship between company and client
+	// 2) delete provider entity
+	// 3) add manytoone relation ship between invoice and company as client, invoice and client as client personnel or vurial one, invoice and company as provider
+	
+	
 	
     private static final long serialVersionUID = 12345678103L;
     
@@ -69,6 +74,7 @@ public class Client extends BaseEntity<Long> implements Serializable {
     @JoinColumn(name = "companyId")
     private Company company;
     
-    
+    @OneToMany(mappedBy = "client")
+    private Set<ClientCompany> companies;
     
 }
